@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Col,
+  Dropdown,
   Empty,
   Form,
   Input,
@@ -37,8 +38,10 @@ import {
   ArrowRightOutlined,
   CloseOutlined,
   MedicineBoxOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import Swal from 'sweetalert2';
 
 import PacientesService, {
@@ -613,11 +616,42 @@ const Pacientes: React.FC = () => {
     }
   };
 
+  const getActionItems = (paciente: PacienteData): MenuProps['items'] => [
+    {
+      key: 'detalle',
+      icon: <EyeOutlined />,
+      label: 'Ver detalle',
+      onClick: () => openDetail(paciente),
+    },
+    {
+      key: 'auditoria',
+      icon: <HistoryOutlined />,
+      label: 'Auditoría',
+      onClick: () => openAudit(paciente),
+    },
+    {
+      key: 'editar',
+      icon: <EditOutlined />,
+      label: 'Editar',
+      onClick: () => openEdit(paciente),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'eliminar',
+      icon: <DeleteOutlined />,
+      label: 'Eliminar',
+      danger: true,
+      onClick: () => handleDelete(paciente),
+    },
+  ];
+
   const columns: ColumnsType<PacienteData> = [
     {
       title: 'Paciente',
       key: 'paciente',
-      width: '26%',
+      width: '27%',
       render: (_, paciente) => (
         <Space size={10} className="paciente-cell-space">
           <Avatar icon={<UserOutlined />} className="paciente-avatar" />
@@ -640,12 +674,13 @@ const Pacientes: React.FC = () => {
       title: 'CURP',
       dataIndex: 'curp',
       width: '18%',
+      ellipsis: true,
       render: (curp) => curp || <Text type="secondary">Sin CURP</Text>,
     },
     {
       title: 'Contacto',
       key: 'contacto',
-      width: '16%',
+      width: '19%',
       render: (_, paciente) => (
         <div className="paciente-contact-cell">
           <strong title={paciente.celular || paciente.telefono || '-'}>
@@ -658,7 +693,7 @@ const Pacientes: React.FC = () => {
     {
       title: 'Estado',
       dataIndex: 'activo',
-      width: '8%',
+      width: '9%',
       align: 'center',
       render: (activo) =>
         activo ? (
@@ -670,7 +705,7 @@ const Pacientes: React.FC = () => {
     {
       title: 'Acciones',
       key: 'acciones',
-      width: '21%',
+      width: '16%',
       align: 'center',
       render: (_, paciente) => (
         <div className="paciente-actions-wrap">
@@ -681,39 +716,28 @@ const Pacientes: React.FC = () => {
               className="paciente-consulta-btn"
               onClick={() => abrirConsultaPaciente(paciente)}
             >
-              Consulta
+              <span className="consulta-text">Consulta</span>
             </Button>
           </Tooltip>
 
-          <Space size={4} className="paciente-actions-space">
-            <Tooltip title="Ver detalle">
-              <Button icon={<EyeOutlined />} onClick={() => openDetail(paciente)} />
-            </Tooltip>
-
-            <Tooltip title="Auditoría">
-              <Button icon={<HistoryOutlined />} onClick={() => openAudit(paciente)} />
-            </Tooltip>
-
-            <Tooltip title="Editar">
-              <Button icon={<EditOutlined />} onClick={() => openEdit(paciente)} />
-            </Tooltip>
-
-            <Tooltip title="Eliminar">
-              <Button danger icon={<DeleteOutlined />} onClick={() => handleDelete(paciente)} />
-            </Tooltip>
-          </Space>
+          <Dropdown
+            menu={{ items: getActionItems(paciente) }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button
+              className="paciente-more-btn"
+              icon={<MoreOutlined />}
+              onClick={(event) => event.preventDefault()}
+            />
+          </Dropdown>
         </div>
       ),
     },
   ];
 
   if (consultaPaciente) {
-    return (
-      <ConsultaExterna
-        paciente={consultaPaciente}
-        onBack={cerrarConsultaPaciente}
-      />
-    );
+    return <ConsultaExterna paciente={consultaPaciente} onBack={cerrarConsultaPaciente} />;
   }
 
   return (
@@ -1131,9 +1155,13 @@ const Pacientes: React.FC = () => {
                         <Form.Item name="estado_civil" label="Estado civil">
                           <Select
                             allowClear
-                            options={['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Union libre'].map(
-                              (v) => ({ value: v, label: v }),
-                            )}
+                            options={[
+                              'Soltero',
+                              'Casado',
+                              'Divorciado',
+                              'Viudo',
+                              'Union libre',
+                            ].map((v) => ({ value: v, label: v }))}
                           />
                         </Form.Item>
                       </Col>

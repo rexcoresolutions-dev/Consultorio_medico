@@ -50,7 +50,7 @@ const ConfirmarAtencion: React.FC = () => {
           <button
             type="button"
             className="confirmar-card confirmar-procedimiento"
-            onClick={() => navigate('/busqueda-paciente/procedimiento')}
+            onClick={() => navigate('/procedimientos')}
           >
             <div className="confirmar-card-left">
               <div className="confirmar-icon">

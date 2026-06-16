@@ -521,7 +521,7 @@ const Receta: React.FC<RecetaProps> = ({
         <header className="rx-hero">
           <div className="rx-hero__top">
             <Button icon={<ArrowLeftOutlined />} onClick={onBack} className="rx-back-btn">
-              Volver a consulta
+              Volver
             </Button>
 
             <div className="rx-title-block">
@@ -543,56 +543,63 @@ const Receta: React.FC<RecetaProps> = ({
           </div>
 
           <section className="rx-patient-panel">
-            <div className="rx-patient-main">
+
+            <div className="rx-patient-header">
+
               <div className="rx-avatar-frame">
-                <Avatar size={70} className="rx-avatar" icon={!iniciales && <UserOutlined />}>
+                <Avatar
+                  size={70}
+                  className="rx-avatar"
+                  icon={!iniciales && <UserOutlined />}
+                >
                   {iniciales}
                 </Avatar>
               </div>
 
-              <div className="rx-patient-name">
-                <span>Paciente</span>
-                <strong>{nombreCompleto || 'Paciente sin nombre'}</strong>
-                <small>Expediente: {paciente.numero_expediente || 'Sin expediente'}</small>
+              <div className="rx-patient-data">
+
+                <h2>{nombreCompleto || 'Paciente sin nombre'}</h2>
+
+                <div className="rx-patient-meta">
+                  <span>
+                    Expediente: {paciente.numero_expediente || 'Sin expediente'}
+                  </span>
+
+                  <span>{calcularEdad()}</span>
+
+                  <span>{paciente.sexo || '-'}</span>
+                </div>
+
+                <div className="rx-diagnostico-box">
+                  <label>Diagnóstico</label>
+                  <p>{diagnosticoPrincipal}</p>
+                </div>
+
+                <div className="rx-alergias-box">
+                  <label>Alergias</label>
+                  <p>{consulta?.alergias || 'No registradas'}</p>
+                </div>
+
               </div>
+
+              <div className="rx-status-card">
+                <div
+                  className="rx-progress-ring"
+                  style={{ ['--rx-progress' as any]: `${progresoReceta}%` }}
+                >
+                  <span>{progresoReceta}%</span>
+                </div>
+
+                <div>
+                  <span>Estado</span>
+                  <strong>{tratamientos.length} medicamento(s)</strong>
+                </div>
+              </div>
+
             </div>
 
-            <div className="rx-patient-info">
-              <div>
-                <span>Edad</span>
-                <strong>{calcularEdad()}</strong>
-              </div>
-
-              <div>
-                <span>Sexo</span>
-                <strong>{paciente.sexo || '-'}</strong>
-              </div>
-
-              <div>
-                <span>Diagnóstico</span>
-                <strong title={diagnosticoPrincipal}>{diagnosticoPrincipal}</strong>
-              </div>
-
-              <div>
-                <span>Alergias</span>
-                <strong>{consulta?.alergias || 'No registradas'}</strong>
-              </div>
-            </div>
-
-            <div className="rx-status-card">
-              <div
-                className="rx-progress-ring"
-                style={{ ['--rx-progress' as any]: `${progresoReceta}%` }}
-              >
-                <span>{progresoReceta}%</span>
-              </div>
-
-              <div>
-                <span>Estado</span>
-                <strong>{tratamientos.length} medicamento(s)</strong>
-              </div>
-            </div>
           </section>
+
         </header>
 
         <Form
@@ -720,7 +727,7 @@ const Receta: React.FC<RecetaProps> = ({
                     <InputNumber min={1} className="rx-number" />
                   </Form.Item>
 
-                  <Form.Item name="frecuencia_unidad" label="Unidad">
+                  <Form.Item className="rx-field-duracion-unidad" name="frecuencia_unidad" label="Unidad">
                     <Select options={opcionesUnidadFrecuencia} />
                   </Form.Item>
 
@@ -737,8 +744,9 @@ const Receta: React.FC<RecetaProps> = ({
                   </Form.Item>
 
                   <Form.Item
+                    className="rx-field-via"
                     name="via_administracion"
-                    label="Vía"
+                    label="Vía de administración"
                     rules={[{ required: true, message: 'Selecciona vía' }]}
                   >
                     <Select placeholder="Seleccione" options={opcionesVia} />
@@ -862,7 +870,8 @@ const Receta: React.FC<RecetaProps> = ({
         className="rx-preview-modal"
         open={previewOpen}
         onCancel={() => setPreviewOpen(false)}
-        width={1120}
+        width="82vw"
+        centered={false}
         title={
           <div className="rx-preview-title">
             <MedicineBoxOutlined />

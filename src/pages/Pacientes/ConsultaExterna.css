@@ -4,7 +4,6 @@
   background:
     radial-gradient(circle at top left, rgba(67, 215, 216, 0.14), transparent 32%),
     linear-gradient(135deg, #f8fbfd, #eef7f9);
-  zoom: 0.9;
 }
 
 .consulta-shell {
@@ -430,8 +429,8 @@
 
 .consulta-vitals-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
 }
 
 .consulta-vital-card {
@@ -449,10 +448,9 @@
 
 .consulta-vital-card > div:first-child {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 12px;
 }
 
 .consulta-vital-card strong {
@@ -900,7 +898,6 @@
 @media (max-width: 1200px) {
   .consulta-page {
     padding: 20px;
-    zoom: 1;
   }
 
   .consulta-shell {
@@ -937,7 +934,6 @@
   .consulta-page {
     min-height: auto;
     padding: 12px;
-    zoom: 1;
     background: #f8fbfd;
   }
 
@@ -1210,4 +1206,683 @@
   height: 14px;
   border-radius: 999px;
   background: #43d7d8;
+}
+
+
+/* =========================================================
+   OVERRIDES RESPONSIVE / ZOOM SAFE
+   Objetivo: que la pantalla no se deforme con zoom del navegador
+   y que las tablas cambien a tarjetas antes de cortarse.
+   ========================================================= */
+
+.consulta-page,
+.consulta-page * {
+  box-sizing: border-box;
+}
+
+.consulta-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  padding: clamp(12px, 2vw, 24px) clamp(12px, 2.6vw, 34px);
+  zoom: normal !important;
+}
+
+.consulta-shell,
+.consulta-main,
+.consulta-section,
+.consulta-subsection,
+.consulta-diagnostico-box,
+.consulta-header,
+.consulta-service,
+.consulta-vital-card,
+.consulta-patient-panel,
+.consulta-patient-card,
+.consulta-preview,
+.ant-modal,
+.ant-modal-content,
+.ant-modal-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.consulta-shell {
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+  gap: clamp(12px, 1.5vw, 18px);
+}
+
+.consulta-main {
+  padding: clamp(14px, 2vw, 24px);
+}
+
+.consulta-header {
+  padding: clamp(16px, 2vw, 24px);
+  align-items: stretch;
+}
+
+.consulta-header-left {
+  min-width: 0;
+}
+
+.consulta-header-left > div:last-child {
+  min-width: 0;
+}
+
+.consulta-header h2 {
+  font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.consulta-service {
+  width: clamp(210px, 24vw, 260px);
+  min-width: 210px;
+  flex: 0 1 260px;
+}
+
+.consulta-progress-five {
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+.consulta-progress div {
+  min-width: 0;
+  min-height: 42px;
+  border-radius: 16px;
+  line-height: 1.15;
+}
+
+.consulta-progress div span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.consulta-vitals-grid {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.consulta-vital-card > div:first-child {
+  min-width: 0;
+}
+
+.consulta-vital-card > div:first-child strong,
+.consulta-vital-card .ant-checkbox-wrapper {
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.consulta-vital-card .ant-checkbox-wrapper {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.consulta-vital-card .ant-form-item {
+  margin-bottom: 0;
+}
+
+.consulta-vital-card .ant-input-group-wrapper {
+  width: 100%;
+}
+
+.consulta-vital-card .ant-input-group-addon {
+  min-width: 60px;
+}
+
+.consulta-section .ant-row {
+  min-width: 0;
+}
+
+.consulta-section .ant-col {
+  min-width: 0;
+}
+
+.consulta-section .ant-input,
+.consulta-section .ant-input-affix-wrapper,
+.consulta-section .ant-select,
+.consulta-section .ant-picker,
+.consulta-section .ant-input-group-wrapper,
+.consulta-section .ant-input-number,
+.consulta-preview .ant-input,
+.consulta-preview .ant-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.consulta-section .ant-input-group-wrapper,
+.consulta-section .ant-input-group,
+.consulta-section .ant-input-group > .ant-input {
+  min-width: 0;
+}
+
+.consulta-section .ant-form-item-label > label {
+  white-space: normal;
+  height: auto;
+  line-height: 1.2;
+}
+
+.consulta-section .ant-select-selection-item,
+.consulta-section .ant-select-selection-placeholder,
+.consulta-service .ant-select-selection-item,
+.consulta-service .ant-select-selection-placeholder {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consulta-diagnostico-table,
+.consulta-preview-table {
+  max-width: 100%;
+  overflow: hidden !important;
+}
+
+.consulta-diagnostico-table .ant-table,
+.consulta-preview-table .ant-table {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.consulta-diagnostico-table .ant-table-container,
+.consulta-diagnostico-table .ant-table-content,
+.consulta-preview-table .ant-table-container,
+.consulta-preview-table .ant-table-content {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden !important;
+}
+
+.consulta-diagnostico-table .ant-table-cell,
+.consulta-preview-table .ant-table-cell {
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.consulta-diagnostico-table .ant-checkbox-wrapper,
+.consulta-preview-table .ant-checkbox-wrapper {
+  justify-content: center;
+}
+
+.consulta-code-tag {
+  max-width: 100%;
+  margin-inline-end: 0;
+  white-space: normal;
+}
+
+.consulta-step-actions {
+  flex-wrap: wrap;
+}
+
+.consulta-step-actions .ant-btn {
+  max-width: 100%;
+}
+
+.consulta-preview-modal {
+  width: min(980px, calc(100vw - 28px)) !important;
+  max-width: calc(100vw - 28px) !important;
+}
+
+.consulta-preview-modal .ant-modal-content {
+  max-width: 100%;
+}
+
+.consulta-preview .ant-descriptions,
+.consulta-preview .ant-descriptions-view,
+.consulta-preview .ant-descriptions table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+}
+
+.consulta-preview .ant-descriptions-item-label,
+.consulta-preview .ant-descriptions-item-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Antes de que una tabla se corte por zoom, se reemplaza por tarjetas. */
+@media (max-width: 1180px) {
+  .consulta-desktop-table {
+    display: none !important;
+  }
+
+  .consulta-mobile-cards {
+    display: block;
+    margin-top: 14px;
+  }
+
+  .consulta-diagnostico-card-mobile {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1080px) {
+  .consulta-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .consulta-patient-panel {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .consulta-back-btn,
+  .consulta-patient-card,
+  .consulta-date-card,
+  .consulta-side-status {
+    grid-column: 1 / -1;
+  }
+
+  .consulta-patient-data {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .consulta-header {
+    flex-direction: column;
+  }
+
+  .consulta-service {
+    width: 100%;
+    min-width: 0;
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .consulta-page {
+    padding: 10px;
+    overflow-x: hidden;
+  }
+
+  .consulta-patient-panel,
+  .consulta-patient-data {
+    grid-template-columns: 1fr;
+  }
+
+  .consulta-header-left {
+    align-items: flex-start;
+  }
+
+  .consulta-progress-five {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .consulta-section-title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .consulta-step-actions {
+    flex-direction: column-reverse;
+  }
+
+  .consulta-step-actions .ant-btn {
+    width: 100%;
+  }
+
+  .consulta-preview-modal {
+    width: calc(100vw - 18px) !important;
+    max-width: calc(100vw - 18px) !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .consulta-main,
+  .consulta-section,
+  .consulta-subsection,
+  .consulta-diagnostico-box,
+  .consulta-header {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .consulta-header-left {
+    flex-direction: column;
+  }
+
+  .consulta-progress-five {
+    grid-template-columns: 1fr;
+  }
+
+  .consulta-vitals-grid,
+  .consulta-diagnostico-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .consulta-vital-card > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* =========================================================
+   CORRECCIÓN FINAL ANTI-DEFORMACIÓN POR ZOOM
+   - No usa zoom.
+   - No usa scroll horizontal.
+   - Reduce columnas rígidas.
+   - Evita que las palabras se partan letra por letra.
+   ========================================================= */
+.consulta-page {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.consulta-page *,
+.consulta-page *::before,
+.consulta-page *::after {
+  box-sizing: border-box;
+}
+
+.consulta-shell {
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.consulta-patient-panel,
+.consulta-main,
+.consulta-section,
+.consulta-subsection,
+.consulta-diagnostico-box,
+.consulta-header {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.consulta-main {
+  padding: clamp(14px, 1.25vw, 22px);
+}
+
+.consulta-patient-card {
+  padding: clamp(18px, 1.4vw, 22px);
+}
+
+.consulta-patient-card h4,
+.consulta-patient-data strong,
+.consulta-date-card strong {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.consulta-header {
+  padding: clamp(16px, 1.4vw, 22px);
+}
+
+.consulta-header h2 {
+  font-size: clamp(22px, 1.8vw, 30px);
+  line-height: 1.1;
+}
+
+.consulta-service {
+  min-width: 220px;
+  max-width: 100%;
+}
+
+.consulta-progress-five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.consulta-progress div {
+  min-width: 0;
+  padding-inline: 8px;
+}
+
+.consulta-progress div span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consulta-vitals-grid {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.consulta-section .ant-row {
+  min-width: 0;
+}
+
+.consulta-section .ant-col {
+  min-width: 0;
+}
+
+.consulta-section .ant-form-item-label > label {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.15;
+}
+
+.consulta-section .ant-input,
+.consulta-section .ant-input-affix-wrapper,
+.consulta-section .ant-select,
+.consulta-section .ant-select-selector,
+.consulta-section .ant-picker,
+.consulta-section .ant-input-group-wrapper {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Tabla compacta estable */
+.consulta-diagnostico-table,
+.consulta-preview-table {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden !important;
+  border-radius: 20px;
+}
+
+.consulta-diagnostico-table .ant-table,
+.consulta-preview-table .ant-table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+}
+
+.consulta-diagnostico-table .ant-table-container,
+.consulta-diagnostico-table .ant-table-content,
+.consulta-preview-table .ant-table-container,
+.consulta-preview-table .ant-table-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.consulta-diagnostico-table table,
+.consulta-preview-table table {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.consulta-diagnostico-table .ant-table-thead > tr > th,
+.consulta-preview-table .ant-table-thead > tr > th {
+  padding: 11px 6px !important;
+  font-size: clamp(11px, 0.78vw, 13px);
+  line-height: 1.15;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.consulta-diagnostico-table .ant-table-tbody > tr > td,
+.consulta-preview-table .ant-table-tbody > tr > td {
+  padding: 11px 7px !important;
+  font-size: clamp(11px, 0.78vw, 13px);
+  line-height: 1.32;
+  white-space: normal;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  vertical-align: middle;
+}
+
+.consulta-table-strong {
+  display: block;
+  max-width: 100%;
+  color: #071733;
+  font-weight: 950;
+  line-height: 1.32;
+  white-space: normal;
+  word-break: normal !important;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+.consulta-table-description {
+  display: block;
+  max-width: 100%;
+  color: #1f2937;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+}
+
+.consulta-code-tag,
+.consulta-type-tag {
+  max-width: 100%;
+  margin-inline-end: 0;
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.consulta-type-tag {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.consulta-type-tag.primera {
+  background: #e8fbfb;
+  color: #063f40;
+}
+
+.consulta-type-tag.subsecuente {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.consulta-diagnostico-table .ant-checkbox-wrapper,
+.consulta-preview-table .ant-checkbox-wrapper {
+  justify-content: center;
+}
+
+.consulta-diagnostico-table .ant-btn,
+.consulta-preview-table .ant-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+/* Cuando el espacio real ya no alcanza, se usan tarjetas antes de deformar. */
+@media (max-width: 1500px) {
+  .consulta-shell {
+    grid-template-columns: minmax(220px, 250px) minmax(0, 1fr);
+  }
+
+  .consulta-page {
+    padding: 18px;
+  }
+
+  .consulta-main {
+    padding: 16px;
+  }
+
+  .consulta-diagnostico-box {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .consulta-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .consulta-patient-panel {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .consulta-back-btn,
+  .consulta-patient-card,
+  .consulta-date-card,
+  .consulta-side-status {
+    grid-column: 1 / -1;
+  }
+
+  .consulta-patient-data {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  .consulta-desktop-table {
+    display: none !important;
+  }
+
+  .consulta-mobile-cards {
+    display: block;
+    margin-top: 14px;
+  }
+}
+
+@media (max-width: 900px) {
+  .consulta-progress-five {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .consulta-header,
+  .consulta-header-left {
+    align-items: flex-start;
+  }
+
+  .consulta-header {
+    flex-direction: column;
+  }
+
+  .consulta-service {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .consulta-page {
+    padding: 10px;
+  }
+
+  .consulta-patient-panel,
+  .consulta-patient-data,
+  .consulta-vitals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .consulta-main,
+  .consulta-section,
+  .consulta-subsection,
+  .consulta-diagnostico-box,
+  .consulta-header {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .consulta-step-actions {
+    flex-direction: column-reverse;
+  }
+
+  .consulta-step-actions .ant-btn {
+    width: 100%;
+  }
 }

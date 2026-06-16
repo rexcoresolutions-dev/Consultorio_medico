@@ -426,14 +426,14 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
       title: 'No.',
       dataIndex: 'no',
       key: 'no',
-      width: 62,
+      width: 48,
       align: 'center',
     },
     {
       title: 'Clave',
       dataIndex: 'clave',
       key: 'clave',
-      width: 86,
+      width: 74,
       align: 'center',
       render: (value: string) => <Tag className="consulta-code-tag">{value}</Tag>,
     },
@@ -444,32 +444,29 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
       render: (value: string) => <span className="consulta-table-strong">{value}</span>,
     },
     {
-      title: 'Primera vez',
-      dataIndex: 'primeraVez',
-      key: 'primeraVez',
+      title: 'Tipo',
+      key: 'tipo',
       width: 112,
       align: 'center',
-      render: (value: boolean) => <Checkbox checked={value} disabled />,
-    },
-    {
-      title: 'Subsecuente',
-      dataIndex: 'subsecuente',
-      key: 'subsecuente',
-      width: 112,
-      align: 'center',
-      render: (value: boolean) => <Checkbox checked={value} disabled />,
+      render: (_, record) => (
+        <Tag className={record.primeraVez ? 'consulta-type-tag primera' : 'consulta-type-tag subsecuente'}>
+          {record.primeraVez ? 'Primera vez' : 'Subsecuente'}
+        </Tag>
+      ),
     },
     {
       title: 'Descripción',
       dataIndex: 'descripcion',
       key: 'descripcion',
-      width: 150,
-      render: (value: string) => value || '-',
+      width: 160,
+      render: (value: string) => (
+        <span className="consulta-table-description">{value || '-'}</span>
+      ),
     },
     {
       title: '',
       key: 'acciones',
-      width: 58,
+      width: 44,
       align: 'center',
       render: (_, record) => (
         <Button
@@ -1121,9 +1118,10 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
                     className="consulta-diagnostico-table consulta-desktop-table"
                     columns={columnasDiagnostico}
                     dataSource={diagnosticos}
+                    rowKey="key"
                     pagination={false}
                     size="middle"
-                    tableLayout="fixed"
+                    tableLayout="auto"
                     locale={{
                       emptyText: 'Sin diagnósticos agregados',
                     }}
@@ -1329,9 +1327,10 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
           <Table
             columns={columnasVistaPrevia}
             dataSource={diagnosticos}
+            rowKey="key"
             pagination={false}
             size="small"
-            tableLayout="fixed"
+            tableLayout="auto"
             className="consulta-preview-table consulta-desktop-table"
             locale={{ emptyText: 'Sin diagnósticos agregados' }}
           />

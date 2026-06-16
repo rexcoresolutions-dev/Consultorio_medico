@@ -20,6 +20,7 @@ import Usuarios from '../pages/Usuarios/Usuarios';
 import Pacientes from '../pages/Pacientes/Pacientes';
 
 import ConfirmarAtencion from '../pages/ConfirmarAtencion/ConfirmarAtencion';
+import Procedimientos from '../pages/procedimientos/Procedimientos';
 
 import {
   ROUTES,
@@ -161,6 +162,15 @@ const AppRouter: React.FC = () => {
                 element={
                   <RoleRoute>
                     <ConfirmarAtencion />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path="/procedimientos"
+                element={
+                  <RoleRoute>
+                    <Procedimientos />
                   </RoleRoute>
                 }
               />
