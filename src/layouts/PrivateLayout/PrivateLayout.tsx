@@ -29,6 +29,7 @@ import {
   ProfileOutlined,
   DownOutlined,
   EyeOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -87,6 +88,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/usuarios', icon: <TeamOutlined />, label: 'Usuarios' },
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
     { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
+    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -96,6 +98,7 @@ const PrivateLayout: React.FC = () => {
   const menuMedico = [
     { key: '/dashboard-medico', icon: <DashboardOutlined />, label: 'Dashboard' },
     { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Procedimientos' },
+    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -106,6 +109,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/dashboard-consultor', icon: <EyeOutlined />, label: 'Dashboard' },
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
     { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
+    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },

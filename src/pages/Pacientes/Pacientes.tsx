@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
   Button,
@@ -39,6 +40,7 @@ import {
   CloseOutlined,
   MedicineBoxOutlined,
   MoreOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
@@ -57,7 +59,8 @@ import './Pacientes.css';
 
 const { Title, Text } = Typography;
 
-const CONSULTA_PACIENTE_STORAGE_KEY = 'pacientes_consulta_paciente_actual';
+const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
+const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
 
 type DomicilioPacienteData = {
   calle?: string;
@@ -72,22 +75,22 @@ type DomicilioPacienteData = {
 
 type PacienteFormData = PacienteData & DomicilioPacienteData;
 
-const guardarPacienteConsulta = (paciente: PacienteData | null) => {
+const guardarPacienteAtencion = (paciente: PacienteData | null) => {
   try {
     if (!paciente) {
-      localStorage.removeItem(CONSULTA_PACIENTE_STORAGE_KEY);
+      localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
       return;
     }
 
-    localStorage.setItem(CONSULTA_PACIENTE_STORAGE_KEY, JSON.stringify(paciente));
+    localStorage.setItem(PACIENTE_ATENCION_STORAGE_KEY, JSON.stringify(paciente));
   } catch {
     // Evita romper la app si el navegador bloquea localStorage.
   }
 };
 
-const cargarPacienteConsulta = (): PacienteData | null => {
+const cargarPacienteAtencion = (): PacienteData | null => {
   try {
-    const data = localStorage.getItem(CONSULTA_PACIENTE_STORAGE_KEY);
+    const data = localStorage.getItem(PACIENTE_ATENCION_STORAGE_KEY);
     return data ? JSON.parse(data) : null;
   } catch {
     return null;
@@ -104,6 +107,8 @@ const generarCurpGenerica = () => {
 };
 
 const Pacientes: React.FC = () => {
+  const navigate = useNavigate();
+
   const [form] = Form.useForm<PacienteFormData>();
   const { message } = App.useApp();
 
@@ -120,8 +125,16 @@ const Pacientes: React.FC = () => {
   const [auditOpen, setAuditOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  const [consultaPaciente, setConsultaPaciente] = useState<PacienteData | null>(() =>
-    cargarPacienteConsulta(),
+  const [consultaPaciente, setConsultaPaciente] = useState<PacienteData | null>(() => {
+    const consultaAbierta = localStorage.getItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY) === 'true';
+
+    if (!consultaAbierta) return null;
+
+    return cargarPacienteAtencion();
+  });
+
+  const [pacienteAtencion, setPacienteAtencion] = useState<PacienteData | null>(() =>
+    cargarPacienteAtencion(),
   );
 
   const [selectedPaciente, setSelectedPaciente] = useState<PacienteData | null>(null);
@@ -137,14 +150,62 @@ const Pacientes: React.FC = () => {
   const desktopPageSize = 10;
   const mobilePageSize = 5;
 
+  const getFullName = (paciente: PacienteData) =>
+    `${paciente.nombre || ''} ${paciente.primer_apellido || ''} ${
+      paciente.segundo_apellido || ''
+    }`
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const formatDate = (fecha?: string) => {
+    if (!fecha) return '-';
+    return fecha.split('T')[0];
+  };
+
   const abrirConsultaPaciente = (paciente: PacienteData) => {
+    setPacienteAtencion(paciente);
+    guardarPacienteAtencion(paciente);
+    localStorage.setItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY, 'true');
     setConsultaPaciente(paciente);
-    guardarPacienteConsulta(paciente);
   };
 
   const cerrarConsultaPaciente = () => {
+    localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
     setConsultaPaciente(null);
-    guardarPacienteConsulta(null);
+  };
+
+  const finalizarAtencion = async () => {
+    if (!pacienteAtencion) return;
+
+    const result = await Swal.fire({
+      icon: 'question',
+      title: 'Finalizar atención',
+      text: `El paciente ${getFullName(
+        pacienteAtencion,
+      )} dejará de estar activo para consulta y procedimientos.`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, finalizar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#94a3b8',
+      reverseButtons: true,
+      allowOutsideClick: false,
+      allowEscapeKey: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    setPacienteAtencion(null);
+    setConsultaPaciente(null);
+    guardarPacienteAtencion(null);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Atención finalizada',
+      text: 'El paciente activo fue liberado correctamente.',
+      timer: 1600,
+      showConfirmButton: false,
+    });
   };
 
   const loadPacientes = async () => {
@@ -153,14 +214,21 @@ const Pacientes: React.FC = () => {
       const data = await PacientesService.getPacientes();
       setPacientes(data);
 
-      const pacienteGuardado = cargarPacienteConsulta();
+      const pacienteGuardado = cargarPacienteAtencion();
 
       if (pacienteGuardado) {
         const actualizado = data.find((item) => String(item.id) === String(pacienteGuardado.id));
 
         if (actualizado) {
-          setConsultaPaciente(actualizado);
-          guardarPacienteConsulta(actualizado);
+          setPacienteAtencion(actualizado);
+          guardarPacienteAtencion(actualizado);
+
+          if (consultaPaciente?.id === actualizado.id) {
+            setConsultaPaciente(actualizado);
+          }
+        } else {
+          setPacienteAtencion(null);
+          guardarPacienteAtencion(null);
         }
       }
     } catch (error) {
@@ -173,19 +241,8 @@ const Pacientes: React.FC = () => {
 
   useEffect(() => {
     loadPacientes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const getFullName = (paciente: PacienteData) =>
-    `${paciente.nombre || ''} ${paciente.primer_apellido || ''} ${
-      paciente.segundo_apellido || ''
-    }`
-      .replace(/\s+/g, ' ')
-      .trim();
-
-  const formatDate = (fecha?: string) => {
-    if (!fecha) return '-';
-    return fecha.split('T')[0];
-  };
 
   const resetPagination = () => setCurrentPage(1);
 
@@ -373,8 +430,13 @@ const Pacientes: React.FC = () => {
       setEditModalOpen(false);
       setSelectedPaciente(null);
 
+      if (pacienteAtencion?.id === selectedPaciente.id) {
+        setPacienteAtencion(payload);
+        guardarPacienteAtencion(payload);
+      }
+
       if (consultaPaciente?.id === selectedPaciente.id) {
-        abrirConsultaPaciente(payload);
+        setConsultaPaciente(payload);
       }
 
       loadPacientes();
@@ -542,6 +604,7 @@ const Pacientes: React.FC = () => {
       handleCloseWizard();
       limpiarBusqueda();
       await loadPacientes();
+
       abrirConsultaPaciente(pacienteGuardado);
     } catch (error: any) {
       Swal.close();
@@ -598,8 +661,13 @@ const Pacientes: React.FC = () => {
         confirmButtonColor: '#36c6c7',
       });
 
+      if (pacienteAtencion?.id === paciente.id) {
+        setPacienteAtencion(null);
+        guardarPacienteAtencion(null);
+      }
+
       if (consultaPaciente?.id === paciente.id) {
-        cerrarConsultaPaciente();
+        setConsultaPaciente(null);
       }
 
       resetPagination();
@@ -655,8 +723,10 @@ const Pacientes: React.FC = () => {
       render: (_, paciente) => (
         <Space size={10} className="paciente-cell-space">
           <Avatar icon={<UserOutlined />} className="paciente-avatar" />
+
           <div className="paciente-name-cell">
             <strong title={getFullName(paciente)}>{getFullName(paciente)}</strong>
+
             <span title={paciente.numero_expediente || 'Sin expediente'}>
               Exp. {paciente.numero_expediente || 'Sin expediente'}
             </span>
@@ -686,6 +756,7 @@ const Pacientes: React.FC = () => {
           <strong title={paciente.celular || paciente.telefono || '-'}>
             {paciente.celular || paciente.telefono || '-'}
           </strong>
+
           <span title={paciente.correo || 'Sin correo'}>{paciente.correo || 'Sin correo'}</span>
         </div>
       ),
@@ -709,7 +780,7 @@ const Pacientes: React.FC = () => {
       align: 'center',
       render: (_, paciente) => (
         <div className="paciente-actions-wrap">
-          <Tooltip title="Abrir consulta externa">
+          <Tooltip title="Abrir consulta externa y dejar paciente activo">
             <Button
               type="primary"
               icon={<MedicineBoxOutlined />}
@@ -737,30 +808,98 @@ const Pacientes: React.FC = () => {
   ];
 
   if (consultaPaciente) {
-    return <ConsultaExterna paciente={consultaPaciente} onBack={cerrarConsultaPaciente} />;
-  }
+    return (
+      <ConsultaExterna
+        paciente={consultaPaciente}
+        onBack={cerrarConsultaPaciente}
+        onPacienteLiberado={() => {
+          localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
+          localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
 
+          setPacienteAtencion(null);
+          setConsultaPaciente(null);
+          guardarPacienteAtencion(null);
+
+          setWizardOpen(false);
+          setDetailOpen(false);
+          setAuditOpen(false);
+          setEditModalOpen(false);
+
+          resetPagination();
+
+          navigate('/pacientes', { replace: true });
+        }}
+      />
+    );
+  }
   return (
     <div className="pacientes-page">
       {!wizardOpen ? (
         <>
           <div className="pacientes-hero">
-            <div>
-              <Text className="pacientes-subtitle">Expediente electrónico</Text>
-              <Title level={2}>Pacientes</Title>
-              <Text type="secondary">
-                Busca en tiempo real. Si no existe, se notificará y se abrirá el wizard.
-              </Text>
+            <div className="pacientes-header-top">
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                className="pacientes-back-btn"
+                onClick={() => navigate('/confirmar-atencion')}
+              >
+                Regresar
+              </Button>
+
+              <span className="pacientes-subtitle-right">Expediente electrónico</span>
             </div>
 
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              className="pacientes-primary-btn"
-              onClick={openCreate}
-            >
-              Crear paciente
-            </Button>
+            <div className="pacientes-hero-main">
+              <div>
+                <Title level={2}>Pacientes</Title>
+
+                <Text type="secondary">
+                  Busca en tiempo real. Si no existe, se notificará y se abrirá el wizard.
+                </Text>
+
+                {pacienteAtencion && (
+                  <div className="pacientes-active-patient">
+                    <div className="pacientes-active-left">
+                      <MedicineBoxOutlined className="pacientes-active-icon" />
+
+                      <span className="pacientes-active-badge">
+                        EN ATENCIÓN
+                      </span>
+
+                      <span className="pacientes-active-name">
+                        {getFullName(pacienteAtencion)}
+                      </span>
+
+                      <span className="pacientes-active-divider">
+                        •
+                      </span>
+
+                      <span className="pacientes-active-exp">
+                        Exp. {pacienteAtencion.numero_expediente || 'Sin expediente'}
+                      </span>
+                    </div>
+
+                    <Button
+                      icon={<CheckCircleOutlined />}
+                      className="pacientes-finalizar-btn-outline"
+                      onClick={finalizarAtencion}
+                    >
+                      Finalizar atención
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                className="pacientes-create-btn"
+                onClick={openCreate}
+              >
+                Crear paciente
+              </Button>
+            </div>
           </div>
 
           <Card className="pacientes-card">
@@ -772,6 +911,7 @@ const Pacientes: React.FC = () => {
 
               <div className="pacientes-search-main">
                 <label>Buscar paciente</label>
+
                 <Input
                   className="pacientes-name-search"
                   placeholder="Nombre o apellidos..."
@@ -824,6 +964,7 @@ const Pacientes: React.FC = () => {
 
               <div className="pacientes-search-actions">
                 <Button onClick={limpiarBusqueda}>Limpiar</Button>
+
                 <Button icon={<ReloadOutlined />} onClick={loadPacientes}>
                   Actualizar
                 </Button>
@@ -882,6 +1023,7 @@ const Pacientes: React.FC = () => {
                   <Card key={paciente.id} className="paciente-mobile-card">
                     <div className="paciente-mobile-header">
                       <Avatar icon={<UserOutlined />} className="paciente-avatar" />
+
                       <div>
                         <strong>{getFullName(paciente)}</strong>
                         <p>{paciente.numero_expediente || 'Sin expediente'}</p>
@@ -892,12 +1034,15 @@ const Pacientes: React.FC = () => {
                       <p>
                         <strong>Fecha nacimiento:</strong> {formatDate(paciente.fecha_nacimiento)}
                       </p>
+
                       <p>
                         <strong>CURP:</strong> {paciente.curp || 'Sin CURP'}
                       </p>
+
                       <p>
                         <strong>Contacto:</strong> {paciente.celular || paciente.telefono || '-'}
                       </p>
+
                       <p>
                         <strong>Correo:</strong> {paciente.correo || 'Sin correo'}
                       </p>
@@ -1021,6 +1166,7 @@ const Pacientes: React.FC = () => {
                   <div className="pacientes-wizard-step">
                     <div className="pacientes-step-title">
                       <span>1</span>
+
                       <div>
                         <strong>Información del paciente</strong>
                         <p>Estos datos son necesarios para crear el expediente clínico.</p>
@@ -1233,6 +1379,7 @@ const Pacientes: React.FC = () => {
                   <div className="pacientes-wizard-step">
                     <div className="pacientes-step-title domicilio">
                       <span>2</span>
+
                       <div>
                         <strong>Domicilio del paciente</strong>
                         <p>Este paso es solo simulación por ahora. No se enviará al backend.</p>

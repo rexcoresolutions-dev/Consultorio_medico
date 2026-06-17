@@ -1,0 +1,680 @@
+.historial-page {
+  min-height: 100%;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.1), transparent 32%),
+    #f6f9fb;
+}
+
+.historial-shell {
+  max-width: 1380px;
+  margin: 0 auto;
+}
+
+.historial-hero-card {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+
+  padding: 30px 34px;
+  margin-bottom: 20px;
+
+  border-radius: 28px;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(67, 215, 216, 0.18),
+      transparent 34%
+    ),
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f8ffff
+    );
+
+  border: 1px solid #d7e4ec;
+}
+
+.historial-hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+
+  min-width: 140px;
+}
+
+.historial-back-btn {
+  height: 46px;
+  border-radius: 14px;
+  font-weight: 850;
+}
+
+.historial-icon {
+  width: 72px;
+  height: 72px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 24px;
+
+  font-size: 34px;
+
+  color: #063f40;
+
+  background:
+    linear-gradient(
+      135deg,
+      #43d7d8,
+      #b7f5f5
+    );
+
+  box-shadow:
+    0 16px 35px rgba(67, 215, 216, 0.28);
+}
+
+.historial-hero-content {
+  flex: 1;
+}
+
+.historial-eyebrow {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #159fa3;
+
+  font-size: 13px;
+  font-weight: 950;
+
+  text-transform: uppercase;
+  letter-spacing: .7px;
+}
+
+.historial-hero-content h2 {
+  margin: 0 !important;
+
+  color: #071733;
+
+  font-size: 32px;
+  font-weight: 950;
+
+  text-transform: uppercase;
+}
+
+.historial-hero-content .ant-typography-secondary {
+  font-size: 14px;
+  color: #667085;
+}
+
+.historial-hero-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.historial-icon {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 62px;
+  border-radius: 22px;
+  font-size: 28px;
+  color: #063f40;
+  background: linear-gradient(135deg, #43d7d8, #b7f5f5);
+  box-shadow: 0 14px 28px rgba(67, 215, 216, 0.25);
+}
+
+.historial-eyebrow {
+  color: #159fa3;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.historial-hero-main h2 {
+  margin: 0;
+  color: #071733;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historial-patient-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 22px;
+  margin-bottom: 20px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.18), transparent 35%),
+    #ffffff;
+  border: 1px solid #d7e4ec;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
+}
+
+.historial-patient-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.historial-avatar {
+  background: linear-gradient(135deg, #43d7d8, #b7f5f5);
+  color: #063f40;
+  font-weight: 950;
+  flex: 0 0 auto;
+}
+
+.historial-patient-main h2 {
+  margin: 0 0 8px;
+  color: #071733;
+  font-size: 25px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historial-patient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.historial-patient-tags .ant-tag {
+  border-radius: 999px;
+  padding: 5px 12px;
+  color: #0f766e;
+  background: rgba(67, 215, 216, 0.1);
+  border-color: rgba(67, 215, 216, 0.25);
+  font-weight: 800;
+}
+
+.historial-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.historial-summary div {
+  min-height: 78px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f8ffff;
+  border: 1px solid #d7e4ec;
+}
+
+.historial-summary span {
+  display: block;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.historial-summary strong {
+  display: block;
+  margin-top: 4px;
+  color: #0f766e;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.historial-actions-row {
+  margin-bottom: 20px;
+}
+
+.historial-action-card {
+  height: 100%;
+  border-radius: 24px;
+  border: 1px solid #d7e4ec;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
+}
+
+.historial-action-card .ant-card-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.historial-action-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.historial-action-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  font-size: 26px;
+}
+
+.historial-action-icon.primary {
+  color: #063f40;
+  background: linear-gradient(135deg, #43d7d8, #b7f5f5);
+}
+
+.historial-action-icon.success {
+  color: white;
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+}
+
+.historial-action-tag {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 850;
+  color: #0f766e;
+  background: rgba(67, 215, 216, 0.1);
+  border-color: rgba(67, 215, 216, 0.24);
+}
+
+.historial-action-tag.green {
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.08);
+  border-color: rgba(15, 118, 110, 0.2);
+}
+
+.historial-action-card h3 {
+  margin: 0 0 8px;
+  color: #071733;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.historial-action-card p {
+  flex: 1;
+  color: #667085;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.historial-action-card .ant-btn {
+  width: fit-content;
+  height: 42px;
+  border-radius: 13px;
+  font-weight: 850;
+}
+
+.historial-note-card .ant-alert {
+  border-radius: 18px;
+}
+
+.historial-table-card {
+  border-radius: 24px;
+  border: 1px solid #d7e4ec;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
+}
+
+.historial-table-head {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 360px);
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.historial-table-head h3 {
+  margin: 0;
+  color: #071733;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.historial-table-head span {
+  color: #667085;
+  font-weight: 750;
+}
+
+.historial-search {
+  height: 42px;
+  border-radius: 14px;
+}
+
+.historial-table .ant-table {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.historial-table .ant-table-thead > tr > th {
+  background: #f8ffff !important;
+  color: #071733;
+  font-weight: 950;
+}
+
+.historial-table .ant-table-tbody > tr > td {
+  vertical-align: middle;
+}
+
+.historial-table .ant-pagination {
+  margin-top: 20px !important;
+}
+
+.historial-table .ant-pagination-item,
+.historial-table .ant-pagination-prev,
+.historial-table .ant-pagination-next {
+  border-radius: 10px !important;
+  font-weight: 800;
+}
+
+.historial-date-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.historial-diagnostico-cell strong {
+  display: block;
+  color: #071733;
+  font-weight: 900;
+}
+
+.historial-diagnostico-cell span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.historial-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.historial-tags .ant-tag {
+  border-radius: 999px;
+  font-weight: 750;
+}
+
+.historial-view-btn {
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.historial-empty-card {
+  max-width: 560px;
+  margin: 120px auto 0;
+  text-align: center;
+  border-radius: 26px;
+}
+
+.historial-empty-card p {
+  color: #667085;
+  font-weight: 700;
+}
+
+.historial-detail-modal .ant-modal-content,
+.historial-wizard-modal .ant-modal-content {
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.historial-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #071733;
+  font-weight: 950;
+}
+
+.historial-detail-title {
+  margin: 22px 0 10px;
+  color: #0f766e;
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historial-diagnosticos-list {
+  display: grid;
+  gap: 10px;
+}
+
+.historial-diagnostico-item {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f8ffff;
+  border: 1px solid #d7e4ec;
+}
+
+.historial-diagnostico-item strong {
+  display: block;
+  color: #071733;
+  font-weight: 900;
+}
+
+.historial-diagnostico-item span {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.historial-wizard-modal .ant-modal-body {
+  padding: 0;
+}
+
+.historial-wizard-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 26px 28px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.22), transparent 34%),
+    linear-gradient(135deg, #ffffff, #f8ffff);
+  border-bottom: 1px solid #d7e4ec;
+}
+
+.historial-wizard-icon {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  font-size: 28px;
+  color: #063f40;
+  background: linear-gradient(135deg, #43d7d8, #b7f5f5);
+}
+
+.historial-wizard-header h2 {
+  margin: 3px 0 4px;
+  color: #071733;
+  font-size: 24px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historial-wizard-header p {
+  margin: 0;
+  color: #667085;
+  font-weight: 700;
+}
+
+.historial-wizard-steps {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 28px;
+  border-bottom: 1px solid #edf3f5;
+}
+
+.historial-wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.55;
+}
+
+.historial-wizard-step.active,
+.historial-wizard-step.done {
+  opacity: 1;
+}
+
+.historial-wizard-step > span {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #eef7f7;
+  color: #0f766e;
+  font-weight: 950;
+  border: 1px solid #cceaea;
+}
+
+.historial-wizard-step.active > span,
+.historial-wizard-step.done > span {
+  background: linear-gradient(135deg, #43d7d8, #31c4c8);
+  color: #063f40;
+  border-color: transparent;
+}
+
+.historial-wizard-step strong {
+  display: block;
+  color: #071733;
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historial-wizard-step small {
+  display: block;
+  color: #667085;
+  font-weight: 750;
+}
+
+.historial-wizard-line {
+  flex: 1;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c9f3f3, #edf3f5);
+}
+
+.historial-wizard-form {
+  padding: 22px 26px 0;
+}
+
+.historial-wizard-section {
+  padding: 18px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #d7e4ec;
+}
+
+.historial-wizard-form .ant-form-item-label > label {
+  font-weight: 850;
+  color: #344054;
+}
+
+.historial-wizard-form .ant-input,
+.historial-wizard-form .ant-select-selector {
+  min-height: 40px;
+  border-radius: 13px !important;
+}
+
+.historial-wizard-form textarea.ant-input {
+  border-radius: 16px !important;
+}
+
+.historial-wizard-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px -26px 0;
+  padding: 16px 24px;
+  border-top: 1px solid #edf3f5;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+}
+
+.historial-wizard-footer > div {
+  display: flex;
+  gap: 10px;
+}
+
+.historial-wizard-footer .ant-btn {
+  height: 42px;
+  border-radius: 12px;
+  font-weight: 850;
+}
+
+.historial-wizard-footer .ant-btn-primary {
+  background: linear-gradient(135deg, #43d7d8, #31c4c8) !important;
+  border-color: #43d7d8 !important;
+  color: #063f40 !important;
+  font-weight: 950 !important;
+}
+
+@media (max-width: 768px) {
+  .historial-page {
+    padding: 16px;
+  }
+
+  .historial-hero-card,
+  .historial-patient-card,
+  .historial-table-head {
+    grid-template-columns: 1fr;
+  }
+
+  .historial-hero-main,
+  .historial-patient-main,
+  .historial-wizard-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .historial-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .historial-table-head {
+    align-items: stretch;
+  }
+
+  .historial-actions-row .ant-card-body {
+    min-height: auto;
+  }
+
+  .historial-wizard-steps {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .historial-wizard-line {
+    width: 2px;
+    height: 20px;
+    margin-left: 18px;
+  }
+
+  .historial-wizard-form {
+    padding: 18px 18px 0;
+  }
+
+  .historial-wizard-footer {
+    margin: 20px -18px 0;
+    flex-direction: column;
+  }
+
+  .historial-wizard-footer > div,
+  .historial-wizard-footer .ant-btn {
+    width: 100%;
+  }
+
+  .historial-wizard-footer > div {
+    flex-direction: column;
+  }
+}

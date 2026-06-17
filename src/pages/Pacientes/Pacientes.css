@@ -16,31 +16,171 @@
   box-sizing: border-box;
 }
 
+/* =====================================
+   HERO PACIENTES
+===================================== */
+
 .pacientes-hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 16px;
-  padding: clamp(18px, 2vw, 26px);
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.74);
-  border: 1px solid rgba(215, 228, 236, 0.95);
+  margin-bottom: 18px;
+  padding: 28px 36px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #d7e4ec;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
-  backdrop-filter: blur(14px);
 }
+
+.pacientes-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.pacientes-back-btn {
+  padding: 0 !important;
+  height: auto !important;
+  color: #0f5f5d !important;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.pacientes-back-btn:hover {
+  background: transparent !important;
+  color: #20bebe !important;
+}
+
+.pacientes-subtitle-right {
+  color: #20bebe;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.pacientes-hero-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+}
+
+.pacientes-hero-main > div:first-child {
+  flex: 1;
+}
+
+.pacientes-hero h2 {
+  margin: 0 0 12px !important;
+  color: #071733 !important;
+  font-size: 48px !important;
+  font-weight: 900 !important;
+  line-height: 1;
+}
+
+.pacientes-hero .ant-typography-secondary {
+  display: block;
+  font-size: 15px;
+  color: #7a8494 !important;
+  margin-bottom: 22px;
+}
+
+.pacientes-active-patient {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 14px 18px;
+
+  border-radius: 18px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(67, 215, 216, 0.12),
+    rgba(255, 255, 255, 0.95)
+  );
+
+  border: 1px solid rgba(67, 215, 216, 0.25);
+
+  color: #243447;
+  font-size: 15px;
+  font-weight: 700;
+
+  box-shadow: 0 10px 20px rgba(67, 215, 216, 0.08);
+}
+
+.pacientes-active-patient svg {
+  color: #159fa3;
+  font-size: 18px;
+}
+
+.pacientes-active-patient strong {
+  color: #071733;
+  font-weight: 900;
+}
+
+.pacientes-create-btn {
+  flex-shrink: 0;
+
+  height: 52px !important;
+  padding: 0 28px !important;
+
+  border: none !important;
+  border-radius: 16px !important;
+
+  background: linear-gradient(
+    135deg,
+    #43d7d8,
+    #159fa3
+  ) !important;
+
+  color: #fff !important;
+  font-size: 16px;
+  font-weight: 900;
+
+  box-shadow: 0 14px 28px rgba(67, 215, 216, 0.28);
+
+  transition: all .25s ease;
+}
+
+.pacientes-create-btn:hover {
+  transform: translateY(-2px);
+
+  background: linear-gradient(
+    135deg,
+    #159fa3,
+    #0f7f83
+  ) !important;
+}
+
+/* MOBILE */
+
+@media (max-width: 900px) {
+  .pacientes-header-top {
+    margin-bottom: 24px;
+  }
+
+  .pacientes-hero-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pacientes-create-btn {
+    width: 100%;
+  }
+
+  .pacientes-hero h2 {
+    font-size: 42px !important;
+  }
+
+  .pacientes-active-patient {
+    width: 100%;
+  }
+}
+
+/* ==============================
+   BOTONES GENERALES
+============================== */
 
 .pacientes-subtitle {
   color: #159fa3;
   font-weight: 900;
-}
-
-.pacientes-hero h2,
-.pacientes-wizard-topbar h2 {
-  margin: 6px 0 4px;
-  color: #071733;
-  font-size: clamp(25px, 2.3vw, 33px);
-  font-weight: 950;
 }
 
 .pacientes-primary-btn {
@@ -59,6 +199,10 @@
   color: #ffffff !important;
 }
 
+/* ==============================
+   CARD PRINCIPAL
+============================== */
+
 .pacientes-card {
   width: 100%;
   max-width: 100%;
@@ -72,6 +216,10 @@
 .pacientes-card .ant-card-body {
   padding: clamp(12px, 1.5vw, 18px);
 }
+
+/* ==============================
+   BUSCADOR
+============================== */
 
 .pacientes-smart-search {
   display: grid;
@@ -206,6 +354,10 @@
   padding-inline: 14px;
 }
 
+/* ==============================
+   RESUMEN
+============================== */
+
 .pacientes-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -232,6 +384,10 @@
   color: #667085;
   font-weight: 800;
 }
+
+/* ==============================
+   TABLA
+============================== */
 
 .pacientes-table-desktop {
   width: 100%;
@@ -392,6 +548,10 @@
 .pacientes-table-desktop .ant-pagination {
   margin: 14px 0 0;
 }
+
+/* ==============================
+   WIZARD
+============================== */
 
 .pacientes-wizard-page {
   min-height: calc(100vh - 120px);
@@ -631,6 +791,10 @@
   font-weight: 900;
 }
 
+/* ==============================
+   MOBILE LIST
+============================== */
+
 .pacientes-mobile-list {
   display: none;
 }
@@ -721,6 +885,10 @@
   border-radius: 12px;
   font-weight: 850;
 }
+
+/* ==============================
+   MODALES / DETALLE
+============================== */
 
 .paciente-detail {
   text-align: center;
@@ -829,6 +997,10 @@
   color: #53627a;
 }
 
+/* ==============================
+   RESPONSIVE
+============================== */
+
 @media (max-width: 1380px) {
   .pacientes-smart-search {
     grid-template-columns: 58px minmax(0, 1.4fr) minmax(165px, 1fr) minmax(165px, 1fr);
@@ -885,9 +1057,31 @@
 @media (max-width: 768px) {
   .pacientes-hero,
   .pacientes-wizard-topbar {
-    flex-direction: column;
-    align-items: stretch;
     padding: 20px;
+  }
+
+  .pacientes-header-top {
+    align-items: stretch;
+    gap: 18px;
+    flex-direction: column;
+    margin-bottom: 26px;
+  }
+
+  .pacientes-expediente-actions {
+    align-items: stretch;
+  }
+
+  .pacientes-subtitle-right {
+    margin-left: 0;
+  }
+
+  .pacientes-create-btn {
+    width: 100%;
+  }
+
+  .pacientes-active-patient {
+    width: 100%;
+    align-items: flex-start;
   }
 
   .pacientes-primary-btn,
@@ -925,3 +1119,99 @@
     grid-template-columns: 1fr;
   }
 }
+
+.pacientes-active-patient {
+  margin-top: 16px;
+  padding: 12px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  border-radius: 16px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(67, 215, 216, .12),
+    rgba(67, 215, 216, .04)
+  );
+
+  border: 1px solid rgba(67, 215, 216, .25);
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.05),
+    0 2px 6px rgba(67,215,216,.08);
+}
+
+.pacientes-active-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pacientes-active-icon {
+  font-size: 18px;
+  color: #0f766e;
+}
+
+.pacientes-active-badge {
+  background: #0f766e;
+  color: white;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.pacientes-active-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pacientes-active-divider {
+  color: #94a3b8;
+}
+
+.pacientes-active-exp {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.pacientes-finalizar-btn {
+  border-radius: 12px !important;
+  height: 40px !important;
+  padding: 0 18px !important;
+
+  font-weight: 600;
+
+  box-shadow: 0 8px 18px rgba(239, 68, 68, .18);
+
+  transition: all .25s ease;
+}
+
+.pacientes-finalizar-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(239, 68, 68, .28);
+}
+
+@media (max-width: 768px) {
+  .pacientes-active-patient {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pacientes-active-left {
+    flex-wrap: wrap;
+  }
+
+  .pacientes-finalizar-btn {
+    width: 100%;
+  }
+}
+

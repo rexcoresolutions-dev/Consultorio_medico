@@ -35,17 +35,23 @@ import {
   PlusOutlined,
   DeleteOutlined,
   ShareAltOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import Swal from 'sweetalert2';
+
 import type { PacienteData } from '../../services/pacientes/pacientes.service';
 import Receta from './Receta';
 import './ConsultaExterna.css';
 
 const { Title, Text } = Typography;
 
+const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
+
 type ConsultaExternaProps = {
   paciente: PacienteData;
   onBack: () => void;
+  onPacienteLiberado?: () => void;
 };
 
 export type DiagnosticoItem = {
@@ -107,7 +113,15 @@ const guardarEstadoConsulta = (key: string, data: Partial<ConsultaStorageState>)
   }
 };
 
-const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) => {
+const limpiarPacienteActivo = () => {
+  try {
+    localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
+  } catch {
+    // Evita romper la pantalla si el navegador bloquea storage.
+  }
+};
+
+const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPacienteLiberado, }) => {
   const [form] = Form.useForm();
 
   const storageKey = useMemo(() => getConsultaStorageKey(paciente), [paciente]);
@@ -141,6 +155,24 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
   const imcActual = Form.useWatch('imc', form);
   const alturaActual = Form.useWatch('altura', form);
   const referirPaciente = Form.useWatch('referir_paciente', form);
+
+  const nombreCompleto = useMemo(() => {
+    return `${paciente.nombre || ''} ${paciente.primer_apellido || ''} ${
+      paciente.segundo_apellido || ''
+    }`
+      .replace(/\s+/g, ' ')
+      .trim();
+  }, [paciente]);
+
+  const iniciales = useMemo(() => {
+    return nombreCompleto
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((item) => item[0])
+      .join('')
+      .toUpperCase();
+  }, [nombreCompleto]);
 
   useEffect(() => {
     if (estadoInicial?.formValues) {
@@ -187,11 +219,45 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
     });
   };
 
-    const handleBackPacientes = () => {
+  const handleBackPacientes = () => {
     localStorage.removeItem(storageKey);
     onBack();
-    };
-    
+  };
+
+  const liberarPaciente = async () => {
+    const result = await Swal.fire({
+      icon: 'question',
+      title: 'Finalizar atención',
+      text: `El paciente ${nombreCompleto || 'seleccionado'} dejará de estar activo para consulta y procedimientos.`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, finalizar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#94a3b8',
+      reverseButtons: true,
+      allowOutsideClick: false,
+      allowEscapeKey: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    limpiarPacienteActivo();
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem('consulta_externa_abierta');
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Paciente liberado',
+      text: 'El paciente activo fue liberado correctamente.',
+      timer: 1700,
+      showConfirmButton: false,
+      confirmButtonColor: '#0f766e',
+    });
+
+    onPacienteLiberado?.();
+    onBack();
+  };
+
   const opcionesSiNoDesconoce = [
     { value: 'SI', label: 'Sí' },
     { value: 'NO', label: 'No' },
@@ -242,24 +308,6 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
       diagnostico: 'ALTERACIONES VISUALES SUBJETIVAS',
     },
   ];
-
-  const nombreCompleto = useMemo(() => {
-    return `${paciente.nombre || ''} ${paciente.primer_apellido || ''} ${
-      paciente.segundo_apellido || ''
-    }`
-      .replace(/\s+/g, ' ')
-      .trim();
-  }, [paciente]);
-
-  const iniciales = useMemo(() => {
-    return nombreCompleto
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((item) => item[0])
-      .join('')
-      .toUpperCase();
-  }, [nombreCompleto]);
 
   const calcularEdad = () => {
     if (!paciente.fecha_nacimiento) return '-';
@@ -449,7 +497,9 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
       width: 112,
       align: 'center',
       render: (_, record) => (
-        <Tag className={record.primeraVez ? 'consulta-type-tag primera' : 'consulta-type-tag subsecuente'}>
+        <Tag
+          className={record.primeraVez ? 'consulta-type-tag primera' : 'consulta-type-tag subsecuente'}
+        >
           {record.primeraVez ? 'Primera vez' : 'Subsecuente'}
         </Tag>
       ),
@@ -508,6 +558,38 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
     setPreviewOpen(true);
   };
 
+  const guardarHistorialClinico = (payload: any) => {
+    const HISTORIAL_CLINICO_STORAGE_KEY = 'historial_clinico_pacientes';
+
+    try {
+      const data = localStorage.getItem(HISTORIAL_CLINICO_STORAGE_KEY);
+      const historiales = data ? JSON.parse(data) : [];
+
+      const nuevoHistorial = {
+        id: `${paciente.id || paciente.numero_expediente || Date.now()}-${Date.now()}`,
+        pacienteId: paciente.id,
+        paciente: {
+          id: paciente.id,
+          nombre: nombreCompleto,
+          numero_expediente: paciente.numero_expediente,
+          curp: paciente.curp,
+          sexo: paciente.sexo,
+          fecha_nacimiento: paciente.fecha_nacimiento,
+        },
+        consulta: payload,
+        diagnosticos,
+        fecha_consulta: payload.fecha_consulta,
+      };
+
+      localStorage.setItem(
+        HISTORIAL_CLINICO_STORAGE_KEY,
+        JSON.stringify([nuevoHistorial, ...historiales]),
+      );
+    } catch {
+      // Evita romper la pantalla si localStorage falla.
+    }
+  };
+
   const handleGuardar = async () => {
     const values = await form.validateFields();
     const imcCalculado = calcularIMC(values.peso, values.altura);
@@ -518,6 +600,8 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
       diagnosticos,
       fecha_consulta: new Date().toISOString(),
     };
+    
+    guardarHistorialClinico(payload);
 
     setProgress((prev) => ({
       ...prev,
@@ -526,7 +610,6 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
 
     setConsultaGuardada(payload);
     setPreviewOpen(false);
-    setMostrarReceta(true);
 
     guardarEstadoConsulta(storageKey, {
       currentStep: 3,
@@ -534,7 +617,7 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
       sinAltura,
       sinTemperatura,
       diagnosticos,
-      mostrarReceta: true,
+      mostrarReceta: false,
       consultaGuardada: payload,
       progress: {
         ...progress,
@@ -547,6 +630,43 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
     });
 
     console.log('Consulta externa guardada:', payload);
+
+    const result = await Swal.fire({
+      icon: 'success',
+      title: 'Consulta guardada',
+      text: 'La información clínica se guardó correctamente.',
+      showCancelButton: true,
+      confirmButtonText: 'Continuar a receta',
+      cancelButtonText: 'Seguir editando',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#94a3b8',
+      reverseButtons: true,
+      customClass: {
+        popup: 'consulta-save-swal',
+      },
+    });
+
+    if (result.isConfirmed) {
+      setMostrarReceta(true);
+
+      guardarEstadoConsulta(storageKey, {
+        currentStep: 3,
+        sinPeso,
+        sinAltura,
+        sinTemperatura,
+        diagnosticos,
+        mostrarReceta: true,
+        consultaGuardada: payload,
+        progress: {
+          ...progress,
+          guardado: true,
+        },
+        formValues: {
+          ...values,
+          imc: payload.imc,
+        },
+      });
+    }
   };
 
   const DiagnosticoCards = ({ preview = false }: { preview?: boolean }) => (
@@ -597,27 +717,28 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
 
   if (mostrarReceta) {
     return (
-      <Receta
-        paciente={paciente}
-        consulta={consultaGuardada}
-        diagnosticos={diagnosticos}
-        onBack={() => {
+    <Receta
+      paciente={paciente}
+      consulta={consultaGuardada}
+      diagnosticos={diagnosticos}
+      onBack={() => {
         setMostrarReceta(false);
         setCurrentStep(3);
 
         guardarEstadoConsulta(storageKey, {
-            currentStep: 3,
-            sinPeso,
-            sinAltura,
-            sinTemperatura,
-            diagnosticos,
-            mostrarReceta: false,
-            consultaGuardada,
-            progress,
-            formValues: form.getFieldsValue(true),
+          currentStep: 3,
+          sinPeso,
+          sinAltura,
+          sinTemperatura,
+          diagnosticos,
+          mostrarReceta: false,
+          consultaGuardada,
+          progress,
+          formValues: form.getFieldsValue(true),
         });
-        }}
-      />
+      }}
+      onPacienteLiberado={onPacienteLiberado}
+    />
     );
   }
 
@@ -625,7 +746,11 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
     <div className="consulta-page">
       <div className="consulta-shell">
         <aside className="consulta-patient-panel">
-          <Button icon={<ArrowLeftOutlined />} onClick={handleBackPacientes} className="consulta-back-btn">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={handleBackPacientes}
+            className="consulta-back-btn"
+          >
             Volver a pacientes
           </Button>
 
@@ -690,6 +815,15 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({ paciente, onBack }) =
               <span>Captura segura</span>
             </div>
           </div>
+
+          <Button
+            icon={<CheckCircleOutlined />}
+            className="consulta-liberar-paciente-btn"
+            onClick={liberarPaciente}
+            block
+          >
+            Finalizar atención
+          </Button>
         </aside>
 
         <main className="consulta-main">

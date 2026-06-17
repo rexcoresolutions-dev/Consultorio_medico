@@ -1886,3 +1886,22 @@
     width: 100%;
   }
 }
+
+.consulta-liberar-paciente-btn {
+  margin-top: 14px;
+  height: 42px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(15, 118, 110, 0.35) !important;
+  background: transparent !important;
+  color: #0f766e !important;
+  font-weight: 700;
+  box-shadow: none !important;
+  transition: all 0.25s ease;
+}
+
+.consulta-liberar-paciente-btn:hover {
+  background: rgba(15, 118, 110, 0.08) !important;
+  border-color: #0f766e !important;
+  color: #0f766e !important;
+  transform: translateY(-1px);
+}

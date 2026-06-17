@@ -11,12 +11,14 @@ export const ROUTES = {
 
   PATIENTS: '/pacientes',
 
-  // NUEVO MODULO
   CONFIRMAR_ATENCION: '/confirmar-atencion',
   BUSQUEDA_PACIENTE: '/busqueda-paciente/:tipo',
 
   CONSULTA: '/consulta/:pacienteId',
   PROCEDIMIENTO: '/procedimiento/:pacienteId',
+
+  PROCEDIMIENTOS: '/procedimientos',
+  HISTORIAL_CLINICO: '/historial-clinico',
 
   APPOINTMENTS: '/citas',
   MEDICAL_RECORDS: '/expedientes',
@@ -65,6 +67,8 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.BUSQUEDA_PACIENTE,
     ROUTES.CONSULTA,
     ROUTES.PROCEDIMIENTO,
+    ROUTES.PROCEDIMIENTOS,
+    ROUTES.HISTORIAL_CLINICO,
 
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
@@ -83,6 +87,8 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.BUSQUEDA_PACIENTE,
     ROUTES.CONSULTA,
     ROUTES.PROCEDIMIENTO,
+    ROUTES.PROCEDIMIENTOS,
+    ROUTES.HISTORIAL_CLINICO,
 
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
@@ -99,6 +105,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
 
     ROUTES.CONFIRMAR_ATENCION,
     ROUTES.BUSQUEDA_PACIENTE,
+    ROUTES.HISTORIAL_CLINICO,
 
     ROUTES.APPOINTMENTS,
     ROUTES.PRESCRIPTIONS,
@@ -109,10 +116,9 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
 
 export const canAccessRoute = (
   rolId: number | undefined,
-  pathname: string
+  pathname: string,
 ) => {
-  const allowedRoutes =
-    ROLE_ALLOWED_ROUTES[Number(rolId)] || [];
+  const allowedRoutes = ROLE_ALLOWED_ROUTES[Number(rolId)] || [];
 
   return allowedRoutes.some((route) => {
     if (route.includes('/:')) {

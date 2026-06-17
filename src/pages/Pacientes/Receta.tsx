@@ -30,13 +30,19 @@ import {
   PrinterOutlined,
   SaveOutlined,
   UserOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import Swal from 'sweetalert2';
+
 import type { PacienteData } from '../../services/pacientes/pacientes.service';
 import './Receta.css';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
+const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
 
 type DiagnosticoResumen = {
   key?: string;
@@ -51,6 +57,7 @@ type RecetaProps = {
   consulta?: any;
   diagnosticos?: DiagnosticoResumen[];
   onBack: () => void;
+  onPacienteLiberado?: () => void;
 };
 
 type TratamientoItem = {
@@ -140,6 +147,7 @@ const Receta: React.FC<RecetaProps> = ({
   consulta,
   diagnosticos = [],
   onBack,
+  onPacienteLiberado,
 }) => {
   const [form] = Form.useForm();
   const [tratamientos, setTratamientos] = useState<TratamientoItem[]>([]);
@@ -300,6 +308,49 @@ const Receta: React.FC<RecetaProps> = ({
     } catch {
       message.warning('Revisa los campos pendientes antes de guardar.');
     }
+  };
+
+  const getConsultaStorageKey = (paciente?: PacienteData) => {
+    const pacienteKey =
+      paciente?.id ||
+      paciente?.numero_expediente ||
+      paciente?.curp ||
+      `${paciente?.nombre || 'paciente'}-${paciente?.primer_apellido || ''}`;
+
+    return `consulta_externa_estado_${pacienteKey}`;
+  };
+
+  const finalizarAtencion = async () => {
+    const result = await Swal.fire({
+      icon: 'question',
+      title: 'Finalizar atención',
+      text: `${nombreCompleto || 'El paciente'} dejará de estar activo para consulta, procedimientos y receta.`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, finalizar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#94a3b8',
+      reverseButtons: true,
+      allowOutsideClick: false,
+      allowEscapeKey: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
+    localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
+    localStorage.removeItem(getConsultaStorageKey(paciente));
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Atención finalizada',
+      text: 'El paciente activo fue liberado correctamente.',
+      timer: 1700,
+      showConfirmButton: false,
+      confirmButtonColor: '#0f766e',
+    });
+
+    onPacienteLiberado?.();
   };
 
   const columnasTratamientos: ColumnsType<TratamientoItem> = [
@@ -543,9 +594,7 @@ const Receta: React.FC<RecetaProps> = ({
           </div>
 
           <section className="rx-patient-panel">
-
             <div className="rx-patient-header">
-
               <div className="rx-avatar-frame">
                 <Avatar
                   size={70}
@@ -557,16 +606,11 @@ const Receta: React.FC<RecetaProps> = ({
               </div>
 
               <div className="rx-patient-data">
-
                 <h2>{nombreCompleto || 'Paciente sin nombre'}</h2>
 
                 <div className="rx-patient-meta">
-                  <span>
-                    Expediente: {paciente.numero_expediente || 'Sin expediente'}
-                  </span>
-
+                  <span>Expediente: {paciente.numero_expediente || 'Sin expediente'}</span>
                   <span>{calcularEdad()}</span>
-
                   <span>{paciente.sexo || '-'}</span>
                 </div>
 
@@ -579,7 +623,6 @@ const Receta: React.FC<RecetaProps> = ({
                   <label>Alergias</label>
                   <p>{consulta?.alergias || 'No registradas'}</p>
                 </div>
-
               </div>
 
               <div className="rx-status-card">
@@ -590,16 +633,21 @@ const Receta: React.FC<RecetaProps> = ({
                   <span>{progresoReceta}%</span>
                 </div>
 
-                <div>
+                <div className="rx-status-content">
                   <span>Estado</span>
                   <strong>{tratamientos.length} medicamento(s)</strong>
                 </div>
+
+                <Button
+                  icon={<CheckCircleOutlined />}
+                  className="rx-finalizar-btn"
+                  onClick={finalizarAtencion}
+                >
+                  Finalizar atención
+                </Button>
               </div>
-
             </div>
-
           </section>
-
         </header>
 
         <Form
@@ -670,7 +718,11 @@ const Receta: React.FC<RecetaProps> = ({
                       <Input addonAfter="m" placeholder="1.70" />
                     </Form.Item>
 
-                    <Form.Item name="abdomen" label="C. abdomen" initialValue={consulta?.circunferencia_abdomen}>
+                    <Form.Item
+                      name="abdomen"
+                      label="C. abdomen"
+                      initialValue={consulta?.circunferencia_abdomen}
+                    >
                       <Input addonAfter="cm" placeholder="80" />
                     </Form.Item>
 
@@ -727,7 +779,11 @@ const Receta: React.FC<RecetaProps> = ({
                     <InputNumber min={1} className="rx-number" />
                   </Form.Item>
 
-                  <Form.Item className="rx-field-duracion-unidad" name="frecuencia_unidad" label="Unidad">
+                  <Form.Item
+                    className="rx-field-duracion-unidad"
+                    name="frecuencia_unidad"
+                    label="Unidad"
+                  >
                     <Select options={opcionesUnidadFrecuencia} />
                   </Form.Item>
 

@@ -1,5 +1,11 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
 import { Spin, App as AntdApp } from 'antd';
 
 import { AuthProvider } from '../context/auth/AuthContext';
@@ -21,6 +27,7 @@ import Pacientes from '../pages/Pacientes/Pacientes';
 
 import ConfirmarAtencion from '../pages/ConfirmarAtencion/ConfirmarAtencion';
 import Procedimientos from '../pages/procedimientos/Procedimientos';
+import HistorialClinico from '../pages/HistorialClinico/HistorialClinico';
 
 import {
   ROUTES,
@@ -155,10 +162,17 @@ const AppRouter: React.FC = () => {
                 }
               />
 
-              <Route path="/pacientes" element={<Pacientes />} />
+              <Route
+                path={ROUTES.PATIENTS}
+                element={
+                  <RoleRoute>
+                    <Pacientes />
+                  </RoleRoute>
+                }
+              />
 
               <Route
-                path="/confirmar-atencion"
+                path={ROUTES.CONFIRMAR_ATENCION}
                 element={
                   <RoleRoute>
                     <ConfirmarAtencion />
@@ -167,7 +181,7 @@ const AppRouter: React.FC = () => {
               />
 
               <Route
-                path="/procedimientos"
+                path={ROUTES.PROCEDIMIENTOS}
                 element={
                   <RoleRoute>
                     <Procedimientos />
@@ -175,7 +189,23 @@ const AppRouter: React.FC = () => {
                 }
               />
 
-              <Route path="/perfil" element={<Perfil />} />
+              <Route
+                path={ROUTES.HISTORIAL_CLINICO}
+                element={
+                  <RoleRoute>
+                    <HistorialClinico />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.PROFILE}
+                element={
+                  <RoleRoute>
+                    <Perfil />
+                  </RoleRoute>
+                }
+              />
 
               <Route path="*" element={<RoleRedirect />} />
             </Route>
