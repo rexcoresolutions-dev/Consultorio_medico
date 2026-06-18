@@ -112,6 +112,39 @@ type HistorialFormValues = {
   otros_no_patologicos_check?: boolean;
   otros_no_patologicos?: string;
 
+  enfermedades_infancia?: string;
+  alergias?: string;
+  cirugias?: string;
+  transfusiones?: string;
+  fracturas?: string;
+  traumatismos?: string;
+  hospitalizaciones?: string;
+  medicamentos_actuales?: string;
+  tabaquismo?: string;
+  alcoholismo?: string;
+  toxicomanias?: string;
+  dislipidemia_patologica?: string;
+  tuberculosis_pulmonar?: string;
+  otros_patologicos_check?: boolean;
+  otros_patologicos?: string;
+
+  ivsa?: string;
+  numero_parejas?: string;
+  metodo_anticonceptivo?: string;
+  gestas?: string;
+  partos?: string;
+  abortos?: string;
+  cesareas?: string;
+  fum?: string;
+  menarca?: string;
+  ritmo?: string;
+  ultimo_papanicolaou?: string;
+  terapia_hormonal?: string;
+  peri_post_menopausia?: string;
+  infeccion_transmision_sexual?: string;
+  patologia_mamaria_benigna?: string;
+  colposcopia?: string;
+
   motivo_consulta?: string;
   diagnostico?: string;
   descripcion_diagnostico?: string;
@@ -142,6 +175,17 @@ const grupoSanguineoOptions = [
   { value: 'O+', label: 'O+' },
   { value: 'O-', label: 'O-' },
   { value: 'Desconocido', label: 'Desconocido' },
+];
+
+const siNoOptions = [
+  { value: 'SI', label: 'Sí' },
+  { value: 'NO', label: 'No' },
+];
+
+const noAplicaOptions = [
+  { value: 'NO APLICA', label: 'NO APLICA' },
+  { value: 'SI', label: 'Sí' },
+  { value: 'NO', label: 'No' },
 ];
 
 const antecedentesFamiliares = [
@@ -237,8 +281,7 @@ const calcularIMC = (peso?: string | number, altura?: string | number) => {
 
 const getPacienteDato = (paciente: PacienteData | null, key: string, fallback = '-') => {
   if (!paciente) return fallback;
-  const value = (paciente as any)?.[key];
-  return value || fallback;
+  return (paciente as any)?.[key] || fallback;
 };
 
 const HistorialClinico: React.FC = () => {
@@ -257,6 +300,8 @@ const HistorialClinico: React.FC = () => {
 
   const [registroOpen, setRegistroOpen] = useState(false);
   const [registroStep, setRegistroStep] = useState(0);
+  const [vistaPreviaOpen, setVistaPreviaOpen] = useState(false);
+  const [vistaPreviaData, setVistaPreviaData] = useState<HistorialFormValues | null>(null);
 
   const pacienteNombre = getFullName(pacienteActivo);
 
@@ -309,6 +354,17 @@ const HistorialClinico: React.FC = () => {
     form.setFieldValue('imc', imc);
   };
 
+  const renderToggleRadio = (name: string) => (
+    <Form.Item noStyle shouldUpdate>
+      {() => (
+        <Radio
+          checked={Boolean(form.getFieldValue(name))}
+          onClick={() => form.setFieldValue(name, !form.getFieldValue(name))}
+        />
+      )}
+    </Form.Item>
+  );
+
   const abrirRegistroHistorial = () => {
     const consultaBase = ultimoHistorial?.consulta || {};
 
@@ -352,6 +408,41 @@ const HistorialClinico: React.FC = () => {
       otros_no_patologicos_check: consultaBase.otros_no_patologicos_check || false,
       otros_no_patologicos: consultaBase.otros_no_patologicos || '',
 
+      enfermedades_infancia: consultaBase.enfermedades_infancia || '',
+      alergias: consultaBase.alergias || '',
+      cirugias: consultaBase.cirugias || '',
+      transfusiones: consultaBase.transfusiones || '',
+      fracturas: consultaBase.fracturas || '',
+      traumatismos: consultaBase.traumatismos || '',
+      hospitalizaciones: consultaBase.hospitalizaciones || '',
+      medicamentos_actuales: consultaBase.medicamentos_actuales || '',
+      tabaquismo: consultaBase.tabaquismo || '',
+      alcoholismo: consultaBase.alcoholismo || '',
+      toxicomanias: consultaBase.toxicomanias || '',
+      dislipidemia_patologica: consultaBase.dislipidemia_patologica || '',
+      tuberculosis_pulmonar: consultaBase.tuberculosis_pulmonar || '',
+      otros_patologicos_check: consultaBase.otros_patologicos_check || false,
+      otros_patologicos: consultaBase.otros_patologicos || '',
+
+      ivsa: consultaBase.ivsa || '',
+      numero_parejas: consultaBase.numero_parejas || '',
+      metodo_anticonceptivo: consultaBase.metodo_anticonceptivo || '',
+      gestas: consultaBase.gestas || '',
+      partos: consultaBase.partos || '',
+      abortos: consultaBase.abortos || '',
+      cesareas: consultaBase.cesareas || '',
+      fum: consultaBase.fum || '',
+      menarca: consultaBase.menarca || '',
+      ritmo: consultaBase.ritmo || '',
+      ultimo_papanicolaou: consultaBase.ultimo_papanicolaou || '',
+      terapia_hormonal: consultaBase.terapia_hormonal || 'NO APLICA',
+      peri_post_menopausia: consultaBase.peri_post_menopausia || 'NO APLICA',
+      infeccion_transmision_sexual:
+        consultaBase.infeccion_transmision_sexual || 'NO APLICA',
+      patologia_mamaria_benigna:
+        consultaBase.patologia_mamaria_benigna || 'NO APLICA',
+      colposcopia: consultaBase.colposcopia || 'NO APLICA',
+
       motivo_consulta: consultaBase.motivo_consulta || '',
       diagnostico: ultimoHistorial?.diagnosticos?.[0]?.diagnostico || '',
       descripcion_diagnostico: ultimoHistorial?.diagnosticos?.[0]?.descripcion || '',
@@ -371,24 +462,40 @@ const HistorialClinico: React.FC = () => {
     form.resetFields();
   };
 
-  const siguienteRegistro = async () => {
+  const irAPaso = async (paso: number) => {
     actualizarIMC();
 
-    try {
-      await form.validateFields([
-        'peso',
-        'altura',
-        'temperatura',
-        'presion_arterial',
-        'frecuencia_cardiaca',
-        'frecuencia_respiratoria',
-        'spo2',
-      ]);
-
-      setRegistroStep(1);
-    } catch {
-      message.warning('Revisa los datos clínicos antes de continuar.');
+    if (registroStep === 0 && paso > 0) {
+      try {
+        await form.validateFields([
+          'peso',
+          'altura',
+          'temperatura',
+          'presion_arterial',
+          'frecuencia_cardiaca',
+          'frecuencia_respiratoria',
+          'spo2',
+        ]);
+      } catch {
+        message.warning('Revisa los datos clínicos antes de continuar.');
+        return;
+      }
     }
+
+    setRegistroStep(paso);
+  };
+
+  const abrirVistaPrevia = () => {
+    actualizarIMC();
+
+    const values = form.getFieldsValue(true);
+
+    setVistaPreviaData({
+      ...values,
+      imc: values.imc || calcularIMC(values.peso, values.altura),
+    });
+
+    setVistaPreviaOpen(true);
   };
 
   const guardarNuevoHistorial = async () => {
@@ -437,6 +544,7 @@ const HistorialClinico: React.FC = () => {
       guardarHistoriales(nuevosHistoriales);
 
       message.success('Historial clínico creado correctamente.');
+      setVistaPreviaOpen(false);
       cerrarRegistro();
     } catch {
       message.warning('Completa la información necesaria del historial.');
@@ -853,44 +961,83 @@ const HistorialClinico: React.FC = () => {
         className="historial-wizard-modal"
         title={null}
       >
-        <Form form={form} layout="vertical" className="historial-wizard-form">
+        <Form
+          form={form}
+          layout="vertical"
+          className="historial-wizard-form"
+          onValuesChange={(changedValues) => {
+            if ('peso' in changedValues || 'altura' in changedValues) {
+              actualizarIMC();
+            }
+          }}
+        >
+          <div className="historial-wizard-header">
+            <div className="historial-wizard-icon">
+              {registroStep === 0 && <FileTextOutlined />}
+              {registroStep === 1 && <HistoryOutlined />}
+              {registroStep === 2 && <MedicineBoxOutlined />}
+            </div>
+
+            <div>
+              <Text className="historial-eyebrow">Crear historial clínico</Text>
+
+              <h2>
+                {registroStep === 0 && 'Historia clínica'}
+                {registroStep === 1 && 'Antecedentes personales'}
+                {registroStep === 2 && 'Gineco obstétricos y diagnóstico'}
+              </h2>
+
+              <p>
+                {registroStep === 0 &&
+                  'Captura datos generales, signos vitales y antecedentes hereditarios familiares.'}
+                {registroStep === 1 &&
+                  'Registra antecedentes personales no patológicos y patológicos.'}
+                {registroStep === 2 &&
+                  'Completa los antecedentes gineco obstétricos, diagnóstico y revisa la vista previa.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="historial-wizard-steps three">
+            <div
+              className={`historial-wizard-step ${
+                registroStep === 0 ? 'active' : registroStep > 0 ? 'done' : ''
+              }`}
+            >
+              <span>1</span>
+              <div>
+                <strong>Historia clínica</strong>
+                <small>Datos iniciales</small>
+              </div>
+            </div>
+
+            <div className={`historial-wizard-line ${registroStep > 0 ? 'active' : ''}`} />
+
+            <div
+              className={`historial-wizard-step ${
+                registroStep === 1 ? 'active' : registroStep > 1 ? 'done' : ''
+              }`}
+            >
+              <span>2</span>
+              <div>
+                <strong>Antecedentes</strong>
+                <small>Personales</small>
+              </div>
+            </div>
+
+            <div className={`historial-wizard-line ${registroStep > 1 ? 'active' : ''}`} />
+
+            <div className={`historial-wizard-step ${registroStep === 2 ? 'active' : ''}`}>
+              <span>3</span>
+              <div>
+                <strong>Gineco / diagnóstico</strong>
+                <small>Vista previa</small>
+              </div>
+            </div>
+          </div>
+
           {registroStep === 0 && (
             <>
-              <div className="historial-wizard-header">
-                <div className="historial-wizard-icon">
-                  <FileTextOutlined />
-                </div>
-
-                <div>
-                  <Text className="historial-eyebrow">Crear historial clínico</Text>
-                  <h2>Historia clínica</h2>
-                  <p>
-                    Captura signos vitales, antecedentes hereditarios familiares y antecedentes
-                    personales no patológicos.
-                  </p>
-                </div>
-              </div>
-
-              <div className="historial-wizard-steps">
-                <div className="historial-wizard-step active">
-                  <span>1</span>
-                  <div>
-                    <strong>Historia clínica</strong>
-                    <small>Datos generales y antecedentes</small>
-                  </div>
-                </div>
-
-                <div className="historial-wizard-line" />
-
-                <div className="historial-wizard-step">
-                  <span>2</span>
-                  <div>
-                    <strong>Diagnóstico</strong>
-                    <small>Resumen clínico</small>
-                  </div>
-                </div>
-              </div>
-
               <section className="historial-wizard-section">
                 <div className="historial-clinical-card">
                   <div className="historial-clinical-title">
@@ -916,9 +1063,7 @@ const HistorialClinico: React.FC = () => {
 
                       <p>
                         {pacienteActivo.fecha_nacimiento
-                          ? new Date(
-                              pacienteActivo.fecha_nacimiento,
-                            ).toLocaleDateString('es-MX')
+                          ? new Date(pacienteActivo.fecha_nacimiento).toLocaleDateString('es-MX')
                           : '--/--/----'}{' '}
                         / {pacienteActivo.sexo || 'Sin sexo'}
                       </p>
@@ -947,11 +1092,11 @@ const HistorialClinico: React.FC = () => {
                       <div className="historial-signos-grid">
                         <div>
                           <Form.Item name="peso" label="Peso">
-                            <Input addonAfter="Kg" placeholder="Ej. 70" onBlur={actualizarIMC} />
+                            <Input addonAfter="Kg" placeholder="Ej. 70" />
                           </Form.Item>
 
                           <Form.Item name="altura" label="Talla">
-                            <Input addonAfter="m" placeholder="Ej. 1.70" onBlur={actualizarIMC} />
+                            <Input addonAfter="m/cm" placeholder="Ej. 1.70 o 170" />
                           </Form.Item>
 
                           <Form.Item name="imc" label="IMC">
@@ -999,9 +1144,7 @@ const HistorialClinico: React.FC = () => {
                       <div className="historial-antecedentes-grid">
                         {antecedentesFamiliares.map(([name, label]) => (
                           <div className="historial-antecedente-row" key={name}>
-                            <Form.Item name={`${name}_check`} valuePropName="checked" noStyle>
-                              <Radio />
-                            </Form.Item>
+                            {renderToggleRadio(`${name}_check`)}
 
                             <span>{label}</span>
 
@@ -1015,9 +1158,7 @@ const HistorialClinico: React.FC = () => {
                         ))}
 
                         <div className="historial-antecedente-row">
-                          <Form.Item name="otros_check" valuePropName="checked" noStyle>
-                            <Radio />
-                          </Form.Item>
+                          {renderToggleRadio('otros_check')}
 
                           <span>Otros</span>
 
@@ -1037,8 +1178,26 @@ const HistorialClinico: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              </section>
 
-                  <div className="historial-section-block">
+              <div className="historial-wizard-footer">
+                <Button onClick={cerrarRegistro}>Cancelar</Button>
+
+                <div>
+                  <Button type="primary" onClick={() => irAPaso(1)}>
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {registroStep === 1 && (
+            <>
+              <section className="historial-wizard-section">
+                <div className="historial-clinical-card">
+                  <div className="historial-section-block first">
                     <div className="historial-antecedentes-title">
                       ANTECEDENTES PERSONALES NO PATOLÓGICOS
                     </div>
@@ -1053,13 +1212,7 @@ const HistorialClinico: React.FC = () => {
 
                         <Col xs={24} md={12}>
                           <div className="historial-inline-check-field">
-                            <Form.Item
-                              name="inmunizaciones_incompletas_check"
-                              valuePropName="checked"
-                              noStyle
-                            >
-                              <Radio />
-                            </Form.Item>
+                            {renderToggleRadio('inmunizaciones_incompletas_check')}
 
                             <span>Inmunizaciones incompletas</span>
 
@@ -1087,18 +1240,112 @@ const HistorialClinico: React.FC = () => {
 
                         <Col xs={24}>
                           <div className="historial-inline-check-field wide">
-                            <Form.Item
-                              name="otros_no_patologicos_check"
-                              valuePropName="checked"
-                              noStyle
-                            >
-                              <Radio />
-                            </Form.Item>
+                            {renderToggleRadio('otros_no_patologicos_check')}
 
                             <span>Otros</span>
 
                             <Form.Item name="otros_no_patologicos" noStyle>
-                              <Input placeholder="Especifica otros antecedentes personales no patológicos" />
+                              <Input placeholder="Especifica otros antecedentes no patológicos" />
+                            </Form.Item>
+                          </div>
+                        </Col>
+                      </Row>
+                    </div>
+                  </div>
+
+                  <div className="historial-section-block">
+                    <div className="historial-antecedentes-title">
+                      ANTECEDENTES PERSONALES PATOLÓGICOS
+                    </div>
+
+                    <div className="historial-patologicos-card">
+                      <Row gutter={[18, 16]}>
+                        <Col xs={24} md={12}>
+                          <Form.Item name="enfermedades_infancia" label="Enfermedades de infancia">
+                            <Input placeholder="Ej. varicela, sarampión..." />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="alergias" label="Alérgicos">
+                            <Input placeholder="Medicamentos, alimentos, etc." />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="cirugias" label="Quirúrgicos">
+                            <Input placeholder="Antecedentes quirúrgicos" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="transfusiones" label="Transfusiones">
+                            <Input placeholder="Antecedentes de transfusiones" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="fracturas" label="Fracturas">
+                            <Input placeholder="Fracturas previas" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="traumatismos" label="Traumatismos">
+                            <Input placeholder="Traumatismos relevantes" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="hospitalizaciones" label="Hospitalizaciones">
+                            <Input placeholder="Hospitalizaciones previas" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="medicamentos_actuales" label="Medicamentos actuales">
+                            <Input placeholder="Medicamentos que consume" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="dislipidemia_patologica" label="Dislipidemia">
+                            <Input placeholder="Antecedentes de dislipidemia" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="tuberculosis_pulmonar" label="Tuberculosis pulmonar">
+                            <Input placeholder="Antecedentes de tuberculosis pulmonar" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={8}>
+                          <Form.Item name="tabaquismo" label="Tabaquismo">
+                            <Select allowClear options={siNoOptions} placeholder="Seleccione" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={8}>
+                          <Form.Item name="alcoholismo" label="Alcoholismo">
+                            <Select allowClear options={siNoOptions} placeholder="Seleccione" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={8}>
+                          <Form.Item name="toxicomanias" label="Toxicomanías">
+                            <Select allowClear options={siNoOptions} placeholder="Seleccione" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24}>
+                          <div className="historial-inline-check-field wide">
+                            {renderToggleRadio('otros_patologicos_check')}
+
+                            <span>Otros</span>
+
+                            <Form.Item name="otros_patologicos" noStyle>
+                              <Input placeholder="Especifique otros antecedentes patológicos" />
                             </Form.Item>
                           </div>
                         </Col>
@@ -1112,118 +1359,205 @@ const HistorialClinico: React.FC = () => {
                 <Button onClick={cerrarRegistro}>Cancelar</Button>
 
                 <div>
-                  <Button type="primary" onClick={siguienteRegistro}>
-                    Vista previa
+                  <Button icon={<ArrowLeftOutlined />} onClick={() => irAPaso(0)}>
+                    Anterior
                   </Button>
 
-                  <Button icon={<SaveOutlined />} onClick={guardarNuevoHistorial}>
-                    Guardar
+                  <Button type="primary" onClick={() => irAPaso(2)}>
+                    Siguiente
                   </Button>
                 </div>
               </div>
             </>
           )}
 
-          {registroStep === 1 && (
+          {registroStep === 2 && (
             <>
-              <div className="historial-wizard-header">
-                <div className="historial-wizard-icon">
-                  <MedicineBoxOutlined />
-                </div>
-
-                <div>
-                  <Text className="historial-eyebrow">Crear historial clínico</Text>
-                  <h2>Diagnóstico y referencia</h2>
-                  <p>Completa diagnóstico, motivo de consulta y referencia.</p>
-                </div>
-              </div>
-
-              <div className="historial-wizard-steps">
-                <div className="historial-wizard-step done">
-                  <span>1</span>
-                  <div>
-                    <strong>Historia clínica</strong>
-                    <small>Datos generales y antecedentes</small>
-                  </div>
-                </div>
-
-                <div className="historial-wizard-line active" />
-
-                <div className="historial-wizard-step active">
-                  <span>2</span>
-                  <div>
-                    <strong>Diagnóstico</strong>
-                    <small>Resumen clínico</small>
-                  </div>
-                </div>
-              </div>
-
               <section className="historial-wizard-section">
-                <Row gutter={[16, 8]}>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="motivo_consulta" label="Clave / motivo">
-                      <Input placeholder="Ej. J00X" />
-                    </Form.Item>
-                  </Col>
+                <div className="historial-clinical-card">
+                  <div className="historial-section-block first">
+                    <div className="historial-antecedentes-title">
+                      ANTECEDENTES GINECO OBSTÉTRICOS
+                    </div>
 
-                  <Col xs={24} md={16}>
-                    <Form.Item
-                      name="diagnostico"
-                      label="Diagnóstico"
-                      rules={[{ required: true, message: 'Ingresa el diagnóstico' }]}
-                    >
-                      <Input placeholder="Diagnóstico principal" />
-                    </Form.Item>
-                  </Col>
+                    <div className="historial-gineco-box">
+                      <Row gutter={[18, 16]}>
+                        <Col xs={24} md={6}>
+                          <Form.Item name="ivsa" label="IVSA">
+                            <Input addonAfter="años" />
+                          </Form.Item>
+                        </Col>
 
-                  <Col xs={24}>
-                    <Form.Item name="descripcion_diagnostico" label="Descripción">
-                      <Input.TextArea rows={4} placeholder="Descripción clínica del historial" />
-                    </Form.Item>
-                  </Col>
+                        <Col xs={24} md={6}>
+                          <Form.Item name="numero_parejas" label="No. de parejas">
+                            <Input />
+                          </Form.Item>
+                        </Col>
 
-                  <Col xs={24} md={8}>
-                    <Form.Item name="referir_paciente" label="Referir paciente">
-                      <Select
-                        options={[
-                          { value: 'SI', label: 'Sí' },
-                          { value: 'NO', label: 'No' },
-                        ]}
-                      />
-                    </Form.Item>
-                  </Col>
+                        <Col xs={24} md={6}>
+                          <Form.Item name="metodo_anticonceptivo" label="Método anticonceptivo">
+                            <Input />
+                          </Form.Item>
+                        </Col>
 
-                  <Col xs={24} md={16}>
-                    <Form.Item name="referido_por" label="Referido por">
-                      <Input placeholder="Área o médico de referencia" />
-                    </Form.Item>
-                  </Col>
+                        <Col xs={24} md={6}>
+                          <Form.Item name="gestas" label="Gestas">
+                            <Input />
+                          </Form.Item>
+                        </Col>
 
-                  <Col xs={24} md={8}>
-                    <Form.Item name="contrarreferencia" label="Contrarreferencia">
-                      <Select
-                        options={[
-                          { value: 'SI', label: 'Sí' },
-                          { value: 'NO', label: 'No' },
-                        ]}
-                      />
-                    </Form.Item>
-                  </Col>
+                        <Col xs={24} md={6}>
+                          <Form.Item name="partos" label="Partos">
+                            <Input />
+                          </Form.Item>
+                        </Col>
 
-                  <Col xs={24} md={16}>
-                    <Form.Item name="detalle_contrarreferencia" label="Detalle">
-                      <Input placeholder="Detalle de contrarreferencia" />
-                    </Form.Item>
-                  </Col>
-                </Row>
+                        <Col xs={24} md={6}>
+                          <Form.Item name="abortos" label="Abortos">
+                            <Input />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item name="cesareas" label="Cesáreas">
+                            <Input />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item name="fum" label="FUM">
+                            <Input placeholder="dd/mm/aaaa" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item name="menarca" label="Menarca">
+                            <Input />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="ritmo" label="Ritmo">
+                            <Input />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item name="ultimo_papanicolaou" label="F. Último Papanicolaou">
+                            <Input placeholder="dd/mm/aaaa" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item name="terapia_hormonal" label="Terapia hormonal">
+                            <Select options={noAplicaOptions} />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item name="peri_post_menopausia" label="PeriPost menopausia">
+                            <Select options={noAplicaOptions} />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item
+                            name="infeccion_transmision_sexual"
+                            label="I. Transmisión sexual"
+                          >
+                            <Select options={noAplicaOptions} />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item
+                            name="patologia_mamaria_benigna"
+                            label="P. Mamaria benigna"
+                          >
+                            <Select options={noAplicaOptions} />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={6}>
+                          <Form.Item name="colposcopia" label="Colposcopia">
+                            <Select options={noAplicaOptions} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    </div>
+                  </div>
+
+                  <div className="historial-section-block">
+                    <div className="historial-antecedentes-title">
+                      DIAGNÓSTICO Y REFERENCIA
+                    </div>
+
+                    <div className="historial-no-patologicos-box">
+                      <Row gutter={[16, 8]}>
+                        <Col xs={24} md={8}>
+                          <Form.Item name="motivo_consulta" label="Clave / motivo">
+                            <Input placeholder="Ej. J00X" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={16}>
+                          <Form.Item
+                            name="diagnostico"
+                            label="Diagnóstico"
+                            rules={[{ required: true, message: 'Ingresa el diagnóstico' }]}
+                          >
+                            <Input placeholder="Diagnóstico principal" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24}>
+                          <Form.Item name="descripcion_diagnostico" label="Descripción">
+                            <Input.TextArea
+                              rows={4}
+                              placeholder="Descripción clínica del historial"
+                            />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={8}>
+                          <Form.Item name="referir_paciente" label="Referir paciente">
+                            <Select options={siNoOptions} />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={16}>
+                          <Form.Item name="referido_por" label="Referido por">
+                            <Input placeholder="Área o médico de referencia" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={8}>
+                          <Form.Item name="contrarreferencia" label="Contrarreferencia">
+                            <Select options={siNoOptions} />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={16}>
+                          <Form.Item name="detalle_contrarreferencia" label="Detalle">
+                            <Input placeholder="Detalle de contrarreferencia" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    </div>
+                  </div>
+                </div>
               </section>
 
               <div className="historial-wizard-footer">
                 <Button onClick={cerrarRegistro}>Cancelar</Button>
 
                 <div>
-                  <Button icon={<ArrowLeftOutlined />} onClick={() => setRegistroStep(0)}>
+                  <Button icon={<ArrowLeftOutlined />} onClick={() => irAPaso(1)}>
                     Anterior
+                  </Button>
+
+                  <Button icon={<EyeOutlined />} onClick={abrirVistaPrevia}>
+                    Vista previa
                   </Button>
 
                   <Button type="primary" icon={<SaveOutlined />} onClick={guardarNuevoHistorial}>
@@ -1234,6 +1568,167 @@ const HistorialClinico: React.FC = () => {
             </>
           )}
         </Form>
+      </Modal>
+
+      <Modal
+        open={vistaPreviaOpen}
+        onCancel={() => setVistaPreviaOpen(false)}
+        footer={[
+          <Button key="cerrar" onClick={() => setVistaPreviaOpen(false)}>
+            Cerrar
+          </Button>,
+          <Button
+            key="guardar"
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={guardarNuevoHistorial}
+          >
+            Guardar historial
+          </Button>,
+        ]}
+        width={980}
+        centered
+        className="historial-preview-modal"
+        title={
+          <div className="historial-modal-title">
+            <EyeOutlined />
+            <span>Vista previa del historial clínico</span>
+          </div>
+        }
+      >
+        {vistaPreviaData && (
+          <div className="historial-preview">
+            <div className="historial-preview-section">
+              <h3>Paciente</h3>
+
+              <Descriptions bordered size="small" column={{ xs: 1, md: 2 }}>
+                <Descriptions.Item label="Nombre">{pacienteNombre || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Expediente">
+                  {pacienteActivo.numero_expediente || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Sexo">{pacienteActivo.sexo || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Edad">
+                  {calcularEdad(pacienteActivo.fecha_nacimiento)}
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+
+            <div className="historial-preview-section">
+              <h3>Signos vitales</h3>
+
+              <Descriptions bordered size="small" column={{ xs: 1, md: 3 }}>
+                <Descriptions.Item label="Peso">{vistaPreviaData.peso || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Talla">{vistaPreviaData.altura || '-'}</Descriptions.Item>
+                <Descriptions.Item label="IMC">{vistaPreviaData.imc || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Temperatura">
+                  {vistaPreviaData.temperatura || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Presión arterial">
+                  {vistaPreviaData.presion_arterial || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="SpO₂">{vistaPreviaData.spo2 || '-'}</Descriptions.Item>
+              </Descriptions>
+            </div>
+
+            <div className="historial-preview-section">
+              <h3>Antecedentes personales</h3>
+
+              <Descriptions bordered size="small" column={{ xs: 1, md: 2 }}>
+                <Descriptions.Item label="Alimentación">
+                  {vistaPreviaData.alimentacion || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Higiene">
+                  {vistaPreviaData.higiene || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Grupo sanguíneo">
+                  {vistaPreviaData.grupo_sanguineo || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Alergias">
+                  {vistaPreviaData.alergias || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Tabaquismo">
+                  {vistaPreviaData.tabaquismo || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Alcoholismo">
+                  {vistaPreviaData.alcoholismo || '-'}
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+
+            <div className="historial-preview-section">
+              <h3>Gineco obstétricos</h3>
+
+              <Descriptions bordered size="small" column={{ xs: 1, md: 3 }}>
+                <Descriptions.Item label="IVSA">{vistaPreviaData.ivsa || '-'}</Descriptions.Item>
+                <Descriptions.Item label="No. parejas">
+                  {vistaPreviaData.numero_parejas || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Método anticonceptivo">
+                  {vistaPreviaData.metodo_anticonceptivo || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Gestas">
+                  {vistaPreviaData.gestas || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Partos">
+                  {vistaPreviaData.partos || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Abortos">
+                  {vistaPreviaData.abortos || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Cesáreas">
+                  {vistaPreviaData.cesareas || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="FUM">{vistaPreviaData.fum || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Menarca">
+                  {vistaPreviaData.menarca || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Ritmo">
+                  {vistaPreviaData.ritmo || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Último Papanicolaou">
+                  {vistaPreviaData.ultimo_papanicolaou || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Terapia hormonal">
+                  {vistaPreviaData.terapia_hormonal || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="PeriPost menopausia">
+                  {vistaPreviaData.peri_post_menopausia || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="I. Transmisión sexual">
+                  {vistaPreviaData.infeccion_transmision_sexual || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="P. Mamaria benigna">
+                  {vistaPreviaData.patologia_mamaria_benigna || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Colposcopia">
+                  {vistaPreviaData.colposcopia || '-'}
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+
+            <div className="historial-preview-section">
+              <h3>Diagnóstico</h3>
+
+              <Descriptions bordered size="small" column={{ xs: 1, md: 2 }}>
+                <Descriptions.Item label="Clave / motivo">
+                  {vistaPreviaData.motivo_consulta || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Diagnóstico">
+                  {vistaPreviaData.diagnostico || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Descripción" span={2}>
+                  {vistaPreviaData.descripcion_diagnostico || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Referir paciente">
+                  {vistaPreviaData.referir_paciente || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Referido por">
+                  {vistaPreviaData.referido_por || '-'}
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
