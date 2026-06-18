@@ -12,9 +12,9 @@ import {
   Form,
   Input,
   Modal,
+  Radio,
   Row,
   Select,
-  Space,
   Table,
   Tag,
   Typography,
@@ -22,21 +22,21 @@ import {
 } from 'antd';
 import {
   ArrowLeftOutlined,
+  CalendarOutlined,
+  EyeOutlined,
   FileTextOutlined,
   HistoryOutlined,
+  IdcardOutlined,
+  LogoutOutlined,
+  MedicineBoxOutlined,
   PlusOutlined,
+  SaveOutlined,
   SearchOutlined,
   UserOutlined,
-  EyeOutlined,
-  CalendarOutlined,
-  IdcardOutlined,
-  SaveOutlined,
-  HeartOutlined,
-  MedicineBoxOutlined,
-  CheckCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 import type { PacienteData } from '../../services/pacientes/pacientes.service';
 import './HistorialClinico.css';
@@ -44,6 +44,7 @@ import './HistorialClinico.css';
 const { Title, Text } = Typography;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
+const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
 const HISTORIAL_CLINICO_STORAGE_KEY = 'historial_clinico_pacientes';
 
 type DiagnosticoHistorial = {
@@ -72,7 +73,7 @@ type HistorialClinicoItem = {
   fecha_consulta: string;
 };
 
-type WizardHistorialValues = {
+type HistorialFormValues = {
   peso?: string;
   altura?: string;
   imc?: string;
@@ -82,6 +83,35 @@ type WizardHistorialValues = {
   frecuencia_respiratoria?: string;
   spo2?: string;
   circunferencia_abdomen?: string;
+
+  diabetes_check?: boolean;
+  diabetes_parentesco?: string;
+  cardiovascular_check?: boolean;
+  cardiovascular_parentesco?: string;
+  epilepsias_check?: boolean;
+  epilepsias_parentesco?: string;
+  neoplasicos_check?: boolean;
+  neoplasicos_parentesco?: string;
+  lueticos_check?: boolean;
+  lueticos_parentesco?: string;
+  hipertension_check?: boolean;
+  hipertension_parentesco?: string;
+  fimicos_check?: boolean;
+  fimicos_parentesco?: string;
+  dislipidemia_check?: boolean;
+  dislipidemia_parentesco?: string;
+  otros_check?: boolean;
+  otros_antecedentes?: string;
+  tipos_antecedentes?: string;
+
+  alimentacion?: string;
+  higiene?: string;
+  inmunizaciones_incompletas_check?: boolean;
+  inmunizaciones_incompletas?: string;
+  grupo_sanguineo?: string;
+  otros_no_patologicos_check?: boolean;
+  otros_no_patologicos?: string;
+
   motivo_consulta?: string;
   diagnostico?: string;
   descripcion_diagnostico?: string;
@@ -89,7 +119,41 @@ type WizardHistorialValues = {
   referido_por?: string;
   contrarreferencia?: string;
   detalle_contrarreferencia?: string;
+
+  [key: string]: any;
 };
+
+const parentescoOptions = [
+  { value: 'Madre', label: 'Madre' },
+  { value: 'Padre', label: 'Padre' },
+  { value: 'Hermano(a)', label: 'Hermano(a)' },
+  { value: 'Abuelo(a)', label: 'Abuelo(a)' },
+  { value: 'Tío(a)', label: 'Tío(a)' },
+  { value: 'Otro', label: 'Otro' },
+];
+
+const grupoSanguineoOptions = [
+  { value: 'A+', label: 'A+' },
+  { value: 'A-', label: 'A-' },
+  { value: 'B+', label: 'B+' },
+  { value: 'B-', label: 'B-' },
+  { value: 'AB+', label: 'AB+' },
+  { value: 'AB-', label: 'AB-' },
+  { value: 'O+', label: 'O+' },
+  { value: 'O-', label: 'O-' },
+  { value: 'Desconocido', label: 'Desconocido' },
+];
+
+const antecedentesFamiliares = [
+  ['diabetes', 'Diabetes'],
+  ['cardiovascular', 'Cardiovascular'],
+  ['epilepsias', 'Epilepsias'],
+  ['neoplasicos', 'Neoplásicos'],
+  ['lueticos', 'Luéticos'],
+  ['hipertension', 'Hipertensión'],
+  ['fimicos', 'Fímicos'],
+  ['dislipidemia', 'Dislipidemia'],
+];
 
 const cargarPacienteActivo = (): PacienteData | null => {
   try {
@@ -171,11 +235,19 @@ const calcularIMC = (peso?: string | number, altura?: string | number) => {
   return (pesoNum / (alturaMetros * alturaMetros)).toFixed(2);
 };
 
+const getPacienteDato = (paciente: PacienteData | null, key: string, fallback = '-') => {
+  if (!paciente) return fallback;
+  const value = (paciente as any)?.[key];
+  return value || fallback;
+};
+
 const HistorialClinico: React.FC = () => {
   const navigate = useNavigate();
-  const [form] = Form.useForm<WizardHistorialValues>();
+  const [form] = Form.useForm<HistorialFormValues>();
 
-  const [pacienteActivo] = useState<PacienteData | null>(() => cargarPacienteActivo());
+  const [pacienteActivo, setPacienteActivo] = useState<PacienteData | null>(() =>
+    cargarPacienteActivo(),
+  );
   const [historiales, setHistoriales] = useState<HistorialClinicoItem[]>(() =>
     cargarHistoriales(),
   );
@@ -183,8 +255,8 @@ const HistorialClinico: React.FC = () => {
   const [historialSeleccionado, setHistorialSeleccionado] =
     useState<HistorialClinicoItem | null>(null);
 
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [wizardStep, setWizardStep] = useState(0);
+  const [registroOpen, setRegistroOpen] = useState(false);
+  const [registroStep, setRegistroStep] = useState(0);
 
   const pacienteNombre = getFullName(pacienteActivo);
 
@@ -229,7 +301,15 @@ const HistorialClinico: React.FC = () => {
 
   const ultimoHistorial = historialesPaciente[0];
 
-  const abrirWizardHistorial = () => {
+  const actualizarIMC = () => {
+    const peso = form.getFieldValue('peso');
+    const altura = form.getFieldValue('altura');
+    const imc = calcularIMC(peso, altura);
+
+    form.setFieldValue('imc', imc);
+  };
+
+  const abrirRegistroHistorial = () => {
     const consultaBase = ultimoHistorial?.consulta || {};
 
     form.setFieldsValue({
@@ -242,6 +322,36 @@ const HistorialClinico: React.FC = () => {
       frecuencia_respiratoria: consultaBase.frecuencia_respiratoria || '',
       spo2: consultaBase.spo2 || '',
       circunferencia_abdomen: consultaBase.circunferencia_abdomen || '',
+
+      diabetes_check: consultaBase.diabetes_check || false,
+      diabetes_parentesco: consultaBase.diabetes_parentesco || undefined,
+      cardiovascular_check: consultaBase.cardiovascular_check || false,
+      cardiovascular_parentesco: consultaBase.cardiovascular_parentesco || undefined,
+      epilepsias_check: consultaBase.epilepsias_check || false,
+      epilepsias_parentesco: consultaBase.epilepsias_parentesco || undefined,
+      neoplasicos_check: consultaBase.neoplasicos_check || false,
+      neoplasicos_parentesco: consultaBase.neoplasicos_parentesco || undefined,
+      lueticos_check: consultaBase.lueticos_check || false,
+      lueticos_parentesco: consultaBase.lueticos_parentesco || undefined,
+      hipertension_check: consultaBase.hipertension_check || false,
+      hipertension_parentesco: consultaBase.hipertension_parentesco || undefined,
+      fimicos_check: consultaBase.fimicos_check || false,
+      fimicos_parentesco: consultaBase.fimicos_parentesco || undefined,
+      dislipidemia_check: consultaBase.dislipidemia_check || false,
+      dislipidemia_parentesco: consultaBase.dislipidemia_parentesco || undefined,
+      otros_check: consultaBase.otros_check || false,
+      otros_antecedentes: consultaBase.otros_antecedentes || '',
+      tipos_antecedentes: consultaBase.tipos_antecedentes || '',
+
+      alimentacion: consultaBase.alimentacion || '',
+      higiene: consultaBase.higiene || '',
+      inmunizaciones_incompletas_check:
+        consultaBase.inmunizaciones_incompletas_check || false,
+      inmunizaciones_incompletas: consultaBase.inmunizaciones_incompletas || '',
+      grupo_sanguineo: consultaBase.grupo_sanguineo || undefined,
+      otros_no_patologicos_check: consultaBase.otros_no_patologicos_check || false,
+      otros_no_patologicos: consultaBase.otros_no_patologicos || '',
+
       motivo_consulta: consultaBase.motivo_consulta || '',
       diagnostico: ultimoHistorial?.diagnosticos?.[0]?.diagnostico || '',
       descripcion_diagnostico: ultimoHistorial?.diagnosticos?.[0]?.descripcion || '',
@@ -251,17 +361,19 @@ const HistorialClinico: React.FC = () => {
       detalle_contrarreferencia: consultaBase.detalle_contrarreferencia || '',
     });
 
-    setWizardStep(0);
-    setWizardOpen(true);
+    setRegistroStep(0);
+    setRegistroOpen(true);
   };
 
-  const cerrarWizard = () => {
-    setWizardOpen(false);
-    setWizardStep(0);
+  const cerrarRegistro = () => {
+    setRegistroOpen(false);
+    setRegistroStep(0);
     form.resetFields();
   };
 
-  const siguienteWizard = async () => {
+  const siguienteRegistro = async () => {
+    actualizarIMC();
+
     try {
       await form.validateFields([
         'peso',
@@ -273,7 +385,7 @@ const HistorialClinico: React.FC = () => {
         'spo2',
       ]);
 
-      setWizardStep(1);
+      setRegistroStep(1);
     } catch {
       message.warning('Revisa los datos clínicos antes de continuar.');
     }
@@ -283,6 +395,8 @@ const HistorialClinico: React.FC = () => {
     if (!pacienteActivo) return;
 
     try {
+      actualizarIMC();
+
       const values = await form.validateFields();
       const imcCalculado = calcularIMC(values.peso, values.altura);
 
@@ -290,7 +404,7 @@ const HistorialClinico: React.FC = () => {
         key: `manual-${Date.now()}`,
         no: 1,
         clave: values.motivo_consulta || 'S/C',
-        diagnostico: values.diagnostico || 'Historial clínico manual',
+        diagnostico: values.diagnostico || 'Historial clínico',
         descripcion: values.descripcion_diagnostico || '',
         primeraVez: false,
         subsecuente: true,
@@ -323,10 +437,41 @@ const HistorialClinico: React.FC = () => {
       guardarHistoriales(nuevosHistoriales);
 
       message.success('Historial clínico creado correctamente.');
-      cerrarWizard();
+      cerrarRegistro();
     } catch {
       message.warning('Completa la información necesaria del historial.');
     }
+  };
+
+  const finalizarAtencion = async () => {
+    const result = await Swal.fire({
+      icon: 'question',
+      title: 'Finalizar atención',
+      text: `${pacienteNombre || 'El paciente'} dejará de estar activo en consulta, procedimientos e historial.`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, finalizar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0f766e',
+      cancelButtonColor: '#94a3b8',
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
+    localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Atención finalizada',
+      text: 'El paciente activo fue liberado correctamente.',
+      timer: 1600,
+      showConfirmButton: false,
+      confirmButtonColor: '#0f766e',
+    });
+
+    setPacienteActivo(null);
+    navigate('/pacientes', { replace: true });
   };
 
   const columns: ColumnsType<HistorialClinicoItem> = [
@@ -404,11 +549,9 @@ const HistorialClinico: React.FC = () => {
               historial clínico.
             </p>
 
-            <Space>
-              <Button type="primary" icon={<UserOutlined />} onClick={() => navigate('/pacientes')}>
-                Ir a pacientes
-              </Button>
-            </Space>
+            <Button type="primary" icon={<UserOutlined />} onClick={() => navigate('/pacientes')}>
+              Ir a pacientes
+            </Button>
           </Card>
         </div>
       </div>
@@ -419,25 +562,37 @@ const HistorialClinico: React.FC = () => {
     <div className="historial-page">
       <div className="historial-shell">
         <header className="historial-hero-card">
-        <div className="historial-hero-left">
+          <div className="historial-hero-left">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              className="historial-back-btn"
+              onClick={() => navigate('/confirmar-atencion')}
+            >
+              Regresar
+            </Button>
+
             <div className="historial-icon">
-            <HistoryOutlined />
+              <HistoryOutlined />
             </div>
-        </div>
+          </div>
 
-        <div className="historial-hero-content">
-            <Text className="historial-eyebrow">
-            Expediente electrónico
-            </Text>
+          <div className="historial-hero-content">
+            <Text className="historial-eyebrow">Expediente electrónico</Text>
 
-            <Title level={2}>
-            Historial clínico
-            </Title>
+            <Title level={2}>Historial clínico</Title>
 
             <Text type="secondary">
-            Consulta, crea y administra los registros clínicos del paciente activo.
+              Consulta, crea y administra los registros clínicos del paciente activo.
             </Text>
-        </div>
+          </div>
+
+          <Button
+            icon={<LogoutOutlined />}
+            className="historial-finalizar-btn"
+            onClick={finalizarAtencion}
+          >
+            Finalizar atención
+          </Button>
         </header>
 
         <section className="historial-patient-card">
@@ -514,17 +669,17 @@ const HistorialClinico: React.FC = () => {
                   <PlusOutlined />
                 </div>
 
-                <Tag className="historial-action-tag green">Wizard</Tag>
+                <Tag className="historial-action-tag green">Nuevo</Tag>
               </div>
 
               <h3>Crear historial</h3>
 
               <p>
-                Crea un nuevo historial clínico con datos precargados de la última consulta externa.
+                Crea un nuevo registro clínico con datos precargados de la última consulta externa.
               </p>
 
-              <Button icon={<MedicineBoxOutlined />} onClick={abrirWizardHistorial}>
-                Abrir wizard
+              <Button icon={<MedicineBoxOutlined />} onClick={abrirRegistroHistorial}>
+                Iniciar registro
               </Button>
             </Card>
           </Col>
@@ -537,7 +692,7 @@ const HistorialClinico: React.FC = () => {
                 type="info"
                 showIcon
                 message="El historial puede generarse automáticamente"
-                description="Cada consulta guardada se agrega al historial, pero también puedes crear un historial manual desde el wizard."
+                description="Cada consulta guardada se agrega al historial, pero también puedes crear un registro clínico manual."
               />
             </Card>
           </Col>
@@ -569,6 +724,7 @@ const HistorialClinico: React.FC = () => {
               pageSize: 5,
               showSizeChanger: false,
               position: ['bottomCenter'],
+              showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
             }}
             scroll={{ x: 900 }}
             locale={{
@@ -689,200 +845,394 @@ const HistorialClinico: React.FC = () => {
       </Modal>
 
       <Modal
-        open={wizardOpen}
-        onCancel={cerrarWizard}
+        open={registroOpen}
+        onCancel={cerrarRegistro}
         footer={null}
-        width={980}
+        width={1180}
         centered
         className="historial-wizard-modal"
         title={null}
       >
-        <div className="historial-wizard-header">
-          <div className="historial-wizard-icon">
-            {wizardStep === 0 ? <HeartOutlined /> : <MedicineBoxOutlined />}
-          </div>
-
-          <div>
-            <Text className="historial-eyebrow">Crear historial clínico</Text>
-            <h2>Wizard de historial</h2>
-            <p>
-              {wizardStep === 0
-                ? 'Revisa o actualiza los signos vitales del paciente.'
-                : 'Completa diagnóstico, motivo de consulta y referencia.'}
-            </p>
-          </div>
-        </div>
-
-        <div className="historial-wizard-steps">
-          <div className={`historial-wizard-step ${wizardStep === 0 ? 'active' : 'done'}`}>
-            <span>1</span>
-            <div>
-              <strong>Signos vitales</strong>
-              <small>Datos clínicos</small>
-            </div>
-          </div>
-
-          <div className="historial-wizard-line" />
-
-          <div className={`historial-wizard-step ${wizardStep === 1 ? 'active' : ''}`}>
-            <span>2</span>
-            <div>
-              <strong>Diagnóstico</strong>
-              <small>Resumen clínico</small>
-            </div>
-          </div>
-        </div>
-
         <Form form={form} layout="vertical" className="historial-wizard-form">
-          {wizardStep === 0 && (
-            <section className="historial-wizard-section">
-              <Row gutter={[16, 8]}>
-                <Col xs={24} md={8}>
-                  <Form.Item name="peso" label="Peso">
-                    <Input addonAfter="kg" placeholder="Ej. 70" />
-                  </Form.Item>
-                </Col>
+          {registroStep === 0 && (
+            <>
+              <div className="historial-wizard-header">
+                <div className="historial-wizard-icon">
+                  <FileTextOutlined />
+                </div>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="altura" label="Altura">
-                    <Input addonAfter="m/cm" placeholder="Ej. 1.70 o 170" />
-                  </Form.Item>
-                </Col>
+                <div>
+                  <Text className="historial-eyebrow">Crear historial clínico</Text>
+                  <h2>Historia clínica</h2>
+                  <p>
+                    Captura signos vitales, antecedentes hereditarios familiares y antecedentes
+                    personales no patológicos.
+                  </p>
+                </div>
+              </div>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="imc" label="IMC">
-                    <Input disabled placeholder="Se calcula si está vacío" />
-                  </Form.Item>
-                </Col>
+              <div className="historial-wizard-steps">
+                <div className="historial-wizard-step active">
+                  <span>1</span>
+                  <div>
+                    <strong>Historia clínica</strong>
+                    <small>Datos generales y antecedentes</small>
+                  </div>
+                </div>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="temperatura" label="Temperatura">
-                    <Input addonAfter="°C" placeholder="Ej. 36.5" />
-                  </Form.Item>
-                </Col>
+                <div className="historial-wizard-line" />
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="presion_arterial" label="Presión arterial">
-                    <Input addonAfter="mm/Hg" placeholder="Ej. 120/80" />
-                  </Form.Item>
-                </Col>
+                <div className="historial-wizard-step">
+                  <span>2</span>
+                  <div>
+                    <strong>Diagnóstico</strong>
+                    <small>Resumen clínico</small>
+                  </div>
+                </div>
+              </div>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="frecuencia_cardiaca" label="Frecuencia cardiaca">
-                    <Input addonAfter="x min" placeholder="Ej. 75" />
-                  </Form.Item>
-                </Col>
+              <section className="historial-wizard-section">
+                <div className="historial-clinical-card">
+                  <div className="historial-clinical-title">
+                    <h2>HISTORIA CLÍNICA</h2>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="frecuencia_respiratoria" label="Frecuencia respiratoria">
-                    <Input addonAfter="x min" placeholder="Ej. 18" />
-                  </Form.Item>
-                </Col>
+                    <span>
+                      <strong>Fecha y hora de elaboración:</strong>{' '}
+                      {new Date().toLocaleString('es-MX', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="spo2" label="SpO₂">
-                    <Input addonAfter="%" placeholder="Ej. 98" />
-                  </Form.Item>
-                </Col>
+                  <div className="historial-clinical-grid">
+                    <div className="historial-paciente-box">
+                      <span className="historial-box-label">PACIENTE</span>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="circunferencia_abdomen" label="Circunferencia abdomen">
-                    <Input addonAfter="cm" placeholder="Ej. 85" />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </section>
+                      <h3>{pacienteNombre || 'Paciente sin nombre'}</h3>
+
+                      <p>
+                        {pacienteActivo.fecha_nacimiento
+                          ? new Date(
+                              pacienteActivo.fecha_nacimiento,
+                            ).toLocaleDateString('es-MX')
+                          : '--/--/----'}{' '}
+                        / {pacienteActivo.sexo || 'Sin sexo'}
+                      </p>
+
+                      <p>{getPacienteDato(pacienteActivo, 'municipio', 'Puebla')}</p>
+
+                      <p>
+                        <strong>No. Expediente:</strong>{' '}
+                        {pacienteActivo.numero_expediente || 'Sin expediente'}
+                      </p>
+
+                      <p>
+                        <strong>CURP:</strong> {pacienteActivo.curp || '-'}
+                      </p>
+
+                      <p>
+                        <strong>Residencia:</strong>{' '}
+                        {getPacienteDato(pacienteActivo, 'direccion', '-') ||
+                          getPacienteDato(pacienteActivo, 'colonia', '-')}
+                      </p>
+                    </div>
+
+                    <div className="historial-signos-box">
+                      <span className="historial-box-label">SIGNOS VITALES</span>
+
+                      <div className="historial-signos-grid">
+                        <div>
+                          <Form.Item name="peso" label="Peso">
+                            <Input addonAfter="Kg" placeholder="Ej. 70" onBlur={actualizarIMC} />
+                          </Form.Item>
+
+                          <Form.Item name="altura" label="Talla">
+                            <Input addonAfter="m" placeholder="Ej. 1.70" onBlur={actualizarIMC} />
+                          </Form.Item>
+
+                          <Form.Item name="imc" label="IMC">
+                            <Input addonAfter="Kg/m²" disabled />
+                          </Form.Item>
+                        </div>
+
+                        <div>
+                          <Form.Item name="temperatura" label="Temperatura">
+                            <Input addonAfter="°C" placeholder="Ej. 36.5" />
+                          </Form.Item>
+
+                          <Form.Item name="frecuencia_cardiaca" label="Frec. Cardíaca">
+                            <Input addonAfter="xmin" placeholder="Ej. 75" />
+                          </Form.Item>
+
+                          <Form.Item name="frecuencia_respiratoria" label="Frec. Respiratoria">
+                            <Input addonAfter="xmin" placeholder="Ej. 18" />
+                          </Form.Item>
+                        </div>
+
+                        <div>
+                          <Form.Item name="presion_arterial" label="Presión arterial">
+                            <Input addonAfter="mm/Hg" placeholder="Ej. 120/80" />
+                          </Form.Item>
+
+                          <Form.Item name="circunferencia_abdomen" label="C. Abdomen">
+                            <Input addonAfter="cm" placeholder="Ej. 85" />
+                          </Form.Item>
+
+                          <Form.Item name="spo2" label="SpO₂">
+                            <Input addonAfter="%" placeholder="Ej. 98" />
+                          </Form.Item>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="historial-section-block">
+                    <div className="historial-antecedentes-title">
+                      ANTECEDENTES HEREDITARIOS FAMILIARES
+                    </div>
+
+                    <div className="historial-antecedentes-box">
+                      <div className="historial-antecedentes-grid">
+                        {antecedentesFamiliares.map(([name, label]) => (
+                          <div className="historial-antecedente-row" key={name}>
+                            <Form.Item name={`${name}_check`} valuePropName="checked" noStyle>
+                              <Radio />
+                            </Form.Item>
+
+                            <span>{label}</span>
+
+                            <Form.Item name={`${name}_parentesco`} noStyle>
+                              <Select
+                                placeholder="Seleccione parentesco..."
+                                options={parentescoOptions}
+                              />
+                            </Form.Item>
+                          </div>
+                        ))}
+
+                        <div className="historial-antecedente-row">
+                          <Form.Item name="otros_check" valuePropName="checked" noStyle>
+                            <Radio />
+                          </Form.Item>
+
+                          <span>Otros</span>
+
+                          <Form.Item name="otros_antecedentes" noStyle>
+                            <Input />
+                          </Form.Item>
+                        </div>
+
+                        <div className="historial-antecedente-row">
+                          <span />
+                          <span>Tipos</span>
+
+                          <Form.Item name="tipos_antecedentes" noStyle>
+                            <Input />
+                          </Form.Item>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="historial-section-block">
+                    <div className="historial-antecedentes-title">
+                      ANTECEDENTES PERSONALES NO PATOLÓGICOS
+                    </div>
+
+                    <div className="historial-no-patologicos-box">
+                      <Row gutter={[18, 16]}>
+                        <Col xs={24} md={12}>
+                          <Form.Item name="alimentacion" label="Alimentación">
+                            <Input placeholder="Describe alimentación del paciente" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <div className="historial-inline-check-field">
+                            <Form.Item
+                              name="inmunizaciones_incompletas_check"
+                              valuePropName="checked"
+                              noStyle
+                            >
+                              <Radio />
+                            </Form.Item>
+
+                            <span>Inmunizaciones incompletas</span>
+
+                            <Form.Item name="inmunizaciones_incompletas" noStyle>
+                              <Input placeholder="Detalle" />
+                            </Form.Item>
+                          </div>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="higiene" label="Higiene">
+                            <Input placeholder="Describe higiene del paciente" />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                          <Form.Item name="grupo_sanguineo" label="Grupo sanguíneo">
+                            <Select
+                              allowClear
+                              placeholder="Seleccione grupo"
+                              options={grupoSanguineoOptions}
+                            />
+                          </Form.Item>
+                        </Col>
+
+                        <Col xs={24}>
+                          <div className="historial-inline-check-field wide">
+                            <Form.Item
+                              name="otros_no_patologicos_check"
+                              valuePropName="checked"
+                              noStyle
+                            >
+                              <Radio />
+                            </Form.Item>
+
+                            <span>Otros</span>
+
+                            <Form.Item name="otros_no_patologicos" noStyle>
+                              <Input placeholder="Especifica otros antecedentes personales no patológicos" />
+                            </Form.Item>
+                          </div>
+                        </Col>
+                      </Row>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <div className="historial-wizard-footer">
+                <Button onClick={cerrarRegistro}>Cancelar</Button>
+
+                <div>
+                  <Button type="primary" onClick={siguienteRegistro}>
+                    Vista previa
+                  </Button>
+
+                  <Button icon={<SaveOutlined />} onClick={guardarNuevoHistorial}>
+                    Guardar
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
 
-          {wizardStep === 1 && (
-            <section className="historial-wizard-section">
-              <Row gutter={[16, 8]}>
-                <Col xs={24} md={8}>
-                  <Form.Item name="motivo_consulta" label="Clave / motivo">
-                    <Input placeholder="Ej. J00X" />
-                  </Form.Item>
-                </Col>
+          {registroStep === 1 && (
+            <>
+              <div className="historial-wizard-header">
+                <div className="historial-wizard-icon">
+                  <MedicineBoxOutlined />
+                </div>
 
-                <Col xs={24} md={16}>
-                  <Form.Item
-                    name="diagnostico"
-                    label="Diagnóstico"
-                    rules={[{ required: true, message: 'Ingresa el diagnóstico' }]}
-                  >
-                    <Input placeholder="Diagnóstico principal" />
-                  </Form.Item>
-                </Col>
+                <div>
+                  <Text className="historial-eyebrow">Crear historial clínico</Text>
+                  <h2>Diagnóstico y referencia</h2>
+                  <p>Completa diagnóstico, motivo de consulta y referencia.</p>
+                </div>
+              </div>
 
-                <Col xs={24}>
-                  <Form.Item name="descripcion_diagnostico" label="Descripción">
-                    <Input.TextArea rows={4} placeholder="Descripción clínica del historial" />
-                  </Form.Item>
-                </Col>
+              <div className="historial-wizard-steps">
+                <div className="historial-wizard-step done">
+                  <span>1</span>
+                  <div>
+                    <strong>Historia clínica</strong>
+                    <small>Datos generales y antecedentes</small>
+                  </div>
+                </div>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="referir_paciente" label="Referir paciente">
-                    <Select
-                      options={[
-                        { value: 'SI', label: 'Sí' },
-                        { value: 'NO', label: 'No' },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
+                <div className="historial-wizard-line active" />
 
-                <Col xs={24} md={16}>
-                  <Form.Item name="referido_por" label="Referido por">
-                    <Input placeholder="Área o médico de referencia" />
-                  </Form.Item>
-                </Col>
+                <div className="historial-wizard-step active">
+                  <span>2</span>
+                  <div>
+                    <strong>Diagnóstico</strong>
+                    <small>Resumen clínico</small>
+                  </div>
+                </div>
+              </div>
 
-                <Col xs={24} md={8}>
-                  <Form.Item name="contrarreferencia" label="Contrarreferencia">
-                    <Select
-                      options={[
-                        { value: 'SI', label: 'Sí' },
-                        { value: 'NO', label: 'No' },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
+              <section className="historial-wizard-section">
+                <Row gutter={[16, 8]}>
+                  <Col xs={24} md={8}>
+                    <Form.Item name="motivo_consulta" label="Clave / motivo">
+                      <Input placeholder="Ej. J00X" />
+                    </Form.Item>
+                  </Col>
 
-                <Col xs={24} md={16}>
-                  <Form.Item name="detalle_contrarreferencia" label="Detalle">
-                    <Input placeholder="Detalle de contrarreferencia" />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </section>
+                  <Col xs={24} md={16}>
+                    <Form.Item
+                      name="diagnostico"
+                      label="Diagnóstico"
+                      rules={[{ required: true, message: 'Ingresa el diagnóstico' }]}
+                    >
+                      <Input placeholder="Diagnóstico principal" />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24}>
+                    <Form.Item name="descripcion_diagnostico" label="Descripción">
+                      <Input.TextArea rows={4} placeholder="Descripción clínica del historial" />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={8}>
+                    <Form.Item name="referir_paciente" label="Referir paciente">
+                      <Select
+                        options={[
+                          { value: 'SI', label: 'Sí' },
+                          { value: 'NO', label: 'No' },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={16}>
+                    <Form.Item name="referido_por" label="Referido por">
+                      <Input placeholder="Área o médico de referencia" />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={8}>
+                    <Form.Item name="contrarreferencia" label="Contrarreferencia">
+                      <Select
+                        options={[
+                          { value: 'SI', label: 'Sí' },
+                          { value: 'NO', label: 'No' },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={16}>
+                    <Form.Item name="detalle_contrarreferencia" label="Detalle">
+                      <Input placeholder="Detalle de contrarreferencia" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </section>
+
+              <div className="historial-wizard-footer">
+                <Button onClick={cerrarRegistro}>Cancelar</Button>
+
+                <div>
+                  <Button icon={<ArrowLeftOutlined />} onClick={() => setRegistroStep(0)}>
+                    Anterior
+                  </Button>
+
+                  <Button type="primary" icon={<SaveOutlined />} onClick={guardarNuevoHistorial}>
+                    Guardar historial
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
-
-          <div className="historial-wizard-footer">
-            <Button onClick={cerrarWizard}>Cancelar</Button>
-
-            <div>
-              {wizardStep === 1 && (
-                <Button icon={<ArrowLeftOutlined />} onClick={() => setWizardStep(0)}>
-                  Anterior
-                </Button>
-              )}
-
-              {wizardStep === 0 && (
-                <Button type="primary" onClick={siguienteWizard}>
-                  Siguiente
-                </Button>
-              )}
-
-              {wizardStep === 1 && (
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  onClick={guardarNuevoHistorial}
-                >
-                  Guardar historial
-                </Button>
-              )}
-            </div>
-          </div>
         </Form>
       </Modal>
     </div>
