@@ -1,5 +1,3 @@
-// src/pages/HistorialClinico/HistorialClinico.tsx
-
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
@@ -15,14 +13,12 @@ import {
   Radio,
   Row,
   Select,
-  Table,
   Tag,
   Typography,
   message,
 } from 'antd';
 import {
   ArrowLeftOutlined,
-  CalendarOutlined,
   EyeOutlined,
   FileTextOutlined,
   HistoryOutlined,
@@ -31,10 +27,8 @@ import {
   MedicineBoxOutlined,
   PlusOutlined,
   SaveOutlined,
-  SearchOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -294,10 +288,6 @@ const HistorialClinico: React.FC = () => {
   const [historiales, setHistoriales] = useState<HistorialClinicoItem[]>(() =>
     cargarHistoriales(),
   );
-  const [busqueda, setBusqueda] = useState('');
-  const [historialSeleccionado, setHistorialSeleccionado] =
-    useState<HistorialClinicoItem | null>(null);
-
   const [registroOpen, setRegistroOpen] = useState(false);
   const [registroStep, setRegistroStep] = useState(0);
   const [vistaPreviaOpen, setVistaPreviaOpen] = useState(false);
@@ -322,27 +312,11 @@ const HistorialClinico: React.FC = () => {
 
         return sameId || sameExpediente || sameCurp;
       })
-      .filter((item) => {
-        const texto = busqueda.trim().toLowerCase();
-
-        if (!texto) return true;
-
-        const diagnosticosTexto = item.diagnosticos
-          .map((d) => `${d.clave || ''} ${d.diagnostico || ''} ${d.descripcion || ''}`)
-          .join(' ')
-          .toLowerCase();
-
-        return (
-          diagnosticosTexto.includes(texto) ||
-          String(item.paciente.numero_expediente || '').toLowerCase().includes(texto) ||
-          formatDateTime(item.fecha_consulta).toLowerCase().includes(texto)
-        );
-      })
       .sort(
         (a, b) =>
           new Date(b.fecha_consulta).getTime() - new Date(a.fecha_consulta).getTime(),
       );
-  }, [historiales, pacienteActivo, busqueda]);
+  }, [historiales, pacienteActivo]);
 
   const ultimoHistorial = historialesPaciente[0];
 
@@ -582,69 +556,6 @@ const HistorialClinico: React.FC = () => {
     navigate('/pacientes', { replace: true });
   };
 
-  const columns: ColumnsType<HistorialClinicoItem> = [
-    {
-      title: 'Fecha',
-      dataIndex: 'fecha_consulta',
-      width: 190,
-      render: (fecha) => (
-        <div className="historial-date-cell">
-          <CalendarOutlined />
-          <span>{formatDateTime(fecha)}</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Diagnósticos',
-      key: 'diagnosticos',
-      render: (_, record) => (
-        <div className="historial-diagnostico-cell">
-          {record.diagnosticos.length ? (
-            <>
-              <strong>
-                {record.diagnosticos[0]?.clave
-                  ? `${record.diagnosticos[0].clave} - `
-                  : ''}
-                {record.diagnosticos[0]?.diagnostico || 'Diagnóstico sin descripción'}
-              </strong>
-
-              <span>{record.diagnosticos.length} diagnóstico(s)</span>
-            </>
-          ) : (
-            <Text type="secondary">Sin diagnósticos registrados</Text>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: 'Signos vitales',
-      key: 'signos',
-      width: 280,
-      render: (_, record) => (
-        <div className="historial-tags">
-          <Tag>Peso: {record.consulta?.peso || '-'}</Tag>
-          <Tag>Temp: {record.consulta?.temperatura || '-'}</Tag>
-          <Tag>SpO₂: {record.consulta?.spo2 || '-'}</Tag>
-        </div>
-      ),
-    },
-    {
-      title: 'Acciones',
-      key: 'acciones',
-      width: 130,
-      align: 'center',
-      render: (_, record) => (
-        <Button
-          icon={<EyeOutlined />}
-          className="historial-view-btn"
-          onClick={() => setHistorialSeleccionado(record)}
-        >
-          Ver
-        </Button>
-      ),
-    },
-  ];
-
   if (!pacienteActivo) {
     return (
       <div className="historial-page">
@@ -762,10 +673,11 @@ const HistorialClinico: React.FC = () => {
 
               <Button
                 type="primary"
-                icon={<SearchOutlined />}
+                icon={<FileTextOutlined />}
                 disabled={historialesPaciente.length === 0}
+                onClick={() => navigate('/historiales-disponibles')}
               >
-                {historialesPaciente.length ? 'Historial disponible' : 'Sin historiales'}
+                {historialesPaciente.length ? 'Ver historiales disponibles' : 'Sin historiales'}
               </Button>
             </Card>
           </Col>
@@ -806,157 +718,14 @@ const HistorialClinico: React.FC = () => {
           </Col>
         </Row>
 
-        <Card className="historial-table-card">
-          <div className="historial-table-head">
-            <div>
-              <h3>Historiales registrados</h3>
-              <span>{historialesPaciente.length} registro(s)</span>
-            </div>
-
-            <Input
-              allowClear
-              prefix={<SearchOutlined />}
-              placeholder="Buscar por diagnóstico, expediente o fecha..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="historial-search"
-            />
-          </div>
-
-          <Table
-            className="historial-table"
-            columns={columns}
-            dataSource={historialesPaciente}
-            rowKey="id"
-            pagination={{
-              pageSize: 5,
-              showSizeChanger: false,
-              position: ['bottomCenter'],
-              showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
-            }}
-            scroll={{ x: 900 }}
-            locale={{
-              emptyText: (
-                <Empty description="Aún no hay historiales clínicos para este paciente" />
-              ),
-            }}
-          />
-        </Card>
       </div>
 
-      <Modal
-        open={Boolean(historialSeleccionado)}
-        onCancel={() => setHistorialSeleccionado(null)}
-        footer={[
-          <Button key="cerrar" onClick={() => setHistorialSeleccionado(null)}>
-            Cerrar
-          </Button>,
-        ]}
-        width={920}
-        centered
-        className="historial-detail-modal"
-        title={
-          <div className="historial-modal-title">
-            <FileTextOutlined />
-            <span>Detalle del historial clínico</span>
-          </div>
-        }
-      >
-        {historialSeleccionado && (
-          <div className="historial-detail">
-            <Descriptions bordered column={{ xs: 1, md: 2 }} size="small">
-              <Descriptions.Item label="Paciente">
-                {historialSeleccionado.paciente.nombre}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Expediente">
-                {historialSeleccionado.paciente.numero_expediente || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Fecha consulta">
-                {formatDateTime(historialSeleccionado.fecha_consulta)}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="CURP">
-                {historialSeleccionado.paciente.curp || '-'}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <div className="historial-detail-title">Signos vitales</div>
-
-            <Descriptions bordered column={{ xs: 1, md: 3 }} size="small">
-              <Descriptions.Item label="Peso">
-                {historialSeleccionado.consulta?.peso || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Altura">
-                {historialSeleccionado.consulta?.altura || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="IMC">
-                {historialSeleccionado.consulta?.imc || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Temperatura">
-                {historialSeleccionado.consulta?.temperatura || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="T.A.">
-                {historialSeleccionado.consulta?.presion_arterial || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="SpO₂">
-                {historialSeleccionado.consulta?.spo2 || '-'}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <div className="historial-detail-title">Diagnósticos</div>
-
-            {historialSeleccionado.diagnosticos.length ? (
-              <div className="historial-diagnosticos-list">
-                {historialSeleccionado.diagnosticos.map((diag, index) => (
-                  <div key={diag.key || index} className="historial-diagnostico-item">
-                    <Tag>{diag.clave || 'S/C'}</Tag>
-
-                    <div>
-                      <strong>{diag.diagnostico || 'Sin diagnóstico'}</strong>
-                      <span>{diag.descripcion || 'Sin descripción'}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Empty description="Sin diagnósticos registrados" />
-            )}
-
-            <div className="historial-detail-title">Referencia</div>
-
-            <Descriptions bordered column={{ xs: 1, md: 2 }} size="small">
-              <Descriptions.Item label="Referir paciente">
-                {historialSeleccionado.consulta?.referir_paciente || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Referido por">
-                {historialSeleccionado.consulta?.referido_por || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Contrarreferencia">
-                {historialSeleccionado.consulta?.contrarreferencia || '-'}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Detalle">
-                {historialSeleccionado.consulta?.detalle_contrarreferencia || '-'}
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
-        )}
-      </Modal>
 
       <Modal
         open={registroOpen}
         onCancel={cerrarRegistro}
         footer={null}
-        width={1180}
+        width={1120}
         centered
         className="historial-wizard-modal"
         title={null}
@@ -984,7 +753,7 @@ const HistorialClinico: React.FC = () => {
               <h2>
                 {registroStep === 0 && 'Historia clínica'}
                 {registroStep === 1 && 'Antecedentes personales'}
-                {registroStep === 2 && 'Gineco obstétricos y diagnóstico'}
+                {registroStep === 2 && 'Gineco obstétricos'}
               </h2>
 
               <p>
@@ -992,8 +761,7 @@ const HistorialClinico: React.FC = () => {
                   'Captura datos generales, signos vitales y antecedentes hereditarios familiares.'}
                 {registroStep === 1 &&
                   'Registra antecedentes personales no patológicos y patológicos.'}
-                {registroStep === 2 &&
-                  'Completa los antecedentes gineco obstétricos, diagnóstico y revisa la vista previa.'}
+                {registroStep === 2 && 'Captura gineco obstétricos y revisa la vista previa.'}
               </p>
             </div>
           </div>
@@ -1030,8 +798,8 @@ const HistorialClinico: React.FC = () => {
             <div className={`historial-wizard-step ${registroStep === 2 ? 'active' : ''}`}>
               <span>3</span>
               <div>
-                <strong>Gineco / diagnóstico</strong>
-                <small>Vista previa</small>
+                <strong>Gineco obstétricos</strong>
+                <small>Revisión final</small>
               </div>
             </div>
           </div>
@@ -1486,65 +1254,6 @@ const HistorialClinico: React.FC = () => {
                       </Row>
                     </div>
                   </div>
-
-                  <div className="historial-section-block">
-                    <div className="historial-antecedentes-title">
-                      DIAGNÓSTICO Y REFERENCIA
-                    </div>
-
-                    <div className="historial-no-patologicos-box">
-                      <Row gutter={[16, 8]}>
-                        <Col xs={24} md={8}>
-                          <Form.Item name="motivo_consulta" label="Clave / motivo">
-                            <Input placeholder="Ej. J00X" />
-                          </Form.Item>
-                        </Col>
-
-                        <Col xs={24} md={16}>
-                          <Form.Item
-                            name="diagnostico"
-                            label="Diagnóstico"
-                            rules={[{ required: true, message: 'Ingresa el diagnóstico' }]}
-                          >
-                            <Input placeholder="Diagnóstico principal" />
-                          </Form.Item>
-                        </Col>
-
-                        <Col xs={24}>
-                          <Form.Item name="descripcion_diagnostico" label="Descripción">
-                            <Input.TextArea
-                              rows={4}
-                              placeholder="Descripción clínica del historial"
-                            />
-                          </Form.Item>
-                        </Col>
-
-                        <Col xs={24} md={8}>
-                          <Form.Item name="referir_paciente" label="Referir paciente">
-                            <Select options={siNoOptions} />
-                          </Form.Item>
-                        </Col>
-
-                        <Col xs={24} md={16}>
-                          <Form.Item name="referido_por" label="Referido por">
-                            <Input placeholder="Área o médico de referencia" />
-                          </Form.Item>
-                        </Col>
-
-                        <Col xs={24} md={8}>
-                          <Form.Item name="contrarreferencia" label="Contrarreferencia">
-                            <Select options={siNoOptions} />
-                          </Form.Item>
-                        </Col>
-
-                        <Col xs={24} md={16}>
-                          <Form.Item name="detalle_contrarreferencia" label="Detalle">
-                            <Input placeholder="Detalle de contrarreferencia" />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-                    </div>
-                  </div>
                 </div>
               </section>
 
@@ -1702,28 +1411,6 @@ const HistorialClinico: React.FC = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Colposcopia">
                   {vistaPreviaData.colposcopia || '-'}
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
-
-            <div className="historial-preview-section">
-              <h3>Diagnóstico</h3>
-
-              <Descriptions bordered size="small" column={{ xs: 1, md: 2 }}>
-                <Descriptions.Item label="Clave / motivo">
-                  {vistaPreviaData.motivo_consulta || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Diagnóstico">
-                  {vistaPreviaData.diagnostico || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Descripción" span={2}>
-                  {vistaPreviaData.descripcion_diagnostico || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Referir paciente">
-                  {vistaPreviaData.referir_paciente || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Referido por">
-                  {vistaPreviaData.referido_por || '-'}
                 </Descriptions.Item>
               </Descriptions>
             </div>

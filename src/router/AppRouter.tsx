@@ -34,6 +34,7 @@ import {
   getDashboardByRole,
   canAccessRoute,
 } from '../router/routes';
+import HistorialesDisponibles from '../pages/HistorialClinico/HistorialesDisponibles';
 
 const LoadingScreen: React.FC = () => (
   <div
@@ -197,6 +198,8 @@ const AppRouter: React.FC = () => {
                   </RoleRoute>
                 }
               />
+
+              <Route path="/historiales-disponibles" element={<HistorialesDisponibles />} />
 
               <Route
                 path={ROUTES.PROFILE}
