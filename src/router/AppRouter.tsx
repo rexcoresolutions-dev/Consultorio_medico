@@ -28,13 +28,14 @@ import Pacientes from '../pages/Pacientes/Pacientes';
 import ConfirmarAtencion from '../pages/ConfirmarAtencion/ConfirmarAtencion';
 import Procedimientos from '../pages/procedimientos/Procedimientos';
 import HistorialClinico from '../pages/HistorialClinico/HistorialClinico';
+import HistorialesDisponibles from '../pages/HistorialClinico/HistorialesDisponibles';
+import NotaEvolucion from '../pages/NotaEvolucion/NotaEvolucion';
 
 import {
   ROUTES,
   getDashboardByRole,
   canAccessRoute,
 } from '../router/routes';
-import HistorialesDisponibles from '../pages/HistorialClinico/HistorialesDisponibles';
 
 const LoadingScreen: React.FC = () => (
   <div
@@ -199,7 +200,23 @@ const AppRouter: React.FC = () => {
                 }
               />
 
-              <Route path="/historiales-disponibles" element={<HistorialesDisponibles />} />
+              <Route
+                path={ROUTES.HISTORIALES_DISPONIBLES}
+                element={
+                  <RoleRoute>
+                    <HistorialesDisponibles />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.NOTA_EVOLUCION}
+                element={
+                  <RoleRoute>
+                    <NotaEvolucion />
+                  </RoleRoute>
+                }
+              />
 
               <Route
                 path={ROUTES.PROFILE}

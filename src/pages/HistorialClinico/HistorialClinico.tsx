@@ -533,7 +533,7 @@ const HistorialClinico: React.FC = () => {
       showCancelButton: true,
       confirmButtonText: 'Sí, finalizar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0f766e',
+      confirmButtonColor: '#ff4d4f',
       cancelButtonColor: '#94a3b8',
       reverseButtons: true,
     });
@@ -553,25 +553,40 @@ const HistorialClinico: React.FC = () => {
     });
 
     setPacienteActivo(null);
-    navigate('/pacientes', { replace: true });
+    navigate('/historial-clinico', { replace: true });
   };
 
   if (!pacienteActivo) {
     return (
       <div className="historial-page">
         <div className="historial-shell">
-          <Card className="historial-empty-card">
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No hay paciente activo" />
+          <section className="historial-no-paciente">
+            <div className="historial-no-paciente-bg" />
+
+            <div className="historial-no-paciente-icon">
+              <HistoryOutlined />
+            </div>
+
+            <Tag className="historial-no-paciente-tag">Historial clínico bloqueado</Tag>
+
+            <h1>No hay paciente activo</h1>
 
             <p>
-              Primero selecciona un paciente desde el módulo de Pacientes para desbloquear su
-              historial clínico.
+              Para consultar, crear o administrar un historial clínico, primero debes
+              seleccionar un paciente desde el módulo de Pacientes.
             </p>
 
-            <Button type="primary" icon={<UserOutlined />} onClick={() => navigate('/pacientes')}>
-              Ir a pacientes
-            </Button>
-          </Card>
+            <div className="historial-no-paciente-actions">
+              <Button
+                type="primary"
+                size="large"
+                icon={<UserOutlined />}
+                onClick={() => navigate('/pacientes')}
+              >
+                Seleccionar paciente
+              </Button>
+            </div>
+          </section>
         </div>
       </div>
     );
@@ -582,13 +597,6 @@ const HistorialClinico: React.FC = () => {
       <div className="historial-shell">
         <header className="historial-hero-card">
           <div className="historial-hero-left">
-            <Button
-              icon={<ArrowLeftOutlined />}
-              className="historial-back-btn"
-              onClick={() => navigate('/confirmar-atencion')}
-            >
-              Regresar
-            </Button>
 
             <div className="historial-icon">
               <HistoryOutlined />

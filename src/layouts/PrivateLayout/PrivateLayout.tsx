@@ -30,6 +30,7 @@ import {
   DownOutlined,
   EyeOutlined,
   HistoryOutlined,
+  FormOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -40,6 +41,9 @@ import './PrivateLayout.css';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
+
+const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
+const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
 
 const PrivateLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -89,6 +93,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
     { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
     { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
+    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -99,6 +104,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/dashboard-medico', icon: <DashboardOutlined />, label: 'Dashboard' },
     { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Procedimientos' },
     { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
+    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -110,6 +116,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
     { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
     { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
+    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -130,12 +137,24 @@ const PrivateLayout: React.FC = () => {
 
   const menuItems = getMenuItems();
 
+  const limpiarEstadoClinicoTemporal = () => {
+    try {
+      localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
+      localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
+      sessionStorage.removeItem('hasSeenWelcome');
+    } catch {
+      // Evita romper la app si el navegador bloquea storage.
+    }
+  };
+
   const handleLogout = () => {
     try {
-      sessionStorage.removeItem('hasSeenWelcome');
+      limpiarEstadoClinicoTemporal();
+
       logout();
+
       message.success('Sesión cerrada correctamente');
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (error) {
       message.error('Error al cerrar sesión');
     }
@@ -313,11 +332,7 @@ const PrivateLayout: React.FC = () => {
         onMenuClick={handleMenuClick}
       />
 
-      <WelcomeModal
-        visible={welcomeOpen}
-        user={activeUser}
-        onClose={() => setWelcomeOpen(false)}
-      />
+      <WelcomeModal visible={welcomeOpen} user={activeUser} onClose={() => setWelcomeOpen(false)} />
     </Layout>
   );
 };

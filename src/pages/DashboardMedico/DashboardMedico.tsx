@@ -21,6 +21,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useNavigate } from 'react-router-dom';
 import './DashboardMedico.css';
 
 const { Title, Text } = Typography;
@@ -79,6 +80,8 @@ const pacientesRecientes = [
 ];
 
 const DashboardMedico: React.FC = () => {
+  const navigate = useNavigate();
+
   const getEstadoColor = (estado: AgendaItem['estado']) => {
     switch (estado) {
       case 'En espera':
@@ -92,6 +95,22 @@ const DashboardMedico: React.FC = () => {
       default:
         return 'default';
     }
+  };
+
+  const goToConsulta = () => {
+    navigate('/pacientes');
+  };
+
+  const goToProcedimiento = () => {
+    navigate('/procedimientos');
+  };
+
+  const goToReceta = () => {
+    navigate('/recetas');
+  };
+
+  const goToAgenda = () => {
+    navigate('/citas');
   };
 
   const columns: ColumnsType<AgendaItem> = [
@@ -126,11 +145,7 @@ const DashboardMedico: React.FC = () => {
       dataIndex: 'estado',
       width: 130,
       align: 'center',
-      render: (estado) => (
-        <Tag color={getEstadoColor(estado)}>
-          {estado}
-        </Tag>
-      ),
+      render: (estado) => <Tag color={getEstadoColor(estado)}>{estado}</Tag>,
     },
   ];
 
@@ -144,11 +159,20 @@ const DashboardMedico: React.FC = () => {
         </div>
 
         <Space wrap className="doctor-header-actions">
-          <Button type="primary" icon={<PlusOutlined />} className="primary-medical-btn">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            className="primary-medical-btn"
+            onClick={goToConsulta}
+          >
             Consulta
           </Button>
 
-          <Button icon={<MedicineBoxOutlined />} className="secondary-medical-btn">
+          <Button
+            icon={<MedicineBoxOutlined />}
+            className="secondary-medical-btn"
+            onClick={goToProcedimiento}
+          >
             Procedimiento
           </Button>
         </Space>
@@ -193,7 +217,11 @@ const DashboardMedico: React.FC = () => {
           <Card
             title="Agenda del día"
             className="doctor-card equal-card"
-            extra={<Button type="link">Ver agenda completa</Button>}
+            extra={
+              <Button type="link" onClick={goToAgenda}>
+                Ver agenda completa
+              </Button>
+            }
           >
             <Table
               columns={columns}
@@ -235,11 +263,7 @@ const DashboardMedico: React.FC = () => {
                 <div key={item.dia} className="week-item">
                   <span>{item.dia}</span>
 
-                  <Progress
-                    percent={item.total * 4}
-                    showInfo={false}
-                    strokeColor="#1677ff"
-                  />
+                  <Progress percent={item.total * 4} showInfo={false} strokeColor="#1677ff" />
 
                   <strong>{item.total}</strong>
                 </div>
@@ -251,19 +275,29 @@ const DashboardMedico: React.FC = () => {
         <Col xs={24} lg={12}>
           <Card title="Acciones rápidas" className="doctor-card doctor-actions-card equal-card">
             <div className="quick-actions-grid">
-              <Button block icon={<PlusOutlined />} className="quick-main-action">
+              <Button
+                block
+                icon={<PlusOutlined />}
+                className="quick-main-action"
+                onClick={goToConsulta}
+              >
                 Consulta
               </Button>
 
-              <Button block icon={<MedicineBoxOutlined />} className="quick-main-action">
+              <Button
+                block
+                icon={<MedicineBoxOutlined />}
+                className="quick-main-action"
+                onClick={goToProcedimiento}
+              >
                 Procedimiento
               </Button>
 
-              <Button block icon={<FileTextOutlined />}>
+              <Button block icon={<FileTextOutlined />} onClick={goToReceta}>
                 Nueva receta
               </Button>
 
-              <Button block icon={<CalendarOutlined />}>
+              <Button block icon={<CalendarOutlined />} onClick={goToAgenda}>
                 Ver agenda
               </Button>
             </div>

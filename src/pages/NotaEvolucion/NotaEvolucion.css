@@ -1,0 +1,839 @@
+.nota-evolucion-page {
+  min-height: 100%;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.12), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(21, 159, 163, 0.08), transparent 30%),
+    #f6f9fb;
+}
+
+.nota-evolucion-shell {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+}
+
+.nota-hero-card {
+  min-height: 138px;
+  padding: 24px;
+  border-radius: 26px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(235, 254, 255, 0.94)),
+    linear-gradient(135deg, #43d7d8, #159fa3);
+  box-shadow: 0 22px 50px rgba(15, 118, 110, 0.12);
+  border: 1px solid rgba(67, 215, 216, 0.28);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.nota-hero-icon {
+  width: 74px;
+  height: 74px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  box-shadow: 0 16px 30px rgba(21, 159, 163, 0.25);
+}
+
+.nota-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #159fa3;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nota-hero-card h2 {
+  margin: 4px 0;
+  color: #0f172a;
+  font-weight: 950;
+}
+
+.nota-status-tag {
+  margin: 0;
+  border-radius: 999px;
+  background: #ecfeff;
+  border-color: #b8eef0;
+  color: #0f766e;
+  font-weight: 900;
+  padding: 5px 12px;
+}
+
+.nota-patient-card {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #e2edf0;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+}
+
+.nota-patient-main {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+
+.nota-patient-info {
+  min-width: 0;
+}
+
+.nota-avatar {
+  width: 72px !important;
+  height: 72px !important;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #ffffff;
+  font-weight: 900;
+  flex-shrink: 0;
+  box-shadow: 0 14px 28px rgba(21, 159, 163, 0.25);
+}
+
+.nota-avatar .anticon {
+  font-size: 32px !important;
+}
+
+.nota-patient-main span {
+  color: #159fa3;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nota-patient-main h2 {
+  margin: 2px 0 8px;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.nota-patient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nota-patient-tags .ant-tag {
+  margin: 0;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border-color: #dbeafe;
+  color: #334155;
+  font-weight: 700;
+}
+
+.nota-finalizar-btn {
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 14px;
+  border: none;
+  color: #ffffff;
+  font-weight: 900;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  box-shadow: 0 14px 28px rgba(21, 159, 163, 0.24);
+  flex-shrink: 0;
+}
+
+.nota-finalizar-btn:hover {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #28cdd0, #0f8f94) !important;
+  transform: translateY(-1px);
+}
+
+.nota-form-card {
+  margin-top: 18px;
+  border-radius: 24px;
+  border: 1px solid #e2edf0;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.nota-form-card .ant-card-body {
+  padding: 20px;
+}
+
+.nota-form-header {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf5f6;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.nota-form-header h3 {
+  margin: 2px 0 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.nota-form-header strong {
+  color: #0f766e;
+}
+
+/* WIZARD */
+
+.nota-wizard-steps {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #f8fcfd;
+  border: 1px solid #e2edf0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.nota-wizard-step {
+  min-height: 64px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid #dbeafe;
+  background: #ffffff;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nota-wizard-step span {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  font-weight: 950;
+  flex-shrink: 0;
+}
+
+.nota-wizard-step strong {
+  display: block;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.nota-wizard-step small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.nota-wizard-step.active {
+  border-color: #43d7d8;
+  background: #ecfeff;
+  box-shadow: inset 0 0 0 1px rgba(67, 215, 216, 0.22);
+}
+
+.nota-wizard-step.active span,
+.nota-wizard-step.done span {
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #ffffff;
+}
+
+.nota-wizard-step.active strong,
+.nota-wizard-step.done strong {
+  color: #0f766e;
+}
+
+.nota-wizard-line {
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.nota-wizard-line.active {
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+}
+
+/* FORM */
+
+.nota-body-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.nota-signos-card {
+  position: sticky;
+  top: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fbffff;
+  border: 1px solid #c8f4f6;
+  box-shadow: inset 0 0 0 1px rgba(67, 215, 216, 0.06);
+}
+
+.nota-section-title {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #ffffff;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 900;
+}
+
+.nota-signos-card .ant-form-item {
+  margin-bottom: 10px;
+}
+
+.nota-signos-card .ant-form-item-label {
+  padding-bottom: 3px;
+}
+
+.nota-signos-card .ant-form-item-label > label,
+.nota-fields-panel .ant-form-item-label > label {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.nota-signos-card .ant-input,
+.nota-signos-card .ant-input-group-addon {
+  height: 34px;
+  font-size: 12px;
+}
+
+.nota-signos-card .ant-input {
+  border-radius: 10px 0 0 10px;
+}
+
+.nota-signos-card .ant-input-group-addon {
+  min-width: 54px;
+  padding: 0 8px;
+  border-radius: 0 10px 10px 0;
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 800;
+}
+
+.nota-fields-panel {
+  padding: 16px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2edf0;
+}
+
+.nota-fields-panel .ant-form-item {
+  margin-bottom: 12px;
+}
+
+.nota-fields-panel .ant-form-item-label {
+  padding-bottom: 4px;
+}
+
+.nota-fields-panel textarea.ant-input {
+  resize: vertical;
+  border-radius: 14px;
+  border-color: #d8e7ea;
+  background: linear-gradient(180deg, #ffffff, #f8fbfc);
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.nota-fields-panel textarea.ant-input:hover,
+.nota-fields-panel textarea.ant-input:focus {
+  border-color: #43d7d8;
+  box-shadow: 0 0 0 3px rgba(67, 215, 216, 0.12);
+}
+
+/* DIAGNÓSTICO */
+
+.nota-diagnostico-panel {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 18px;
+}
+
+.nota-diagnostico-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.nota-diagnostico-row .ant-select-selector {
+  height: 42px !important;
+  border-radius: 14px !important;
+  border-color: #c8f4f6 !important;
+}
+
+.nota-diagnostico-row .ant-select-selection-placeholder,
+.nota-diagnostico-row .ant-select-selection-item {
+  line-height: 40px !important;
+  font-size: 14px;
+}
+
+.nota-add-diagnostico-btn {
+  height: 42px;
+  border-radius: 14px;
+  font-weight: 900;
+  border-color: #b8eef0;
+  color: #0f766e;
+}
+
+.nota-diagnostico-table {
+  margin-top: 10px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #c8f4f6;
+}
+
+.nota-diagnostico-table .ant-table {
+  border-radius: 16px;
+}
+
+.nota-diagnostico-table .ant-table-container {
+  border-radius: 16px;
+}
+
+.nota-diagnostico-table .ant-table-thead > tr > th {
+  height: 44px;
+  padding: 10px 14px !important;
+  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
+  color: #ffffff !important;
+  font-weight: 950 !important;
+  border-bottom: none !important;
+}
+
+.nota-diagnostico-table .ant-table-tbody > tr > td {
+  padding: 12px 14px !important;
+  color: #334155;
+  font-weight: 700;
+  border-bottom: 1px solid #edf5f6 !important;
+}
+
+.nota-diagnostico-table .ant-table-placeholder .ant-empty-description {
+  color: #0f172a;
+  font-weight: 850;
+}
+
+.nota-proxima-cita {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f8fcfd;
+  border: 1px solid #e2edf0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+}
+
+.nota-proxima-cita .ant-checkbox-wrapper {
+  font-weight: 900;
+  color: #334155;
+}
+
+.nota-proxima-cita .ant-input {
+  width: 190px;
+  height: 40px;
+  border-radius: 13px;
+  border-color: #c8f4f6;
+  font-weight: 800;
+}
+
+.nota-diagnostico-title {
+  margin: 8px 0 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.nota-diagnostico-row .ant-select-selector {
+  height: 38px !important;
+  border-radius: 12px !important;
+}
+
+.nota-diagnostico-row .ant-select-selection-placeholder,
+.nota-diagnostico-row .ant-select-selection-item {
+  line-height: 36px !important;
+  font-size: 13px;
+}
+
+.nota-add-diagnostico-btn {
+  height: 38px;
+  border-radius: 12px;
+  font-weight: 850;
+  border-color: #b8eef0;
+  color: #0f766e;
+}
+
+.nota-add-diagnostico-btn:hover {
+  color: #ffffff !important;
+  background: #159fa3 !important;
+  border-color: #159fa3 !important;
+}
+
+.nota-diagnostico-table {
+  margin-top: 8px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #c8f4f6;
+}
+
+.nota-diagnostico-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  border-bottom: none !important;
+}
+
+.nota-diagnostico-table .ant-table-tbody > tr > td {
+  color: #334155;
+  font-weight: 650;
+}
+
+.nota-proxima-cita .ant-checkbox-wrapper {
+  font-weight: 850;
+  color: #334155;
+}
+
+.nota-proxima-cita .ant-input {
+  width: 180px;
+  height: 36px;
+  border-radius: 12px;
+}
+
+/* FOOTER */
+
+.nota-footer {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #edf5f6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nota-footer .ant-btn {
+  height: 40px;
+  min-width: 120px;
+  border-radius: 13px;
+  font-weight: 850;
+}
+
+.nota-save-btn {
+  border: none;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  box-shadow: 0 14px 28px rgba(21, 159, 163, 0.22);
+}
+
+.nota-save-btn:hover {
+  background: linear-gradient(135deg, #28cdd0, #0f8f94) !important;
+}
+
+/* SIN PACIENTE */
+
+.nota-empty-state {
+  position: relative;
+  min-height: 580px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(67, 215, 216, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(235, 254, 255, 0.95));
+  box-shadow: 0 28px 55px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 40px;
+}
+
+.nota-empty-icon {
+  width: 104px;
+  height: 104px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 46px;
+  box-shadow: 0 22px 45px rgba(21, 159, 163, 0.3);
+  margin-bottom: 10px;
+  z-index: 1;
+}
+
+.nota-empty-badge {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: #ecfeff;
+  border: 1px solid #a7eef0;
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 900;
+  z-index: 1;
+}
+
+.nota-empty-state h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  z-index: 1;
+}
+
+.nota-empty-state p {
+  margin: 0;
+  max-width: 620px;
+  color: #64748b;
+  font-size: 17px;
+  line-height: 1.7;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.nota-empty-button {
+  margin-top: 12px;
+  height: 54px;
+  padding: 0 32px;
+  border-radius: 16px;
+  border: none;
+  font-size: 16px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  box-shadow: 0 18px 35px rgba(21, 159, 163, 0.25);
+  z-index: 1;
+}
+
+.nota-empty-button:hover {
+  background: linear-gradient(135deg, #28cdd0, #0f8f94) !important;
+  transform: translateY(-2px);
+}
+
+.nota-empty-decoration {
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  background: rgba(67, 215, 216, 0.12);
+}
+
+.nota-empty-decoration.top {
+  top: -45px;
+  right: -45px;
+}
+
+.nota-empty-decoration.bottom {
+  bottom: -70px;
+  left: -70px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+  .nota-hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .nota-body-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nota-signos-card {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 12px;
+  }
+
+  .nota-section-title {
+    grid-column: 1 / -1;
+  }
+
+  .nota-form-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nota-wizard-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .nota-wizard-line {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .nota-patient-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nota-patient-main {
+    align-items: flex-start;
+  }
+
+  .nota-finalizar-btn {
+    width: 100%;
+  }
+
+  .nota-diagnostico-row {
+    grid-template-columns: 1fr;
+  }
+
+  .nota-add-diagnostico-btn {
+    width: 100%;
+  }
+
+  .nota-proxima-cita {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nota-proxima-cita .ant-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .nota-empty-state {
+    min-height: 520px;
+    padding: 25px;
+  }
+
+  .nota-empty-icon {
+    width: 85px;
+    height: 85px;
+    font-size: 36px;
+  }
+
+  .nota-empty-state h1 {
+    font-size: 28px;
+  }
+
+  .nota-empty-state p {
+    font-size: 14px;
+  }
+
+  .nota-empty-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .nota-evolucion-page {
+    padding: 10px;
+  }
+
+  .nota-hero-card,
+  .nota-patient-card,
+  .nota-form-card {
+    border-radius: 20px;
+  }
+
+  .nota-hero-card {
+    padding: 18px;
+  }
+
+  .nota-hero-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    font-size: 26px;
+  }
+
+  .nota-hero-card h2 {
+    font-size: 22px;
+  }
+
+  .nota-avatar {
+    width: 54px !important;
+    height: 54px !important;
+    min-width: 54px !important;
+    font-size: 16px !important;
+  }
+
+  .nota-avatar .anticon {
+    font-size: 26px !important;
+  }
+
+  .nota-patient-main h2 {
+    font-size: 18px;
+  }
+
+  .nota-form-card .ant-card-body {
+    padding: 14px;
+  }
+
+  .nota-signos-card {
+    grid-template-columns: 1fr;
+  }
+
+  .nota-fields-panel {
+    padding: 12px;
+  }
+
+  .nota-footer {
+    flex-direction: column-reverse;
+  }
+
+  .nota-footer .ant-btn {
+    width: 100%;
+  }
+}
+
+.nota-date-picker {
+  width: 190px;
+  height: 40px;
+  border-radius: 13px;
+  border-color: #c8f4f6;
+  font-weight: 800;
+}
+
+.nota-date-picker:hover,
+.nota-date-picker.ant-picker-focused {
+  border-color: #43d7d8 !important;
+  box-shadow: 0 0 0 3px rgba(67, 215, 216, 0.12) !important;
+}
+
+.nota-date-picker .ant-picker-input > input {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.nota-date-picker .ant-picker-suffix {
+  color: #0f766e;
+}
+
+@media (max-width: 760px) {
+  .nota-date-picker {
+    width: 100%;
+  }
+}

@@ -380,7 +380,7 @@ const HistorialesDisponibles: React.FC = () => {
       showCancelButton: true,
       confirmButtonText: 'Sí, finalizar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0f766e',
+      confirmButtonColor: '#ff4d4f',
       cancelButtonColor: '#94a3b8',
       reverseButtons: true,
     });
@@ -770,30 +770,6 @@ const HistorialesDisponibles: React.FC = () => {
                       </div>
                     </section>
                   ))}
-
-                {extraConsultaFields.length > 0 && (
-                  <section className="historial-detail-card">
-                    <div className="historial-section-header">
-                      <div>
-                        <span>Información adicional</span>
-                        <h3>Otros datos guardados</h3>
-                      </div>
-
-                      <Tag>{extraConsultaFields.length} datos</Tag>
-                    </div>
-
-                    <div className="historial-info-grid">
-                      {extraConsultaFields.map((field) => (
-                        <div className="historial-info-item" key={field.key}>
-                          <span>{field.label}</span>
-                          <strong>
-                            {formatValue(historialSeleccionado.consulta?.[field.key])}
-                          </strong>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
               </>
             )}
           </div>
