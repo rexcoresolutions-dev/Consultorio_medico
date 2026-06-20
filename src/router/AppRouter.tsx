@@ -30,6 +30,8 @@ import Procedimientos from '../pages/procedimientos/Procedimientos';
 import HistorialClinico from '../pages/HistorialClinico/HistorialClinico';
 import HistorialesDisponibles from '../pages/HistorialClinico/HistorialesDisponibles';
 import NotaEvolucion from '../pages/NotaEvolucion/NotaEvolucion';
+import HistoricoPaciente from '../pages/HistoricoPaciente/HistoricoPaciente';
+import HojaReferencia from '../pages/HojaReferencia/HojaReferencia';
 
 import {
   ROUTES,
@@ -50,12 +52,18 @@ const LoadingScreen: React.FC = () => (
   </div>
 );
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return <LoadingScreen />;
 
-  return isAuthenticated ? <>{children}</> : <Navigate to={ROUTES.LOGIN} replace />;
+  return isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to={ROUTES.LOGIN} replace />
+  );
 };
 
 const RoleRedirect: React.FC = () => {
@@ -214,6 +222,24 @@ const AppRouter: React.FC = () => {
                 element={
                   <RoleRoute>
                     <NotaEvolucion />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.HISTORICO_PACIENTE}
+                element={
+                  <RoleRoute>
+                    <HistoricoPaciente />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.HOJA_REFERENCIA}
+                element={
+                  <RoleRoute>
+                    <HojaReferencia />
                   </RoleRoute>
                 }
               />

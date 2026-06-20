@@ -31,6 +31,8 @@ import {
   EyeOutlined,
   HistoryOutlined,
   FormOutlined,
+  FolderOpenOutlined,
+  MedicineBoxOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -91,32 +93,129 @@ const PrivateLayout: React.FC = () => {
     { key: '/clinicas', icon: <ShopOutlined />, label: 'Consultorios' },
     { key: '/usuarios', icon: <TeamOutlined />, label: 'Usuarios' },
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
-    { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
-    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
-    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
+    {
+      key: '/confirmar-atencion',
+      icon: <FileTextOutlined />,
+      label: 'Registrar atención',
+    },
+    {
+      key: '/historial-clinico',
+      icon: <HistoryOutlined />,
+      label: 'Historial clínico',
+    },
+    {
+      key: '/historiales-disponibles',
+      icon: <FolderOpenOutlined />,
+      label: 'Historiales disponibles',
+    },
+    {
+      key: '/nota-evolucion',
+      icon: <FormOutlined />,
+      label: 'Nota de evolución',
+    },
+    {
+      key: '/historico-paciente',
+      icon: <HistoryOutlined />,
+      label: 'Histórico por paciente',
+    },
+    {
+      key: '/hoja-referencia',
+      icon: <MedicineBoxOutlined />,
+      label: 'Hoja de referencia',
+    },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
-    { key: '/configuracion', icon: <SettingOutlined />, label: 'Configuración' },
+    {
+      key: '/configuracion',
+      icon: <SettingOutlined />,
+      label: 'Configuración',
+    },
   ];
 
   const menuMedico = [
-    { key: '/dashboard-medico', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Procedimientos' },
-    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
-    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
+    {
+      key: '/dashboard-medico',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: '/confirmar-atencion',
+      icon: <FileTextOutlined />,
+      label: 'Procedimientos',
+    },
+    {
+      key: '/historial-clinico',
+      icon: <HistoryOutlined />,
+      label: 'Historial clínico',
+    },
+    {
+      key: '/historiales-disponibles',
+      icon: <FolderOpenOutlined />,
+      label: 'Historiales disponibles',
+    },
+    {
+      key: '/nota-evolucion',
+      icon: <FormOutlined />,
+      label: 'Nota de evolución',
+    },
+    {
+      key: '/historico-paciente',
+      icon: <HistoryOutlined />,
+      label: 'Histórico por paciente',
+    },
+    {
+      key: '/hoja-referencia',
+      icon: <MedicineBoxOutlined />,
+      label: 'Hoja de referencia',
+    },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
-    { key: '/configuracion', icon: <SettingOutlined />, label: 'Configuración' },
+    {
+      key: '/configuracion',
+      icon: <SettingOutlined />,
+      label: 'Configuración',
+    },
   ];
 
   const menuConsultor = [
-    { key: '/dashboard-consultor', icon: <EyeOutlined />, label: 'Dashboard' },
+    {
+      key: '/dashboard-consultor',
+      icon: <EyeOutlined />,
+      label: 'Dashboard',
+    },
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
-    { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
-    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
-    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
+    {
+      key: '/confirmar-atencion',
+      icon: <FileTextOutlined />,
+      label: 'Registrar atención',
+    },
+    {
+      key: '/historial-clinico',
+      icon: <HistoryOutlined />,
+      label: 'Historial clínico',
+    },
+    {
+      key: '/historiales-disponibles',
+      icon: <FolderOpenOutlined />,
+      label: 'Historiales disponibles',
+    },
+    {
+      key: '/nota-evolucion',
+      icon: <FormOutlined />,
+      label: 'Nota de evolución',
+    },
+    {
+      key: '/historico-paciente',
+      icon: <HistoryOutlined />,
+      label: 'Histórico por paciente',
+    },
+    {
+      key: '/hoja-referencia',
+      icon: <MedicineBoxOutlined />,
+      label: 'Hoja de referencia',
+    },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -278,7 +377,8 @@ const PrivateLayout: React.FC = () => {
 
             <div className="page-title">
               <Text strong>
-                {menuItems.find((item) => item.key === location.pathname)?.label || 'Dashboard'}
+                {menuItems.find((item) => item.key === location.pathname)?.label ||
+                  'Dashboard'}
               </Text>
             </div>
           </div>
@@ -286,7 +386,11 @@ const PrivateLayout: React.FC = () => {
           <div className="header-right">
             <Tooltip title="Notificaciones">
               <Badge count={3} size="small">
-                <Button type="text" icon={<BellOutlined />} className="notification-btn" />
+                <Button
+                  type="text"
+                  icon={<BellOutlined />}
+                  className="notification-btn"
+                />
               </Badge>
             </Tooltip>
 
@@ -303,13 +407,15 @@ const PrivateLayout: React.FC = () => {
                   size={40}
                   icon={<UserOutlined />}
                   style={{
-                    background: 'linear-gradient(135deg, #50EBEC 0%, #36C6C7 100%)',
+                    background:
+                      'linear-gradient(135deg, #50EBEC 0%, #36C6C7 100%)',
                   }}
                 />
 
                 <div className="user-text-info">
                   <div className="user-name">
-                    {activeUser?.nombre || 'Usuario'} {activeUser?.primer_apellido || ''}
+                    {activeUser?.nombre || 'Usuario'}{' '}
+                    {activeUser?.primer_apellido || ''}
                   </div>
 
                   <div className="user-role">{getRolName()}</div>
@@ -332,7 +438,11 @@ const PrivateLayout: React.FC = () => {
         onMenuClick={handleMenuClick}
       />
 
-      <WelcomeModal visible={welcomeOpen} user={activeUser} onClose={() => setWelcomeOpen(false)} />
+      <WelcomeModal
+        visible={welcomeOpen}
+        user={activeUser}
+        onClose={() => setWelcomeOpen(false)}
+      />
     </Layout>
   );
 };

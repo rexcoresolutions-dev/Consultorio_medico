@@ -1,0 +1,560 @@
+.historico-page {
+  min-height: 100%;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.12), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(21, 159, 163, 0.08), transparent 30%),
+    #f6f9fb;
+}
+
+.historico-shell {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+}
+
+.historico-hero-card {
+  min-height: 138px;
+  padding: 24px;
+  border-radius: 26px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(235, 254, 255, 0.94)),
+    linear-gradient(135deg, #43d7d8, #159fa3);
+  box-shadow: 0 22px 50px rgba(15, 118, 110, 0.12);
+  border: 1px solid rgba(67, 215, 216, 0.28);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.historico-hero-icon {
+  width: 74px;
+  height: 74px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  box-shadow: 0 16px 30px rgba(21, 159, 163, 0.25);
+}
+
+.historico-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #159fa3;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.historico-hero-card h2 {
+  margin: 4px 0;
+  color: #0f172a;
+  font-weight: 950;
+}
+
+.historico-status-tag {
+  margin: 0;
+  border-radius: 999px;
+  background: #ecfeff;
+  border-color: #b8eef0;
+  color: #0f766e;
+  font-weight: 900;
+  padding: 5px 12px;
+}
+
+/* =========================
+   TARJETAS SUPERIORES
+========================= */
+
+.historico-main-row {
+  margin-top: 18px;
+  align-items: stretch;
+}
+
+.historico-main-row > .ant-col {
+  display: flex;
+}
+
+.historico-patient-card,
+.historico-last-card,
+.historico-review-card,
+.historico-documents-card {
+  border-radius: 24px;
+  border: 1px solid #e2edf0;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+}
+
+.historico-patient-card,
+.historico-last-card {
+  width: 100%;
+  min-height: 100%;
+}
+
+.historico-patient-card .ant-card-body,
+.historico-last-card .ant-card-body {
+  height: 100%;
+}
+
+.historico-patient-card .ant-card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.historico-patient-title,
+.historico-card-title {
+  margin-bottom: 14px;
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historico-patient-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.historico-patient-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.historico-avatar {
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(21, 159, 163, 0.24);
+  flex-shrink: 0;
+}
+
+.historico-avatar .anticon {
+  font-size: 30px;
+}
+
+.historico-patient-main h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 21px;
+  font-weight: 950;
+  text-transform: uppercase;
+  word-break: break-word;
+}
+
+.historico-patient-main p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-weight: 750;
+}
+
+.historico-finalizar-btn {
+  margin-top: 18px;
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #43d7d8 0%, #24c4c7 45%, #159fa3 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 850;
+  box-shadow:
+    0 12px 24px rgba(67, 215, 216, 0.22),
+    0 4px 12px rgba(21, 159, 163, 0.18);
+  transition: all 0.25s ease;
+}
+
+.historico-finalizar-btn:hover {
+  background: linear-gradient(135deg, #57e3e4 0%, #34d0d3 45%, #0f8f94 100%) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 34px rgba(67, 215, 216, 0.3),
+    0 8px 18px rgba(21, 159, 163, 0.22);
+}
+
+.historico-finalizar-btn:active {
+  transform: translateY(0);
+}
+
+.historico-finalizar-btn .anticon {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.historico-patient-data {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.historico-patient-data div,
+.historico-last-grid div {
+  padding: 12px;
+  border-radius: 16px;
+  background: #f8fcfd;
+  border: 1px solid #e2edf0;
+}
+
+.historico-patient-data span,
+.historico-last-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.historico-patient-data strong,
+.historico-last-grid strong {
+  color: #0f172a;
+  font-weight: 950;
+}
+
+.historico-last-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.historico-last-grid div {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* =========================
+   ÚLTIMA REVISIÓN
+========================= */
+
+.historico-review-card,
+.historico-documents-card {
+  margin-top: 18px;
+}
+
+.historico-review-card .ant-card-body {
+  padding: 0;
+}
+
+.historico-review-header {
+  padding: 13px 18px;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #ffffff;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historico-review-card .ant-row {
+  padding: 18px;
+}
+
+.historico-review-box {
+  min-height: 110px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fbffff;
+  border: 1px solid #c8f4f6;
+}
+
+.historico-review-box span {
+  display: block;
+  margin-bottom: 8px;
+  color: #0f766e;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.historico-review-box strong {
+  color: #0f172a;
+}
+
+/* =========================
+   DOCUMENTOS
+========================= */
+
+.historico-documents-header {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.historico-documents-header h3 {
+  margin: 2px 0 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.historico-search {
+  width: min(420px, 100%);
+  height: 40px;
+  border-radius: 14px;
+}
+
+.historico-filters {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f8fcfd;
+  border: 1px solid #e2edf0;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.historico-select {
+  width: 260px;
+}
+
+.historico-select .ant-select-selector {
+  height: 40px !important;
+  border-radius: 14px !important;
+}
+
+.historico-select .ant-select-selection-item {
+  line-height: 38px !important;
+  font-weight: 850;
+}
+
+.historico-date-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-weight: 800;
+}
+
+.historico-doc-tag {
+  margin: 0;
+  border-radius: 999px;
+  background: #ecfeff;
+  border-color: #b8eef0;
+  color: #0f766e;
+  font-weight: 900;
+}
+
+.historico-table {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.historico-table .ant-table-thead > tr > th {
+  background: #f0fdff !important;
+  color: #0f766e !important;
+  font-weight: 950 !important;
+}
+
+.historico-table .ant-table-tbody > tr > td {
+  color: #334155;
+  font-weight: 650;
+}
+
+/* =========================
+   SIN PACIENTE ACTIVO
+========================= */
+
+.historico-empty-state {
+  position: relative;
+  min-height: 580px;
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(67, 215, 216, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(235, 254, 255, 0.95));
+  box-shadow: 0 28px 55px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 40px;
+}
+
+.historico-empty-icon {
+  width: 104px;
+  height: 104px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 46px;
+  box-shadow: 0 22px 45px rgba(21, 159, 163, 0.3);
+  margin-bottom: 10px;
+  z-index: 1;
+}
+
+.historico-empty-badge {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: #ecfeff;
+  border: 1px solid #a7eef0;
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 900;
+  z-index: 1;
+}
+
+.historico-empty-state h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 950;
+}
+
+.historico-empty-state p {
+  margin: 0;
+  max-width: 620px;
+  color: #64748b;
+  font-size: 17px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.historico-empty-button {
+  margin-top: 12px;
+  height: 54px;
+  padding: 0 32px;
+  border-radius: 16px;
+  border: none;
+  font-size: 16px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+}
+
+.historico-empty-decoration {
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  background: rgba(67, 215, 216, 0.12);
+}
+
+.historico-empty-decoration.top {
+  top: -45px;
+  right: -45px;
+}
+
+.historico-empty-decoration.bottom {
+  bottom: -70px;
+  left: -70px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1100px) {
+  .historico-last-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1000px) {
+  .historico-hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .historico-documents-header,
+  .historico-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .historico-select,
+  .historico-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 991px) {
+  .historico-main-row > .ant-col {
+    display: block;
+  }
+
+  .historico-patient-card,
+  .historico-last-card {
+    min-height: auto;
+  }
+
+  .historico-patient-card .ant-card-body {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .historico-page {
+    padding: 10px;
+  }
+
+  .historico-hero-card,
+  .historico-patient-card,
+  .historico-last-card,
+  .historico-review-card,
+  .historico-documents-card {
+    border-radius: 20px;
+  }
+
+  .historico-hero-card {
+    padding: 18px;
+  }
+
+  .historico-hero-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    font-size: 26px;
+  }
+
+  .historico-hero-card h2 {
+    font-size: 22px;
+  }
+
+  .historico-patient-main {
+    align-items: center;
+  }
+
+  .historico-avatar {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+  }
+
+  .historico-avatar .anticon {
+    font-size: 26px;
+  }
+
+  .historico-patient-main h2 {
+    font-size: 19px;
+  }
+
+  .historico-last-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .historico-last-grid div {
+    min-height: 78px;
+  }
+
+  .historico-finalizar-btn {
+    height: 46px;
+    margin-top: 14px;
+  }
+
+  .historico-empty-state {
+    min-height: 520px;
+    padding: 25px;
+  }
+
+  .historico-empty-button {
+    width: 100%;
+  }
+}
