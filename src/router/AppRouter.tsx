@@ -31,6 +31,8 @@ import HistorialClinico from '../pages/HistorialClinico/HistorialClinico';
 import HistorialesDisponibles from '../pages/HistorialClinico/HistorialesDisponibles';
 import NotaEvolucion from '../pages/NotaEvolucion/NotaEvolucion';
 import HistoricoPaciente from '../pages/HistoricoPaciente/HistoricoPaciente';
+
+import OpcionesHojaReferencia from '../pages/HojaReferencia/OpcionesHojaReferencia';
 import HojaReferencia from '../pages/HojaReferencia/HojaReferencia';
 
 import {
@@ -52,18 +54,12 @@ const LoadingScreen: React.FC = () => (
   </div>
 );
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return <LoadingScreen />;
 
-  return isAuthenticated ? (
-    <>{children}</>
-  ) : (
-    <Navigate to={ROUTES.LOGIN} replace />
-  );
+  return isAuthenticated ? <>{children}</> : <Navigate to={ROUTES.LOGIN} replace />;
 };
 
 const RoleRedirect: React.FC = () => {
@@ -109,149 +105,27 @@ const AppRouter: React.FC = () => {
             >
               <Route path="/inicio" element={<RoleRedirect />} />
 
-              <Route
-                path={ROUTES.DASHBOARD_ADMIN}
-                element={
-                  <RoleRoute>
-                    <Dashboard />
-                  </RoleRoute>
-                }
-              />
+              <Route path={ROUTES.DASHBOARD_ADMIN} element={<RoleRoute><Dashboard /></RoleRoute>} />
+              <Route path={ROUTES.DASHBOARD_MEDICO} element={<RoleRoute><DashboardMedico /></RoleRoute>} />
+              <Route path={ROUTES.DASHBOARD_CONSULTOR} element={<RoleRoute><DashboardConsultor /></RoleRoute>} />
 
-              <Route
-                path={ROUTES.DASHBOARD_MEDICO}
-                element={
-                  <RoleRoute>
-                    <DashboardMedico />
-                  </RoleRoute>
-                }
-              />
+              <Route path={ROUTES.USERS} element={<RoleRoute><Usuarios /></RoleRoute>} />
+              <Route path={ROUTES.CLINICS} element={<RoleRoute><Clinicas /></RoleRoute>} />
+              <Route path={ROUTES.CLINIC_NEW} element={<RoleRoute><Clinicas /></RoleRoute>} />
+              <Route path={ROUTES.CLINIC_DETAIL} element={<RoleRoute><Clinicas /></RoleRoute>} />
 
-              <Route
-                path={ROUTES.DASHBOARD_CONSULTOR}
-                element={
-                  <RoleRoute>
-                    <DashboardConsultor />
-                  </RoleRoute>
-                }
-              />
+              <Route path={ROUTES.PATIENTS} element={<RoleRoute><Pacientes /></RoleRoute>} />
+              <Route path={ROUTES.CONFIRMAR_ATENCION} element={<RoleRoute><ConfirmarAtencion /></RoleRoute>} />
+              <Route path={ROUTES.PROCEDIMIENTOS} element={<RoleRoute><Procedimientos /></RoleRoute>} />
+              <Route path={ROUTES.HISTORIAL_CLINICO} element={<RoleRoute><HistorialClinico /></RoleRoute>} />
+              <Route path={ROUTES.HISTORIALES_DISPONIBLES} element={<RoleRoute><HistorialesDisponibles /></RoleRoute>} />
+              <Route path={ROUTES.NOTA_EVOLUCION} element={<RoleRoute><NotaEvolucion /></RoleRoute>} />
+              <Route path={ROUTES.HISTORICO_PACIENTE} element={<RoleRoute><HistoricoPaciente /></RoleRoute>} />
 
-              <Route
-                path={ROUTES.USERS}
-                element={
-                  <RoleRoute>
-                    <Usuarios />
-                  </RoleRoute>
-                }
-              />
+              <Route path={ROUTES.HOJA_REFERENCIA} element={<RoleRoute><OpcionesHojaReferencia /></RoleRoute>} />
+              <Route path={ROUTES.HOJA_REFERENCIA_CREAR} element={<RoleRoute><HojaReferencia /></RoleRoute>} />
 
-              <Route
-                path={ROUTES.CLINICS}
-                element={
-                  <RoleRoute>
-                    <Clinicas />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.CLINIC_NEW}
-                element={
-                  <RoleRoute>
-                    <Clinicas />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.CLINIC_DETAIL}
-                element={
-                  <RoleRoute>
-                    <Clinicas />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.PATIENTS}
-                element={
-                  <RoleRoute>
-                    <Pacientes />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.CONFIRMAR_ATENCION}
-                element={
-                  <RoleRoute>
-                    <ConfirmarAtencion />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.PROCEDIMIENTOS}
-                element={
-                  <RoleRoute>
-                    <Procedimientos />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.HISTORIAL_CLINICO}
-                element={
-                  <RoleRoute>
-                    <HistorialClinico />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.HISTORIALES_DISPONIBLES}
-                element={
-                  <RoleRoute>
-                    <HistorialesDisponibles />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.NOTA_EVOLUCION}
-                element={
-                  <RoleRoute>
-                    <NotaEvolucion />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.HISTORICO_PACIENTE}
-                element={
-                  <RoleRoute>
-                    <HistoricoPaciente />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.HOJA_REFERENCIA}
-                element={
-                  <RoleRoute>
-                    <HojaReferencia />
-                  </RoleRoute>
-                }
-              />
-
-              <Route
-                path={ROUTES.PROFILE}
-                element={
-                  <RoleRoute>
-                    <Perfil />
-                  </RoleRoute>
-                }
-              />
+              <Route path={ROUTES.PROFILE} element={<RoleRoute><Perfil /></RoleRoute>} />
 
               <Route path="*" element={<RoleRedirect />} />
             </Route>

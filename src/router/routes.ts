@@ -22,7 +22,9 @@ export const ROUTES = {
   HISTORIALES_DISPONIBLES: '/historiales-disponibles',
   NOTA_EVOLUCION: '/nota-evolucion',
   HISTORICO_PACIENTE: '/historico-paciente',
+
   HOJA_REFERENCIA: '/hoja-referencia',
+  HOJA_REFERENCIA_CREAR: '/hoja-referencia/crear',
 
   APPOINTMENTS: '/citas',
   MEDICAL_RECORDS: '/expedientes',
@@ -43,13 +45,10 @@ export const getDashboardByRole = (rolId?: number) => {
   switch (Number(rolId)) {
     case ROLES.ADMIN:
       return ROUTES.DASHBOARD_ADMIN;
-
     case ROLES.MEDICO:
       return ROUTES.DASHBOARD_MEDICO;
-
     case ROLES.CONSULTOR:
       return ROUTES.DASHBOARD_CONSULTOR;
-
     default:
       return ROUTES.LOGIN;
   }
@@ -58,15 +57,11 @@ export const getDashboardByRole = (rolId?: number) => {
 export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
   [ROLES.ADMIN]: [
     ROUTES.DASHBOARD_ADMIN,
-
     ROUTES.CLINICS,
     ROUTES.CLINIC_NEW,
     ROUTES.CLINIC_DETAIL,
-
     ROUTES.USERS,
-
     ROUTES.PATIENTS,
-
     ROUTES.CONFIRMAR_ATENCION,
     ROUTES.BUSQUEDA_PACIENTE,
     ROUTES.CONSULTA,
@@ -77,7 +72,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.NOTA_EVOLUCION,
     ROUTES.HISTORICO_PACIENTE,
     ROUTES.HOJA_REFERENCIA,
-
+    ROUTES.HOJA_REFERENCIA_CREAR,
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
@@ -88,9 +83,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
 
   [ROLES.MEDICO]: [
     ROUTES.DASHBOARD_MEDICO,
-
     ROUTES.PATIENTS,
-
     ROUTES.CONFIRMAR_ATENCION,
     ROUTES.BUSQUEDA_PACIENTE,
     ROUTES.CONSULTA,
@@ -101,7 +94,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.NOTA_EVOLUCION,
     ROUTES.HISTORICO_PACIENTE,
     ROUTES.HOJA_REFERENCIA,
-
+    ROUTES.HOJA_REFERENCIA_CREAR,
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
@@ -112,9 +105,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
 
   [ROLES.CONSULTOR]: [
     ROUTES.DASHBOARD_CONSULTOR,
-
     ROUTES.PATIENTS,
-
     ROUTES.CONFIRMAR_ATENCION,
     ROUTES.BUSQUEDA_PACIENTE,
     ROUTES.HISTORIAL_CLINICO,
@@ -122,7 +113,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.NOTA_EVOLUCION,
     ROUTES.HISTORICO_PACIENTE,
     ROUTES.HOJA_REFERENCIA,
-
+    ROUTES.HOJA_REFERENCIA_CREAR,
     ROUTES.APPOINTMENTS,
     ROUTES.PRESCRIPTIONS,
     ROUTES.REPORTS,

@@ -148,7 +148,7 @@ const HojaReferencia: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/historico-paciente');
+    navigate('/hoja-referencia');
   };
 
   const handlePreview = async () => {
@@ -240,8 +240,8 @@ const HojaReferencia: React.FC = () => {
       showCancelButton: true,
       confirmButtonText: 'Sí, finalizar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#159fa3',
-      cancelButtonColor: '#8b98a8',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#94a3b8',
     });
 
     if (!result.isConfirmed) return;
@@ -261,7 +261,7 @@ const HojaReferencia: React.FC = () => {
       showConfirmButton: false,
     });
 
-    navigate('/pacientes', { replace: true });
+    navigate('/hoja-referencia', { replace: true });
   };
 
   const previewValues = form.getFieldsValue();

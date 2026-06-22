@@ -163,7 +163,7 @@ const HistoricoPaciente: React.FC = () => {
     });
 
     setPacienteActivo(null);
-    navigate('/pacientes', { replace: true });
+    navigate('/historico-paciente', { replace: true });
   };
 
   const historialesPaciente = useMemo(() => {

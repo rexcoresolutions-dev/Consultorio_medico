@@ -119,7 +119,7 @@ const PrivateLayout: React.FC = () => {
       label: 'Histórico por paciente',
     },
     {
-      key: '/hoja-referencia',
+      key: '/hoja-referenca',
       icon: <MedicineBoxOutlined />,
       label: 'Hoja de referencia',
     },
