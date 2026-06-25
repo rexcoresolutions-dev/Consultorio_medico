@@ -473,16 +473,23 @@ const HistorialesDisponibles: React.FC = () => {
       <div className="historial-page">
         <div className="historial-shell">
           <Card className="historial-empty-card">
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No hay paciente activo" />
-
-            <p>
-              Primero selecciona un paciente desde el módulo de Pacientes para consultar sus
-              historiales disponibles.
-            </p>
-
-            <Button type="primary" icon={<UserOutlined />} onClick={() => navigate('/pacientes')}>
-              Ir a pacientes
-            </Button>
+              <div className="historial-empty-icon">
+                  <UserOutlined />
+              </div>
+              <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No hay paciente activo"
+              />
+              <p>
+                  Primero selecciona un paciente desde el módulo de Pacientes para consultar sus historiales disponibles.
+              </p>
+              <Button
+                  type="primary"
+                  icon={<UserOutlined />}
+                  onClick={() => navigate('/pacientes')}
+              >
+                  Ir a pacientes
+              </Button>
           </Card>
         </div>
       </div>

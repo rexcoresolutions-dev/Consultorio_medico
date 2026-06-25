@@ -24,10 +24,9 @@
   padding: 16px 18px;
   border-radius: 22px;
   text-align: center;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(235, 254, 255, 0.94));
-  border: 1px solid rgba(67, 215, 216, 0.26);
-  box-shadow: 0 16px 38px rgba(15, 118, 110, 0.1);
+  background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(235,254,255,.94));
+  border: 1px solid rgba(67,215,216,.26);
+  box-shadow: 0 16px 38px rgba(15,118,110,.1);
 }
 
 .referencia-main-title h3 {
@@ -35,7 +34,7 @@
   color: #102f38;
   font-size: 21px;
   font-weight: 950;
-  letter-spacing: 0.04em;
+  letter-spacing: .04em;
 }
 
 .referencia-main-title .ant-typography {
@@ -48,359 +47,21 @@
   border-radius: 13px;
   color: #159fa3;
   font-weight: 800;
-  border: 1px solid rgba(67, 215, 216, 0.32);
-  background: #ffffff;
-  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.08);
-}
-
-.referencia-back-btn:hover {
-  color: #0f8f93 !important;
-  border-color: #43d7d8 !important;
-  background: #f0feff !important;
+  border: 1px solid rgba(67,215,216,.32);
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(15,118,110,.08);
 }
 
 .referencia-form-card {
   border-radius: 24px;
-  border: 1px solid rgba(67, 215, 216, 0.24);
-  box-shadow: 0 20px 50px rgba(15, 118, 110, 0.1);
+  border: 1px solid rgba(67,215,216,.24);
+  box-shadow: 0 20px 50px rgba(15,118,110,.1);
   overflow: hidden;
-  background: #ffffff;
+  background: #fff;
 }
 
 .referencia-form-card .ant-card-body {
   padding: 20px;
-}
-
-.referencia-paciente-box {
-  position: relative;
-  padding: 18px;
-  margin-bottom: 18px;
-  border-radius: 20px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(235, 254, 255, 0.95));
-  border: 1px solid rgba(67, 215, 216, 0.24);
-  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.08);
-}
-
-.referencia-paciente-title {
-  position: absolute;
-  top: -12px;
-  left: 16px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: linear-gradient(135deg, #43d7d8, #159fa3);
-  box-shadow: 0 8px 16px rgba(21, 159, 163, 0.22);
-}
-
-.referencia-paciente-box h2 {
-  margin: 0;
-  color: #102f38;
-  font-size: 20px;
-  font-weight: 950;
-  line-height: 1.2;
-}
-
-.referencia-paciente-box span {
-  display: inline-block;
-  margin-right: 6px;
-  color: #647985;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.referencia-paciente-box strong {
-  color: #1c3843;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.referencia-form {
-  padding: 0 4px;
-}
-
-.referencia-general-row {
-  margin-top: 6px;
-}
-
-.referencia-form .ant-form-item {
-  margin-bottom: 10px;
-}
-
-.referencia-form .ant-form-item-label {
-  padding-bottom: 3px;
-}
-
-.referencia-form .ant-form-item-label > label {
-  color: #38515b;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.referencia-form .ant-input,
-.referencia-form .ant-select-selector {
-  min-height: 38px !important;
-  height: 38px !important;
-  border-radius: 12px !important;
-  border: 1px solid rgba(67, 215, 216, 0.28) !important;
-  background: #fbfeff !important;
-  color: #14313d;
-  font-size: 13px;
-  box-shadow: none !important;
-}
-
-.referencia-form .ant-select-selection-item,
-.referencia-form .ant-select-selection-placeholder {
-  line-height: 36px !important;
-  font-size: 13px;
-}
-
-.referencia-form .ant-select-selection-placeholder {
-  color: #93a4ad !important;
-}
-
-.referencia-form .ant-input::placeholder {
-  color: #93a4ad;
-}
-
-.referencia-form .ant-input:focus,
-.referencia-form .ant-input-focused,
-.referencia-form .ant-select-focused .ant-select-selector {
-  border-color: #43d7d8 !important;
-  box-shadow: 0 0 0 4px rgba(67, 215, 216, 0.15) !important;
-}
-
-.referencia-form .ant-select-arrow {
-  color: #159fa3;
-}
-
-.referencia-section-title {
-  margin: 20px 0 16px;
-  padding-bottom: 9px;
-  border-bottom: 2px solid rgba(67, 215, 216, 0.22);
-  color: #159fa3;
-  font-size: 13px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.referencia-section-title::before,
-.referencia-section-title::after {
-  content: '';
-  display: inline-block;
-  width: 38px;
-  height: 2px;
-  margin: 0 10px 4px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #43d7d8);
-}
-
-.referencia-section-title::after {
-  background: linear-gradient(90deg, #43d7d8, transparent);
-}
-
-.referencia-medico-title {
-  margin-top: 18px;
-}
-
-.referencia-separator {
-  height: 2px;
-  margin: 14px 0 14px;
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, transparent, rgba(67, 215, 216, 0.5), transparent);
-}
-
-.referencia-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(67, 215, 216, 0.18);
-}
-
-.referencia-actions .ant-space {
-  justify-content: flex-end;
-}
-
-.referencia-actions .ant-btn {
-  min-width: 96px;
-  height: 38px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.referencia-save-btn {
-  color: #ffffff !important;
-  border: none !important;
-  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
-  box-shadow: 0 12px 24px rgba(21, 159, 163, 0.24) !important;
-}
-
-.referencia-save-btn:hover {
-  color: #ffffff !important;
-  filter: brightness(1.04);
-}
-
-.referencia-finish-btn {
-  color: #ffffff !important;
-  border: none !important;
-  background: linear-gradient(135deg, #20c997, #159fa3) !important;
-  box-shadow: 0 12px 24px rgba(21, 159, 163, 0.24) !important;
-}
-
-.referencia-finish-btn:hover {
-  color: #ffffff !important;
-  filter: brightness(1.04);
-}
-
-.referencia-preview {
-  padding: 8px 2px;
-  color: #263c45;
-}
-
-.preview-title {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 950;
-  color: #102f38;
-  margin-bottom: 14px;
-}
-
-.preview-patient {
-  display: grid;
-  grid-template-columns: 1fr repeat(3, auto);
-  gap: 12px;
-  align-items: center;
-  padding: 14px;
-  border-radius: 16px;
-  background: #f2fbfc;
-  border: 1px solid rgba(21, 159, 163, 0.18);
-  margin-bottom: 14px;
-}
-
-.preview-patient strong {
-  color: #102f38;
-  font-size: 15px;
-}
-
-.preview-patient span {
-  font-weight: 800;
-  color: #5c717b;
-}
-
-.referencia-preview p {
-  margin: 6px 0;
-  line-height: 1.45;
-}
-
-.referencia-preview b {
-  color: #102f38;
-}
-
-@media (max-width: 980px) {
-  .referencia-main-title {
-    grid-template-columns: 1fr;
-  }
-
-  .referencia-back-btn {
-    width: fit-content;
-  }
-
-  .referencia-form-card .ant-card-body {
-    padding: 16px;
-  }
-
-  .referencia-actions {
-    justify-content: stretch;
-  }
-
-  .referencia-actions .ant-space {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .referencia-actions .ant-space-item {
-    width: 100%;
-  }
-
-  .referencia-actions .ant-btn {
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .referencia-page {
-    padding: 12px;
-  }
-
-  .referencia-main-title > div {
-    padding: 14px;
-    border-radius: 18px;
-  }
-
-  .referencia-main-title h3 {
-    font-size: 18px;
-  }
-
-  .referencia-main-title .ant-typography {
-    font-size: 11px;
-  }
-
-  .referencia-form-card {
-    border-radius: 18px;
-  }
-
-  .referencia-form-card .ant-card-body {
-    padding: 14px 12px;
-  }
-
-  .referencia-paciente-box {
-    padding: 18px 12px 12px;
-    border-radius: 16px;
-  }
-
-  .referencia-paciente-box h2 {
-    font-size: 17px;
-  }
-
-  .referencia-section-title {
-    font-size: 11px;
-    letter-spacing: 0.05em;
-  }
-
-  .referencia-section-title::before,
-  .referencia-section-title::after {
-    width: 22px;
-    margin: 0 6px 4px;
-  }
-
-  .referencia-form .ant-input,
-  .referencia-form .ant-select-selector {
-    min-height: 40px !important;
-    height: 40px !important;
-  }
-
-  .referencia-form .ant-select-selection-item,
-  .referencia-form .ant-select-selection-placeholder {
-    line-height: 38px !important;
-  }
-
-  .referencia-actions .ant-space {
-    grid-template-columns: 1fr;
-  }
-
-  .preview-patient {
-    grid-template-columns: 1fr;
-  }
 }
 
 .referencia-paciente-card {
@@ -408,10 +69,9 @@
   margin-bottom: 22px;
   padding: 28px 26px 22px;
   border-radius: 26px;
-  border: 1px solid rgba(67, 215, 216, 0.28);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(235, 254, 255, 0.92));
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(67,215,216,.28);
+  background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(235,254,255,.92));
+  box-shadow: 0 18px 42px rgba(15,23,42,.06);
 }
 
 .referencia-paciente-badge {
@@ -422,75 +82,12 @@
   padding: 0 18px;
   border-radius: 999px;
   background: linear-gradient(135deg, #43d7d8, #159fa3);
-  color: #ffffff;
+  color: #fff;
   font-size: 14px;
   font-weight: 950;
   display: flex;
   align-items: center;
-  box-shadow: 0 10px 20px rgba(21, 159, 163, 0.2);
-}
-
-.referencia-paciente-content {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.referencia-paciente-top {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 24px;
-  align-items: center;
-}
-
-.referencia-paciente-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-
-.referencia-paciente-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
-  align-items: center;
-}
-
-.referencia-paciente-meta div {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.referencia-finalizar-wrapper {
-  flex-shrink: 0;
-}
-@media (max-width: 900px) {
-  .referencia-paciente-bottom {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .referencia-paciente-meta {
-    gap: 12px;
-  }
-
-  .referencia-paciente-meta div {
-    width: 100%;
-    padding: 12px;
-    border-radius: 14px;
-    background: #f8fcfd;
-    border: 1px solid #e2edf0;
-  }
-
-  .referencia-finalizar-wrapper {
-    width: 100%;
-  }
-
-  .referencia-finalizar-paciente-btn {
-    width: 100%;
-  }
+  box-shadow: 0 10px 20px rgba(21,159,163,.2);
 }
 
 .referencia-paciente-main h2 {
@@ -503,7 +100,7 @@
 }
 
 .referencia-paciente-origin {
-  margin-top: 42px;
+  margin-top: 14px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -521,6 +118,14 @@
   color: #082033;
   font-size: 15px;
   font-weight: 950;
+}
+
+.referencia-paciente-bottom {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
 .referencia-paciente-meta {
@@ -543,32 +148,411 @@
   border: none;
   border-radius: 17px;
   background: linear-gradient(135deg, #43d7d8 0%, #24c4c7 45%, #159fa3 100%);
-  color: #ffffff !important;
+  color: #fff !important;
   font-size: 15px;
   font-weight: 900;
   box-shadow:
-    0 14px 28px rgba(67, 215, 216, 0.25),
-    0 5px 14px rgba(21, 159, 163, 0.18);
+    0 14px 28px rgba(67,215,216,.25),
+    0 5px 14px rgba(21,159,163,.18);
 }
 
-.referencia-finalizar-paciente-btn:hover {
-  background: linear-gradient(135deg, #57e3e4 0%, #34d0d3 45%, #0f8f94 100%) !important;
-  color: #ffffff !important;
-  transform: translateY(-2px);
+.referencia-form {
+  padding: 0 4px;
 }
 
-.referencia-finalizar-paciente-btn .anticon {
-  color: #ffffff;
+.referencia-wizard-steps {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 14px;
+  border-radius: 20px;
+  background: #f8fcfd;
+  border: 1px solid rgba(67,215,216,.2);
+}
+
+.referencia-wizard-step {
+  border: 1px solid #d9f7f8;
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  min-width: 280px;
+}
+
+.referencia-wizard-step span {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: #64748b;
+  font-weight: 950;
+}
+
+.referencia-wizard-step strong {
+  display: block;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.referencia-wizard-step small {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.referencia-wizard-step.active {
+  background: #ecfeff;
+  border-color: #43d7d8;
+}
+
+.referencia-wizard-step.active span,
+.referencia-wizard-step.done span {
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #fff;
+}
+
+.referencia-wizard-step.active strong,
+.referencia-wizard-step.done strong {
+  color: #0f766e;
+}
+
+.referencia-step-line {
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.referencia-step-line.active {
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+}
+
+.referencia-wizard-panel {
+  padding: 14px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(67,215,216,.16);
+}
+
+.referencia-section-title {
+  margin: 18px 0 16px;
+  padding-bottom: 9px;
+  border-bottom: 2px solid rgba(67,215,216,.22);
+  color: #159fa3;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.referencia-section-title::before,
+.referencia-section-title::after {
+  content: '';
+  display: inline-block;
+  width: 38px;
+  height: 2px;
+  margin: 0 10px 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #43d7d8);
+}
+
+.referencia-section-title::after {
+  background: linear-gradient(90deg, #43d7d8, transparent);
+}
+
+.referencia-medico-box,
+.referencia-resumen-box {
+  padding: 16px;
+  border-radius: 18px;
+  background: #f8fcfd;
+  border: 1px solid #d9f7f8;
+}
+
+.referencia-form .ant-form-item {
+  margin-bottom: 10px;
+}
+
+.referencia-form .ant-form-item-label {
+  padding-bottom: 3px;
+}
+
+.referencia-form .ant-form-item-label > label {
+  color: #38515b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.referencia-form .ant-input,
+.referencia-form .ant-select-selector,
+.referencia-form textarea {
+  border-radius: 12px !important;
+  border: 1px solid rgba(67,215,216,.28) !important;
+  background: #fbfeff !important;
+  color: #14313d;
+  font-size: 13px;
+  box-shadow: none !important;
+}
+
+.referencia-form .ant-input,
+.referencia-form .ant-select-selector {
+  height: 38px !important;
+}
+
+.referencia-form textarea {
+  min-height: 84px !important;
+}
+
+.referencia-form .ant-input[readonly] {
+  background: #eefafa !important;
+  color: #1f3c46;
+  font-weight: 800;
+  cursor: default;
+}
+
+.referencia-form .ant-input-group-addon {
+  border-color: rgba(67,215,216,.28) !important;
+  background: #f0fdff;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.referencia-form .ant-select-selection-item,
+.referencia-form .ant-select-selection-placeholder {
+  line-height: 36px !important;
+  font-size: 13px;
+}
+
+.referencia-diagnostico-area {
+  width: min(620px, 100%);
+  margin: 12px auto 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.referencia-diagnostico-area .ant-form-item {
+  margin-bottom: 0;
+}
+
+.referencia-add-btn {
+  height: 38px;
+  min-width: 120px;
+  border-radius: 12px;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 850;
+  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
+}
+
+.referencia-diagnostico-table {
+  width: min(680px, 100%);
+  margin: 0 auto;
+}
+
+.referencia-diagnostico-table .ant-table {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(67,215,216,.25);
+}
+
+.referencia-diagnostico-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  font-size: 12px;
+}
+
+.referencia-diagnostico-table .ant-table-tbody > tr > td {
+  font-size: 12px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.referencia-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(67,215,216,.18);
+}
+
+.referencia-actions .ant-space {
+  justify-content: flex-end;
+}
+
+.referencia-actions .ant-btn {
+  min-width: 96px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.referencia-save-btn {
+  color: #fff !important;
+  border: none !important;
+  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
+  box-shadow: 0 12px 24px rgba(21,159,163,.24) !important;
+}
+
+.referencia-preview {
+  padding: 8px 2px;
+  color: #263c45;
+}
+
+.preview-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 950;
+  color: #102f38;
+  margin-bottom: 14px;
+}
+
+.preview-title.small {
+  margin-top: 16px;
+  font-size: 15px;
+}
+
+.preview-patient {
+  display: grid;
+  grid-template-columns: 1fr repeat(3, auto);
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f2fbfc;
+  border: 1px solid rgba(21,159,163,.18);
+  margin-bottom: 14px;
+}
+
+/* ESTADO VACÍO */
+
+.referencia-empty-state {
+  position: relative;
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  min-height: 620px;
+  padding: 70px 24px;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(231,251,252,.9));
+  border: 1px solid rgba(67,215,216,.28);
+  box-shadow: 0 18px 50px rgba(15,118,110,.1);
+  text-align: center;
+}
+
+.referencia-empty-shape {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(67,215,216,.12);
+}
+
+.referencia-empty-shape-top {
+  width: 190px;
+  height: 190px;
+  right: -20px;
+  top: -20px;
+  border-radius: 0 0 0 90px;
+}
+
+.referencia-empty-shape-bottom {
+  width: 180px;
+  height: 180px;
+  left: -30px;
+  bottom: -30px;
+  border-radius: 50%;
+}
+
+.referencia-empty-icon {
+  width: 92px;
+  height: 92px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #43d7d8, #159fa3);
+  color: #fff;
+  font-size: 40px;
+  box-shadow: 0 18px 36px rgba(21,159,163,.22);
+}
+
+.referencia-empty-badge {
+  margin-bottom: 24px;
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(67,215,216,.38);
+  color: #0a7d82;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.referencia-empty-state h1 {
+  margin: 0;
+  color: #081f39;
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.referencia-empty-state p {
+  width: min(560px, 100%);
+  margin: 22px 0 30px;
+  color: #607289;
   font-size: 17px;
+  font-weight: 700;
+  line-height: 1.65;
 }
 
-@media (max-width: 1100px) {
-  .referencia-paciente-content {
+.referencia-empty-btn {
+  min-width: 250px;
+  height: 54px;
+  border: none !important;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
+  color: #fff !important;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 980px) {
+  .referencia-main-title,
+  .referencia-wizard-steps {
     grid-template-columns: 1fr;
   }
 
-  .referencia-paciente-origin {
-    margin-top: 14px;
+  .referencia-step-line {
+    display: none;
+  }
+
+  .referencia-wizard-step {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .referencia-paciente-bottom {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .referencia-paciente-meta {
@@ -586,19 +570,68 @@
   .referencia-finalizar-paciente-btn {
     width: 100%;
   }
+
+  .referencia-actions .ant-space {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .referencia-actions .ant-space-item,
+  .referencia-actions .ant-btn {
+    width: 100%;
+  }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
+  .referencia-page {
+    padding: 12px;
+  }
+
+  .referencia-form-card .ant-card-body {
+    padding: 14px 12px;
+  }
+
   .referencia-paciente-card {
     padding: 28px 16px 16px;
-    border-radius: 20px;
   }
 
   .referencia-paciente-main h2 {
     font-size: 22px;
   }
 
-  .referencia-paciente-meta {
+  .referencia-paciente-meta,
+  .referencia-actions .ant-space,
+  .referencia-diagnostico-area,
+  .preview-patient {
     grid-template-columns: 1fr;
+  }
+
+  .referencia-add-btn {
+    width: 100%;
+  }
+
+  .referencia-empty-state {
+    min-height: calc(100vh - 120px);
+    padding: 55px 20px;
+  }
+
+  .referencia-empty-icon {
+    width: 80px;
+    height: 80px;
+    font-size: 34px;
+  }
+
+  .referencia-empty-state h1 {
+    font-size: 32px;
+  }
+
+  .referencia-empty-state p {
+    font-size: 15px;
+  }
+
+  .referencia-empty-btn {
+    width: 100%;
+    min-width: 0;
   }
 }

@@ -420,23 +420,233 @@
    VACÍO
 ========================= */
 
+/*==================================================
+  ESTADO VACÍO - MISMO ESTILO DEL SISTEMA
+==================================================*/
+
 .historial-empty-card {
-  min-height: 420px;
-  border-radius: 26px;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  position: relative;
+
+  width: min(1180px, 100%);
+  margin: 0 auto;
+
+  min-height: 620px;
+
+  overflow: hidden;
+
+  border-radius: 30px;
+
+  border: 1px solid rgba(67, 215, 216, 0.28);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.98),
+      rgba(231,251,252,.90)
+    );
+
+  box-shadow:
+    0 20px 55px rgba(15,118,110,.10);
 }
 
-.historial-empty-card .ant-card-body {
-  display: grid;
-  justify-items: center;
+.historial-empty-card::before{
+  content:"";
+  position:absolute;
+
+  width:220px;
+  height:220px;
+
+  top:-25px;
+  right:-25px;
+
+  border-radius:0 0 0 100px;
+
+  background:rgba(67,215,216,.12);
 }
 
-.historial-empty-card p {
-  color: #64748b;
-  max-width: 460px;
+.historial-empty-card::after{
+  content:"";
+  position:absolute;
+
+  width:210px;
+  height:210px;
+
+  left:-35px;
+  bottom:-35px;
+
+  border-radius:50%;
+
+  background:rgba(67,215,216,.10);
+}
+
+.historial-empty-card .ant-card-body{
+
+  position:relative;
+  z-index:2;
+
+  min-height:620px;
+
+  padding:80px 32px;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+
+  text-align:center;
+}
+
+/* Oculta el Empty de Ant */
+
+.historial-empty-card .ant-empty-image{
+  display:none;
+}
+
+/* Icono */
+
+.historial-empty-icon{
+
+  width:96px;
+  height:96px;
+
+  margin-bottom:24px;
+
+  border-radius:26px;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  background:
+      linear-gradient(
+          135deg,
+          #43d7d8,
+          #159fa3
+      );
+
+  color:#ffffff;
+
+  font-size:42px;
+
+  box-shadow:
+      0 20px 38px rgba(21,159,163,.22);
+}
+
+.historial-empty-card .ant-empty-description{
+
+  margin:0;
+
+  color:#081f39;
+
+  font-size:38px;
+
+  font-weight:900;
+
+  line-height:1.15;
+}
+
+.historial-empty-card p{
+
+  width:min(620px,100%);
+
+  margin:24px 0 34px;
+
+  color:#607289;
+
+  font-size:17px;
+
+  font-weight:700;
+
+  line-height:1.7;
+}
+
+.historial-empty-card .ant-btn{
+
+  min-width:255px;
+
+  height:56px;
+
+  border:none !important;
+
+  border-radius:16px;
+
+  background:
+      linear-gradient(
+          135deg,
+          #43d7d8,
+          #159fa3
+      ) !important;
+
+  color:#ffffff !important;
+
+  font-size:16px;
+
+  font-weight:900;
+
+  box-shadow:
+      0 16px 30px rgba(21,159,163,.24);
+
+  transition:.25s;
+}
+
+.historial-empty-card .ant-btn:hover{
+
+  color:#ffffff !important;
+
+  transform:translateY(-2px);
+
+  filter:brightness(1.05);
+}
+
+@media (max-width:768px){
+
+  .historial-empty-card{
+
+    width:100%;
+
+    min-height:540px;
+
+    border-radius:24px;
+  }
+
+  .historial-empty-card .ant-card-body{
+
+    min-height:540px;
+
+    padding:60px 20px;
+  }
+
+  .historial-empty-icon{
+
+    width:82px;
+    height:82px;
+
+    font-size:36px;
+  }
+
+  .historial-empty-card .ant-empty-description{
+
+    font-size:30px;
+  }
+
+  .historial-empty-card p{
+
+    font-size:15px;
+
+    margin:18px 0 28px;
+  }
+
+  .historial-empty-card .ant-btn{
+
+    width:100%;
+
+    min-width:0;
+
+    height:52px;
+
+    font-size:15px;
+  }
+
 }
 
 /* =========================

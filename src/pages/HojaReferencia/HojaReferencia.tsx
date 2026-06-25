@@ -3,32 +3,34 @@ import {
   Button,
   Card,
   Col,
-  Empty,
   Form,
   Input,
+  Modal,
   Row,
   Select,
   Space,
+  Table,
   Typography,
-  Modal,
   message,
 } from 'antd';
 import {
   ArrowLeftOutlined,
-  SaveOutlined,
-  EyeOutlined,
-  ClearOutlined,
   CheckCircleOutlined,
-  FileTextOutlined,
+  ClearOutlined,
   CloseCircleOutlined,
+  EyeOutlined,
+  PlusOutlined,
+  SaveOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import './HojaReferencia.css';
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
@@ -50,6 +52,13 @@ type PacienteData = {
   curp?: string;
 };
 
+type DiagnosticoReferencia = {
+  id: string;
+  no: number;
+  clave: string;
+  diagnostico: string;
+};
+
 type HojaReferenciaForm = {
   escolaridad?: string;
   estado_civil?: string;
@@ -64,9 +73,26 @@ type HojaReferenciaForm = {
   unidad_referencia?: string;
   servicio_referencia?: string;
   urgencia?: string;
+
   medico_nombre?: string;
   medico_cedula?: string;
-  medico_especialidad?: string;
+  medico_universidad?: string;
+  medico_unidad?: string;
+  medico_direccion?: string;
+
+  peso?: string;
+  talla?: string;
+  imc?: string;
+  temperatura?: string;
+  presion_arterial?: string;
+  frecuencia_cardiaca?: string;
+  frecuencia_respiratoria?: string;
+  circunferencia_abdomen?: string;
+  spo2?: string;
+  motivo_referencia?: string;
+  descripcion?: string;
+  pronostico?: string;
+  diagnostico_select?: string;
 };
 
 const escolaridadOptions = [
@@ -87,8 +113,43 @@ const estadoCivilOptions = [
 ];
 
 const entidadOptions = ['PUEBLA', 'TLAXCALA', 'VERACRUZ', 'OAXACA', 'CDMX'];
-
 const urgenciaOptions = ['NO', 'SÍ'];
+
+const motivoReferenciaOptions = [
+  'NO APLICA',
+  'VALORACIÓN POR ESPECIALIDAD',
+  'URGENCIA',
+  'ESTUDIO COMPLEMENTARIO',
+  'SEGUIMIENTO',
+];
+
+const diagnosticosCatalogo = [
+  {
+    clave: 'J00X',
+    diagnostico: 'RINOFARINGITIS AGUDA [RESFRIADO COMÚN]',
+  },
+  {
+    clave: 'I10X',
+    diagnostico: 'HIPERTENSIÓN ESENCIAL',
+  },
+  {
+    clave: 'E119',
+    diagnostico: 'DIABETES MELLITUS TIPO 2 SIN COMPLICACIONES',
+  },
+  {
+    clave: 'A09X',
+    diagnostico: 'DIARREA Y GASTROENTERITIS DE PRESUNTO ORIGEN INFECCIOSO',
+  },
+];
+
+const medicoDefault = {
+  medico_nombre: 'JANETH GOMEZ RIOS',
+  medico_cedula: '14987288',
+  medico_universidad: 'BENEMÉRITA UNIVERSIDAD AUTÓNOMA DE PUEBLA',
+  medico_unidad: 'TEPEXI DE RODRÍGUEZ 1 PUE. CONSULTORIO A',
+  medico_direccion:
+    '16 DE SEPTIEMBRE, A, 30, TEPEXI DE RODRÍGUEZ, 74690, TEPEXI DE RODRÍGUEZ, PUEBLA.',
+};
 
 const cargarPacienteActivo = (): PacienteData | null => {
   try {
@@ -109,9 +170,7 @@ const getFullName = (paciente?: Partial<PacienteData> | null) =>
 
 const calcularEdad = (paciente?: PacienteData | null) => {
   if (paciente?.edad) return paciente.edad;
-
   if (!paciente?.fecha_nacimiento) return '—';
-
   return dayjs().diff(dayjs(paciente.fecha_nacimiento), 'year');
 };
 
@@ -119,11 +178,13 @@ const HojaReferencia: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm<HojaReferenciaForm>();
 
+  const [currentStep, setCurrentStep] = useState(0);
   const [pacienteActivo, setPacienteActivo] = useState<PacienteData | null>(() =>
     cargarPacienteActivo(),
   );
   const [previewOpen, setPreviewOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [diagnosticos, setDiagnosticos] = useState<DiagnosticoReferencia[]>([]);
 
   const nombreCompleto = useMemo(
     () => getFullName(pacienteActivo),
@@ -142,18 +203,105 @@ const HojaReferencia: React.FC = () => {
     escolaridad: pacienteActivo?.escolaridad || undefined,
     estado_civil: pacienteActivo?.estado_civil || undefined,
     ocupacion: pacienteActivo?.ocupacion || '',
-    entidad: undefined,
-    municipio: undefined,
-    urgencia: undefined,
+    entidad: 'PUEBLA',
+    urgencia: 'NO',
+    motivo_referencia: 'NO APLICA',
+    ...medicoDefault,
   };
+
+  const stepOneFields: (keyof HojaReferenciaForm)[] = [
+    'unidad_referencia',
+    'servicio_referencia',
+    'urgencia',
+  ];
+
+  const stepTwoFields: (keyof HojaReferenciaForm)[] = [
+    'medico_nombre',
+    'medico_cedula',
+    'medico_universidad',
+    'medico_unidad',
+    'medico_direccion',
+    'motivo_referencia',
+    'descripcion',
+    'pronostico',
+  ];
+
+  const diagnosticoColumns: ColumnsType<DiagnosticoReferencia> = [
+    {
+      title: 'No.',
+      dataIndex: 'no',
+      width: 70,
+      align: 'center',
+    },
+    {
+      title: 'Clave',
+      dataIndex: 'clave',
+      width: 120,
+    },
+    {
+      title: 'Diagnóstico',
+      dataIndex: 'diagnostico',
+    },
+  ];
 
   const handleBack = () => {
     navigate('/hoja-referencia');
   };
 
+  const handleNext = async () => {
+    try {
+      await form.validateFields(stepOneFields);
+      setCurrentStep(1);
+    } catch {
+      message.warning('Completa los campos obligatorios.');
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep(0);
+  };
+
+  const handleAgregarDiagnostico = () => {
+    const value = form.getFieldValue('diagnostico_select');
+
+    if (!value) {
+      message.warning('Selecciona un diagnóstico.');
+      return;
+    }
+
+    const selected = diagnosticosCatalogo.find((item) => item.clave === value);
+
+    if (!selected) return;
+
+    const existe = diagnosticos.some((item) => item.clave === selected.clave);
+
+    if (existe) {
+      message.warning('Este diagnóstico ya fue agregado.');
+      return;
+    }
+
+    setDiagnosticos((prev) => [
+      ...prev,
+      {
+        id: `${selected.clave}-${Date.now()}`,
+        no: prev.length + 1,
+        clave: selected.clave,
+        diagnostico: selected.diagnostico,
+      },
+    ]);
+
+    form.setFieldValue('diagnostico_select', undefined);
+  };
+
   const handlePreview = async () => {
     try {
-      await form.validateFields();
+      await form.validateFields([...stepOneFields, ...stepTwoFields]);
+
+      if (!diagnosticos.length) {
+        message.warning('Agrega al menos un diagnóstico de referencia.');
+        return;
+      }
+
       setPreviewOpen(true);
     } catch {
       message.warning('Completa los campos obligatorios.');
@@ -176,6 +324,8 @@ const HojaReferencia: React.FC = () => {
 
     form.resetFields();
     form.setFieldsValue(initialValues);
+    setDiagnosticos([]);
+    setCurrentStep(0);
     message.success('Formulario limpiado correctamente.');
   };
 
@@ -186,7 +336,15 @@ const HojaReferencia: React.FC = () => {
         return;
       }
 
-      const values = await form.validateFields();
+      const values = await form.validateFields([
+        ...stepOneFields,
+        ...stepTwoFields,
+      ]);
+
+      if (!diagnosticos.length) {
+        message.warning('Agrega al menos un diagnóstico de referencia.');
+        return;
+      }
 
       setSaving(true);
 
@@ -204,6 +362,7 @@ const HojaReferencia: React.FC = () => {
           lugar_origen: pacienteActivo.lugar_origen,
           curp: pacienteActivo.curp,
         },
+        diagnosticos,
         ...values,
       };
 
@@ -270,23 +429,34 @@ const HojaReferencia: React.FC = () => {
     return (
       <section className="referencia-page">
         <div className="referencia-shell">
-          <Card className="referencia-form-card">
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="No hay paciente activo para generar la hoja de referencia."
-            />
+          <div className="referencia-empty-state">
+            <div className="referencia-empty-shape referencia-empty-shape-top" />
+            <div className="referencia-empty-shape referencia-empty-shape-bottom" />
 
-            <div className="referencia-actions">
-              <Button
-                type="primary"
-                icon={<UserOutlined />}
-                className="referencia-save-btn"
-                onClick={() => navigate('/pacientes')}
-              >
-                Seleccionar paciente
-              </Button>
+            <div className="referencia-empty-icon">
+              <UserOutlined />
             </div>
-          </Card>
+
+            <div className="referencia-empty-badge">
+              Hoja de referencia bloqueada
+            </div>
+
+            <h1>No hay paciente activo</h1>
+
+            <p>
+              Para generar una hoja de referencia, primero debes seleccionar un
+              paciente desde el módulo de Pacientes.
+            </p>
+
+            <Button
+              type="primary"
+              icon={<UserOutlined />}
+              className="referencia-empty-btn"
+              onClick={() => navigate('/pacientes')}
+            >
+              Seleccionar paciente
+            </Button>
+          </div>
         </div>
       </section>
     );
@@ -314,60 +484,56 @@ const HojaReferencia: React.FC = () => {
         </div>
 
         <Card className="referencia-form-card">
-        <div className="referencia-paciente-card">
-        <div className="referencia-paciente-badge">PACIENTE</div>
+          <div className="referencia-paciente-card">
+            <div className="referencia-paciente-badge">PACIENTE</div>
 
-<div className="referencia-paciente-content">
+            <div className="referencia-paciente-content">
+              <div className="referencia-paciente-main">
+                <h2>{nombreCompleto}</h2>
 
-  <div className="referencia-paciente-top">
-    <div className="referencia-paciente-main">
-      <h2>{nombreCompleto}</h2>
+                <div className="referencia-paciente-origin">
+                  <span>Lugar de Origen:</span>
+                  <strong>{pacienteActivo.lugar_origen || 'PUEBLA'}</strong>
+                </div>
+              </div>
 
-      <div className="referencia-paciente-origin">
-        <span>Lugar de Origen:</span>
-        <strong>{pacienteActivo.lugar_origen || 'PUEBLA'}</strong>
-      </div>
-    </div>
-  </div>
+              <div className="referencia-paciente-bottom">
+                <div className="referencia-paciente-meta">
+                  <div>
+                    <span>Edad:</span>
+                    <strong>{edadPaciente} años</strong>
+                  </div>
 
-  <div className="referencia-paciente-bottom">
-    <div className="referencia-paciente-meta">
+                  <div>
+                    <strong>
+                      {pacienteActivo.fecha_nacimiento
+                        ? dayjs(pacienteActivo.fecha_nacimiento).format(
+                            'DD/MM/YYYY',
+                          )
+                        : '—'}
+                    </strong>
+                  </div>
 
-      <div>
-        <span>Edad:</span>
-        <strong>{edadPaciente} años</strong>
-      </div>
+                  <div>
+                    <strong>{pacienteActivo.sexo || '—'}</strong>
+                  </div>
 
-      <div>
-        <strong>
-          {dayjs(pacienteActivo.fecha_nacimiento).format('DD/MM/YYYY')}
-        </strong>
-      </div>
+                  <div>
+                    <span>No. Expediente:</span>
+                    <strong>{numeroExpediente}</strong>
+                  </div>
+                </div>
 
-      <div>
-        <strong>{pacienteActivo.sexo}</strong>
-      </div>
-
-      <div>
-        <span>No. Expediente:</span>
-        <strong>{numeroExpediente}</strong>
-      </div>
-
-    </div>
-
-    <div className="referencia-finalizar-wrapper">
-      <Button
-        icon={<CheckCircleOutlined />}
-        onClick={handleFinish}
-        className="referencia-finalizar-paciente-btn"
-      >
-        Finalizar atención
-      </Button>
-    </div>
-  </div>
-
-</div>
-        </div>
+                <Button
+                  icon={<CheckCircleOutlined />}
+                  onClick={handleFinish}
+                  className="referencia-finalizar-paciente-btn"
+                >
+                  Finalizar atención
+                </Button>
+              </div>
+            </div>
+          </div>
 
           <Form
             form={form}
@@ -375,167 +541,378 @@ const HojaReferencia: React.FC = () => {
             initialValues={initialValues}
             className="referencia-form"
           >
-            <Row gutter={[20, 10]} className="referencia-general-row">
-              <Col xs={24} md={8}>
-                <Form.Item name="escolaridad" label="Escolaridad">
-                  <Select
-                    placeholder="Selecciona"
-                    options={escolaridadOptions.map((item) => ({
-                      label: item,
-                      value: item,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
+            <div className="referencia-wizard-steps">
+              <button
+                type="button"
+                className={`referencia-wizard-step ${
+                  currentStep === 0 ? 'active' : 'done'
+                }`}
+                onClick={() => setCurrentStep(0)}
+              >
+                <span>1</span>
+                <div>
+                  <strong>Datos de referencia</strong>
+                  <small>Paciente, domicilio y unidad</small>
+                </div>
+              </button>
 
-              <Col xs={24} md={8}>
-                <Form.Item name="estado_civil" label="Estado civil">
-                  <Select
-                    placeholder="Selecciona"
-                    options={estadoCivilOptions.map((item) => ({
-                      label: item,
-                      value: item,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
+              <div
+                className={`referencia-step-line ${
+                  currentStep === 1 ? 'active' : ''
+                }`}
+              />
 
-              <Col xs={24} md={8}>
-                <Form.Item name="ocupacion" label="Ocupación">
-                  <Input />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <div className="referencia-section-title">DOMICILIO PACIENTE</div>
-
-            <Row gutter={[22, 8]}>
-              <Col xs={24} md={12}>
-                <Form.Item name="entidad" label="Entidad">
-                  <Select
-                    placeholder="Selecciona"
-                    options={entidadOptions.map((item) => ({
-                      label: item,
-                      value: item,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={12}>
-                <Form.Item name="municipio" label="Municipio">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={12}>
-                <Form.Item name="codigo_postal" label="Código postal">
-                  <Input maxLength={5} />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={12}>
-                <Form.Item name="colonia" label="Colonia">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={12}>
-                <Form.Item name="calle" label="Calle">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col xs={12} md={6}>
-                <Form.Item name="numero_ext" label="Número ext.">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col xs={12} md={6}>
-                <Form.Item name="numero_int" label="Número int.">
-                  <Input />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <div className="referencia-separator" />
-
-            <Row gutter={[16, 8]}>
-              <Col xs={24}>
-                <Form.Item
-                  name="unidad_referencia"
-                  label="*Unidad a la que se refiere"
-                  rules={[
-                    {
-                      required: true,
-                      message: 'Ingresa la unidad a la que se refiere.',
-                    },
-                  ]}
-                >
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24}>
-                <Form.Item
-                  name="servicio_referencia"
-                  label="*Servicio al que refiere"
-                  rules={[
-                    {
-                      required: true,
-                      message: 'Ingresa el servicio al que se refiere.',
-                    },
-                  ]}
-                >
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} sm={8} md={4}>
-                <Form.Item
-                  name="urgencia"
-                  label="*Urgencia"
-                  rules={[
-                    {
-                      required: true,
-                      message: 'Selecciona urgencia.',
-                    },
-                  ]}
-                >
-                  <Select
-                    options={urgenciaOptions.map((item) => ({
-                      label: item,
-                      value: item,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <div className="referencia-section-title referencia-medico-title">
-              DATOS DEL MÉDICO QUE REFIERE
+              <button
+                type="button"
+                className={`referencia-wizard-step ${
+                  currentStep === 1 ? 'active' : ''
+                }`}
+                onClick={handleNext}
+              >
+                <span>2</span>
+                <div>
+                  <strong>Médico y resumen clínico</strong>
+                  <small>Signos, motivo, pronóstico y diagnóstico</small>
+                </div>
+              </button>
             </div>
 
-            <Row gutter={[16, 8]}>
-              <Col xs={24} md={8}>
-                <Form.Item name="medico_nombre" label="Nombre del médico">
-                  <Input />
-                </Form.Item>
-              </Col>
+            {currentStep === 0 && (
+              <div className="referencia-wizard-panel">
+                <Row gutter={[20, 10]}>
+                  <Col xs={24} md={8}>
+                    <Form.Item name="escolaridad" label="Escolaridad">
+                      <Select
+                        placeholder="Selecciona"
+                        options={escolaridadOptions.map((item) => ({
+                          label: item,
+                          value: item,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
 
-              <Col xs={24} md={8}>
-                <Form.Item name="medico_cedula" label="Cédula profesional">
-                  <Input />
-                </Form.Item>
-              </Col>
+                  <Col xs={24} md={8}>
+                    <Form.Item name="estado_civil" label="Estado civil">
+                      <Select
+                        placeholder="Selecciona"
+                        options={estadoCivilOptions.map((item) => ({
+                          label: item,
+                          value: item,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
 
-              <Col xs={24} md={8}>
-                <Form.Item name="medico_especialidad" label="Especialidad">
-                  <Input />
-                </Form.Item>
-              </Col>
-            </Row>
+                  <Col xs={24} md={8}>
+                    <Form.Item name="ocupacion" label="Ocupación">
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <div className="referencia-section-title">
+                  DOMICILIO PACIENTE
+                </div>
+
+                <Row gutter={[22, 8]}>
+                  <Col xs={24} md={12}>
+                    <Form.Item name="entidad" label="Entidad">
+                      <Select
+                        placeholder="Selecciona"
+                        options={entidadOptions.map((item) => ({
+                          label: item,
+                          value: item,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={12}>
+                    <Form.Item name="municipio" label="Municipio">
+                      <Input />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={12}>
+                    <Form.Item name="codigo_postal" label="Código postal">
+                      <Input maxLength={5} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={12}>
+                    <Form.Item name="colonia" label="Colonia">
+                      <Input />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={12}>
+                    <Form.Item name="calle" label="Calle">
+                      <Input />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={12} md={6}>
+                    <Form.Item name="numero_ext" label="Número ext.">
+                      <Input />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={12} md={6}>
+                    <Form.Item name="numero_int" label="Número int.">
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <div className="referencia-section-title">
+                  DATOS DE REFERENCIA
+                </div>
+
+                <Row gutter={[16, 8]}>
+                  <Col xs={24}>
+                    <Form.Item
+                      name="unidad_referencia"
+                      label="*Unidad a la que se refiere"
+                      rules={[
+                        {
+                          required: true,
+                          message: 'Ingresa la unidad a la que se refiere.',
+                        },
+                      ]}
+                    >
+                      <Input />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24}>
+                    <Form.Item
+                      name="servicio_referencia"
+                      label="*Servicio al que refiere"
+                      rules={[
+                        {
+                          required: true,
+                          message: 'Ingresa el servicio al que se refiere.',
+                        },
+                      ]}
+                    >
+                      <Input />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} sm={8} md={4}>
+                    <Form.Item
+                      name="urgencia"
+                      label="*Urgencia"
+                      rules={[
+                        {
+                          required: true,
+                          message: 'Selecciona urgencia.',
+                        },
+                      ]}
+                    >
+                      <Select
+                        options={urgenciaOptions.map((item) => ({
+                          label: item,
+                          value: item,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
+            )}
+
+            {currentStep === 1 && (
+              <div className="referencia-wizard-panel">
+                <div className="referencia-section-title">
+                  DATOS DEL MÉDICO QUE REFIERE
+                </div>
+
+                <div className="referencia-medico-box">
+                  <Row gutter={[16, 8]}>
+                    <Col xs={24} md={6}>
+                      <Form.Item name="medico_nombre" label="Nombre del médico">
+                        <Input readOnly />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={6}>
+                      <Form.Item name="medico_cedula" label="Cédula profesional">
+                        <Input readOnly />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        name="medico_universidad"
+                        label="Universidad de egreso"
+                      >
+                        <Input readOnly />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        name="medico_unidad"
+                        label="Unidad de la que refiere"
+                      >
+                        <Input readOnly />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        name="medico_direccion"
+                        label="Dirección del consultorio"
+                      >
+                        <Input readOnly />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </div>
+
+                <div className="referencia-section-title">RESUMEN CLÍNICO</div>
+
+                <div className="referencia-resumen-box">
+                  <Row gutter={[18, 8]}>
+                    <Col xs={12} md={6}>
+                      <Form.Item name="peso" label="Peso">
+                        <Input addonAfter="Kg" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item name="talla" label="Talla">
+                        <Input addonAfter="m" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item name="imc" label="IMC">
+                        <Input addonAfter="Kg/m²" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item name="temperatura" label="Temp.">
+                        <Input addonAfter="°C" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item name="presion_arterial" label="T.A.">
+                        <Input addonAfter="mm/Hg" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item name="frecuencia_cardiaca" label="F.C.">
+                        <Input addonAfter="x min" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item name="frecuencia_respiratoria" label="F.R.">
+                        <Input addonAfter="x min" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item
+                        name="circunferencia_abdomen"
+                        label="C. Abdom."
+                      >
+                        <Input addonAfter="cm" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={12} md={6}>
+                      <Form.Item name="spo2" label="SpO2">
+                        <Input addonAfter="%" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={10}>
+                      <Form.Item
+                        name="motivo_referencia"
+                        label="*Motivo de referencia"
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Selecciona el motivo de referencia.',
+                          },
+                        ]}
+                      >
+                        <Select
+                          options={motivoReferenciaOptions.map((item) => ({
+                            label: item,
+                            value: item,
+                          }))}
+                        />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24}>
+                      <Form.Item
+                        name="descripcion"
+                        label="*Descripción"
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Ingresa la descripción clínica.',
+                          },
+                        ]}
+                      >
+                        <TextArea rows={3} />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24}>
+                      <Form.Item name="pronostico" label="Pronóstico">
+                        <TextArea rows={3} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <div className="referencia-diagnostico-area">
+                    <Form.Item
+                      name="diagnostico_select"
+                      label="*Diagnóstico de referencia"
+                    >
+                      <Select
+                        showSearch
+                        placeholder="Seleccione..."
+                        optionFilterProp="label"
+                        options={diagnosticosCatalogo.map((item) => ({
+                          label: `${item.clave} - ${item.diagnostico}`,
+                          value: item.clave,
+                        }))}
+                      />
+                    </Form.Item>
+
+                    <Button
+                      icon={<PlusOutlined />}
+                      className="referencia-add-btn"
+                      onClick={handleAgregarDiagnostico}
+                    >
+                      Agregar
+                    </Button>
+                  </div>
+
+                  <Table
+                    className="referencia-diagnostico-table"
+                    columns={diagnosticoColumns}
+                    dataSource={diagnosticos}
+                    rowKey="id"
+                    pagination={false}
+                    locale={{
+                      emptyText: 'Sin diagnósticos agregados',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="referencia-actions">
               <Space wrap>
@@ -543,19 +920,37 @@ const HojaReferencia: React.FC = () => {
                   Limpiar
                 </Button>
 
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  loading={saving}
-                  onClick={handleSave}
-                  className="referencia-save-btn"
-                >
-                  Guardar
-                </Button>
+                {currentStep === 1 && (
+                  <Button onClick={handlePrevious}>Anterior</Button>
+                )}
 
-                <Button icon={<EyeOutlined />} onClick={handlePreview}>
-                  Vista previa
-                </Button>
+                {currentStep === 0 && (
+                  <Button
+                    type="primary"
+                    onClick={handleNext}
+                    className="referencia-save-btn"
+                  >
+                    Siguiente
+                  </Button>
+                )}
+
+                {currentStep === 1 && (
+                  <>
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      loading={saving}
+                      onClick={handleSave}
+                      className="referencia-save-btn"
+                    >
+                      Guardar
+                    </Button>
+
+                    <Button icon={<EyeOutlined />} onClick={handlePreview}>
+                      Vista previa
+                    </Button>
+                  </>
+                )}
 
                 <Button danger onClick={handleBack}>
                   Cancelar
@@ -569,7 +964,7 @@ const HojaReferencia: React.FC = () => {
       <Modal
         open={previewOpen}
         onCancel={() => setPreviewOpen(false)}
-        width={900}
+        width={950}
         centered
         title="Vista previa de hoja de referencia"
         footer={[
@@ -602,22 +997,18 @@ const HojaReferencia: React.FC = () => {
             <span>Expediente: {numeroExpediente}</span>
           </div>
 
-          <p><b>Escolaridad:</b> {previewValues.escolaridad || '—'}</p>
-          <p><b>Estado civil:</b> {previewValues.estado_civil || '—'}</p>
-          <p><b>Ocupación:</b> {previewValues.ocupacion || '—'}</p>
-          <p><b>Entidad:</b> {previewValues.entidad || '—'}</p>
-          <p><b>Municipio:</b> {previewValues.municipio || '—'}</p>
-          <p><b>Código postal:</b> {previewValues.codigo_postal || '—'}</p>
-          <p><b>Colonia:</b> {previewValues.colonia || '—'}</p>
-          <p><b>Calle:</b> {previewValues.calle || '—'}</p>
-          <p><b>Número ext.:</b> {previewValues.numero_ext || '—'}</p>
-          <p><b>Número int.:</b> {previewValues.numero_int || '—'}</p>
-          <p><b>Unidad a la que se refiere:</b> {previewValues.unidad_referencia || '—'}</p>
-          <p><b>Servicio al que refiere:</b> {previewValues.servicio_referencia || '—'}</p>
-          <p><b>Urgencia:</b> {previewValues.urgencia || '—'}</p>
           <p><b>Médico:</b> {previewValues.medico_nombre || '—'}</p>
           <p><b>Cédula:</b> {previewValues.medico_cedula || '—'}</p>
-          <p><b>Especialidad:</b> {previewValues.medico_especialidad || '—'}</p>
+          <p><b>Motivo:</b> {previewValues.motivo_referencia || '—'}</p>
+          <p><b>Descripción:</b> {previewValues.descripcion || '—'}</p>
+          <p><b>Pronóstico:</b> {previewValues.pronostico || '—'}</p>
+
+          <div className="preview-title small">Diagnósticos</div>
+          {diagnosticos.map((item) => (
+            <p key={item.id}>
+              <b>{item.no}. {item.clave}</b> - {item.diagnostico}
+            </p>
+          ))}
         </div>
       </Modal>
     </section>
