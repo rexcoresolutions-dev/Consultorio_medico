@@ -33,6 +33,8 @@ import {
   FormOutlined,
   FolderOpenOutlined,
   MedicineBoxOutlined,
+  ExperimentOutlined,
+  SolutionOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -72,7 +74,7 @@ const PrivateLayout: React.FC = () => {
           setWelcomeOpen(true);
           sessionStorage.setItem('hasSeenWelcome', 'true');
         }
-      } catch (error) {
+      } catch {
         const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
 
         if (!hasSeenWelcome) {
@@ -93,129 +95,47 @@ const PrivateLayout: React.FC = () => {
     { key: '/clinicas', icon: <ShopOutlined />, label: 'Consultorios' },
     { key: '/usuarios', icon: <TeamOutlined />, label: 'Usuarios' },
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
-    {
-      key: '/confirmar-atencion',
-      icon: <FileTextOutlined />,
-      label: 'Registrar atención',
-    },
-    {
-      key: '/historial-clinico',
-      icon: <HistoryOutlined />,
-      label: 'Historial clínico',
-    },
-    {
-      key: '/historiales-disponibles',
-      icon: <FolderOpenOutlined />,
-      label: 'Historiales disponibles',
-    },
-    {
-      key: '/nota-evolucion',
-      icon: <FormOutlined />,
-      label: 'Nota de evolución',
-    },
-    {
-      key: '/historico-paciente',
-      icon: <HistoryOutlined />,
-      label: 'Histórico por paciente',
-    },
-    {
-      key: '/hoja-referenca',
-      icon: <MedicineBoxOutlined />,
-      label: 'Hoja de referencia',
-    },
+    { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
+    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
+    { key: '/historiales-disponibles', icon: <FolderOpenOutlined />, label: 'Historiales disponibles' },
+    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
+    { key: '/historico-paciente', icon: <HistoryOutlined />, label: 'Histórico por paciente' },
+    { key: '/hoja-referencia', icon: <MedicineBoxOutlined />, label: 'Hoja de referencia' },
+    { key: '/estudios-clinicos', icon: <ExperimentOutlined />, label: 'Estudios clínicos' },
+    { key: '/certificado-medico', icon: <SolutionOutlined />, label: 'Certificado médico' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
-    {
-      key: '/configuracion',
-      icon: <SettingOutlined />,
-      label: 'Configuración',
-    },
+    { key: '/configuracion', icon: <SettingOutlined />, label: 'Configuración' },
   ];
 
   const menuMedico = [
-    {
-      key: '/dashboard-medico',
-      icon: <DashboardOutlined />,
-      label: 'Dashboard',
-    },
-    {
-      key: '/confirmar-atencion',
-      icon: <FileTextOutlined />,
-      label: 'Procedimientos',
-    },
-    {
-      key: '/historial-clinico',
-      icon: <HistoryOutlined />,
-      label: 'Historial clínico',
-    },
-    {
-      key: '/historiales-disponibles',
-      icon: <FolderOpenOutlined />,
-      label: 'Historiales disponibles',
-    },
-    {
-      key: '/nota-evolucion',
-      icon: <FormOutlined />,
-      label: 'Nota de evolución',
-    },
-    {
-      key: '/historico-paciente',
-      icon: <HistoryOutlined />,
-      label: 'Histórico por paciente',
-    },
-    {
-      key: '/hoja-referencia',
-      icon: <MedicineBoxOutlined />,
-      label: 'Hoja de referencia',
-    },
+    { key: '/dashboard-medico', icon: <DashboardOutlined />, label: 'Dashboard' },
+    { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Procedimientos' },
+    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
+    { key: '/historiales-disponibles', icon: <FolderOpenOutlined />, label: 'Historiales disponibles' },
+    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
+    { key: '/historico-paciente', icon: <HistoryOutlined />, label: 'Histórico por paciente' },
+    { key: '/hoja-referencia', icon: <MedicineBoxOutlined />, label: 'Hoja de referencia' },
+    { key: '/estudios-clinicos', icon: <ExperimentOutlined />, label: 'Estudios clínicos' },
+    { key: '/certificado-medico', icon: <SolutionOutlined />, label: 'Certificado médico' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
-    {
-      key: '/configuracion',
-      icon: <SettingOutlined />,
-      label: 'Configuración',
-    },
+    { key: '/configuracion', icon: <SettingOutlined />, label: 'Configuración' },
   ];
 
   const menuConsultor = [
-    {
-      key: '/dashboard-consultor',
-      icon: <EyeOutlined />,
-      label: 'Dashboard',
-    },
+    { key: '/dashboard-consultor', icon: <EyeOutlined />, label: 'Dashboard' },
     { key: '/pacientes', icon: <UserOutlined />, label: 'Pacientes' },
-    {
-      key: '/confirmar-atencion',
-      icon: <FileTextOutlined />,
-      label: 'Registrar atención',
-    },
-    {
-      key: '/historial-clinico',
-      icon: <HistoryOutlined />,
-      label: 'Historial clínico',
-    },
-    {
-      key: '/historiales-disponibles',
-      icon: <FolderOpenOutlined />,
-      label: 'Historiales disponibles',
-    },
-    {
-      key: '/nota-evolucion',
-      icon: <FormOutlined />,
-      label: 'Nota de evolución',
-    },
-    {
-      key: '/historico-paciente',
-      icon: <HistoryOutlined />,
-      label: 'Histórico por paciente',
-    },
-    {
-      key: '/hoja-referencia',
-      icon: <MedicineBoxOutlined />,
-      label: 'Hoja de referencia',
-    },
+    { key: '/confirmar-atencion', icon: <FileTextOutlined />, label: 'Registrar atención' },
+    { key: '/historial-clinico', icon: <HistoryOutlined />, label: 'Historial clínico' },
+    { key: '/historiales-disponibles', icon: <FolderOpenOutlined />, label: 'Historiales disponibles' },
+    { key: '/nota-evolucion', icon: <FormOutlined />, label: 'Nota de evolución' },
+    { key: '/historico-paciente', icon: <HistoryOutlined />, label: 'Histórico por paciente' },
+    { key: '/hoja-referencia', icon: <MedicineBoxOutlined />, label: 'Hoja de referencia' },
+    { key: '/estudios-clinicos', icon: <ExperimentOutlined />, label: 'Estudios clínicos' },
+    { key: '/certificado-medico', icon: <SolutionOutlined />, label: 'Certificado médico' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -249,12 +169,11 @@ const PrivateLayout: React.FC = () => {
   const handleLogout = () => {
     try {
       limpiarEstadoClinicoTemporal();
-
       logout();
 
       message.success('Sesión cerrada correctamente');
       navigate('/login', { replace: true });
-    } catch (error) {
+    } catch {
       message.error('Error al cerrar sesión');
     }
   };
@@ -290,29 +209,12 @@ const PrivateLayout: React.FC = () => {
   };
 
   const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <ProfileOutlined />,
-      label: 'Mi perfil',
-    },
+    { key: 'profile', icon: <ProfileOutlined />, label: 'Mi perfil' },
     ...(rolId !== 3
-      ? [
-          {
-            key: 'settings',
-            icon: <SettingOutlined />,
-            label: 'Configuración',
-          },
-        ]
+      ? [{ key: 'settings', icon: <SettingOutlined />, label: 'Configuración' }]
       : []),
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'logout',
-      danger: true,
-      icon: <LogoutOutlined />,
-      label: 'Cerrar sesión',
-    },
+    { type: 'divider' as const },
+    { key: 'logout', danger: true, icon: <LogoutOutlined />, label: 'Cerrar sesión' },
   ];
 
   const handleUserMenuClick = ({ key }: { key: string }) => {
@@ -330,6 +232,10 @@ const PrivateLayout: React.FC = () => {
       showLogoutConfirm();
     }
   };
+
+  const selectedKey =
+    menuItems.find((item) => location.pathname.startsWith(String(item.key)))?.key ||
+    location.pathname;
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -351,7 +257,7 @@ const PrivateLayout: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={[String(selectedKey)]}
           items={menuItems}
           className="custom-menu"
           onClick={({ key }) => handleMenuClick(key)}
@@ -377,8 +283,7 @@ const PrivateLayout: React.FC = () => {
 
             <div className="page-title">
               <Text strong>
-                {menuItems.find((item) => item.key === location.pathname)?.label ||
-                  'Dashboard'}
+                {menuItems.find((item) => item.key === selectedKey)?.label || 'Dashboard'}
               </Text>
             </div>
           </div>
@@ -386,19 +291,12 @@ const PrivateLayout: React.FC = () => {
           <div className="header-right">
             <Tooltip title="Notificaciones">
               <Badge count={3} size="small">
-                <Button
-                  type="text"
-                  icon={<BellOutlined />}
-                  className="notification-btn"
-                />
+                <Button type="text" icon={<BellOutlined />} className="notification-btn" />
               </Badge>
             </Tooltip>
 
             <Dropdown
-              menu={{
-                items: userMenuItems,
-                onClick: handleUserMenuClick,
-              }}
+              menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
               trigger={['click']}
               placement="bottomRight"
             >
@@ -407,15 +305,13 @@ const PrivateLayout: React.FC = () => {
                   size={40}
                   icon={<UserOutlined />}
                   style={{
-                    background:
-                      'linear-gradient(135deg, #50EBEC 0%, #36C6C7 100%)',
+                    background: 'linear-gradient(135deg, #50EBEC 0%, #36C6C7 100%)',
                   }}
                 />
 
                 <div className="user-text-info">
                   <div className="user-name">
-                    {activeUser?.nombre || 'Usuario'}{' '}
-                    {activeUser?.primer_apellido || ''}
+                    {activeUser?.nombre || 'Usuario'} {activeUser?.primer_apellido || ''}
                   </div>
 
                   <div className="user-role">{getRolName()}</div>

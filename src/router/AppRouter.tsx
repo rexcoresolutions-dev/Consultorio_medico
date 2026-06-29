@@ -35,6 +35,9 @@ import HistoricoPaciente from '../pages/HistoricoPaciente/HistoricoPaciente';
 import OpcionesHojaReferencia from '../pages/HojaReferencia/OpcionesHojaReferencia';
 import HojaReferencia from '../pages/HojaReferencia/HojaReferencia';
 
+import EstudiosClinicos from '../pages/EstudiosClinicos/EstudiosClinicos';
+import CertificadoMedico from '../pages/CertificadoMedico/CertificadoMedico';
+
 import {
   ROUTES,
   getDashboardByRole,
@@ -54,12 +57,18 @@ const LoadingScreen: React.FC = () => (
   </div>
 );
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return <LoadingScreen />;
 
-  return isAuthenticated ? <>{children}</> : <Navigate to={ROUTES.LOGIN} replace />;
+  return isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to={ROUTES.LOGIN} replace />
+  );
 };
 
 const RoleRedirect: React.FC = () => {
@@ -124,6 +133,9 @@ const AppRouter: React.FC = () => {
 
               <Route path={ROUTES.HOJA_REFERENCIA} element={<RoleRoute><OpcionesHojaReferencia /></RoleRoute>} />
               <Route path={ROUTES.HOJA_REFERENCIA_CREAR} element={<RoleRoute><HojaReferencia /></RoleRoute>} />
+
+              <Route path={ROUTES.ESTUDIOS_CLINICOS} element={<RoleRoute><EstudiosClinicos /></RoleRoute>} />
+              <Route path={ROUTES.CERTIFICADO_MEDICO} element={<RoleRoute><CertificadoMedico /></RoleRoute>} />
 
               <Route path={ROUTES.PROFILE} element={<RoleRoute><Perfil /></RoleRoute>} />
 

@@ -26,6 +26,9 @@ export const ROUTES = {
   HOJA_REFERENCIA: '/hoja-referencia',
   HOJA_REFERENCIA_CREAR: '/hoja-referencia/crear',
 
+  ESTUDIOS_CLINICOS: '/estudios-clinicos',
+  CERTIFICADO_MEDICO: '/certificado-medico',
+
   APPOINTMENTS: '/citas',
   MEDICAL_RECORDS: '/expedientes',
   PRESCRIPTIONS: '/recetas',
@@ -73,6 +76,8 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.HISTORICO_PACIENTE,
     ROUTES.HOJA_REFERENCIA,
     ROUTES.HOJA_REFERENCIA_CREAR,
+    ROUTES.ESTUDIOS_CLINICOS,
+    ROUTES.CERTIFICADO_MEDICO,
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
@@ -95,6 +100,8 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.HISTORICO_PACIENTE,
     ROUTES.HOJA_REFERENCIA,
     ROUTES.HOJA_REFERENCIA_CREAR,
+    ROUTES.ESTUDIOS_CLINICOS,
+    ROUTES.CERTIFICADO_MEDICO,
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
@@ -114,6 +121,8 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.HISTORICO_PACIENTE,
     ROUTES.HOJA_REFERENCIA,
     ROUTES.HOJA_REFERENCIA_CREAR,
+    ROUTES.ESTUDIOS_CLINICOS,
+    ROUTES.CERTIFICADO_MEDICO,
     ROUTES.APPOINTMENTS,
     ROUTES.PRESCRIPTIONS,
     ROUTES.REPORTS,
@@ -121,10 +130,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
   ],
 };
 
-export const canAccessRoute = (
-  rolId: number | undefined,
-  pathname: string,
-) => {
+export const canAccessRoute = (rolId: number | undefined, pathname: string) => {
   const allowedRoutes = ROLE_ALLOWED_ROUTES[Number(rolId)] || [];
 
   return allowedRoutes.some((route) => {
