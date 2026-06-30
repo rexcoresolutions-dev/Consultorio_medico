@@ -37,6 +37,7 @@ import HojaReferencia from '../pages/HojaReferencia/HojaReferencia';
 
 import EstudiosClinicos from '../pages/EstudiosClinicos/EstudiosClinicos';
 import CertificadoMedico from '../pages/CertificadoMedico/CertificadoMedico';
+import ControlDiarioPacientes from '../pages/ControlDiarioPacientes/ControlDiarioPacientes';
 
 import {
   ROUTES,
@@ -136,6 +137,7 @@ const AppRouter: React.FC = () => {
 
               <Route path={ROUTES.ESTUDIOS_CLINICOS} element={<RoleRoute><EstudiosClinicos /></RoleRoute>} />
               <Route path={ROUTES.CERTIFICADO_MEDICO} element={<RoleRoute><CertificadoMedico /></RoleRoute>} />
+              <Route path={ROUTES.CONTROL_DIARIO_PACIENTES} element={<RoleRoute><ControlDiarioPacientes /></RoleRoute>} />
 
               <Route path={ROUTES.PROFILE} element={<RoleRoute><Perfil /></RoleRoute>} />
 

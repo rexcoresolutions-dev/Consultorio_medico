@@ -35,6 +35,7 @@ import {
   MedicineBoxOutlined,
   ExperimentOutlined,
   SolutionOutlined,
+  TableOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -103,6 +104,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/hoja-referencia', icon: <MedicineBoxOutlined />, label: 'Hoja de referencia' },
     { key: '/estudios-clinicos', icon: <ExperimentOutlined />, label: 'Estudios clínicos' },
     { key: '/certificado-medico', icon: <SolutionOutlined />, label: 'Certificado médico' },
+    { key: '/control-diario-pacientes', icon: <TableOutlined />, label: 'Control diario' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -119,6 +121,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/hoja-referencia', icon: <MedicineBoxOutlined />, label: 'Hoja de referencia' },
     { key: '/estudios-clinicos', icon: <ExperimentOutlined />, label: 'Estudios clínicos' },
     { key: '/certificado-medico', icon: <SolutionOutlined />, label: 'Certificado médico' },
+    { key: '/control-diario-pacientes', icon: <TableOutlined />, label: 'Control diario' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -136,6 +139,7 @@ const PrivateLayout: React.FC = () => {
     { key: '/hoja-referencia', icon: <MedicineBoxOutlined />, label: 'Hoja de referencia' },
     { key: '/estudios-clinicos', icon: <ExperimentOutlined />, label: 'Estudios clínicos' },
     { key: '/certificado-medico', icon: <SolutionOutlined />, label: 'Certificado médico' },
+    { key: '/control-diario-pacientes', icon: <TableOutlined />, label: 'Control diario' },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
