@@ -29,6 +29,7 @@ export const ROUTES = {
   ESTUDIOS_CLINICOS: '/estudios-clinicos',
   CERTIFICADO_MEDICO: '/certificado-medico',
   CONTROL_DIARIO_PACIENTES: '/control-diario-pacientes',
+  DOCUMENTOS: '/documentos',
 
   APPOINTMENTS: '/citas',
   MEDICAL_RECORDS: '/expedientes',
@@ -49,10 +50,13 @@ export const getDashboardByRole = (rolId?: number) => {
   switch (Number(rolId)) {
     case ROLES.ADMIN:
       return ROUTES.DASHBOARD_ADMIN;
+
     case ROLES.MEDICO:
       return ROUTES.DASHBOARD_MEDICO;
+
     case ROLES.CONSULTOR:
       return ROUTES.DASHBOARD_CONSULTOR;
+
     default:
       return ROUTES.LOGIN;
   }
@@ -80,6 +84,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.ESTUDIOS_CLINICOS,
     ROUTES.CERTIFICADO_MEDICO,
     ROUTES.CONTROL_DIARIO_PACIENTES,
+    ROUTES.DOCUMENTOS,
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
@@ -105,6 +110,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.ESTUDIOS_CLINICOS,
     ROUTES.CERTIFICADO_MEDICO,
     ROUTES.CONTROL_DIARIO_PACIENTES,
+    ROUTES.DOCUMENTOS,
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
@@ -127,6 +133,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.ESTUDIOS_CLINICOS,
     ROUTES.CERTIFICADO_MEDICO,
     ROUTES.CONTROL_DIARIO_PACIENTES,
+    ROUTES.DOCUMENTOS,
     ROUTES.APPOINTMENTS,
     ROUTES.PRESCRIPTIONS,
     ROUTES.REPORTS,
