@@ -37,6 +37,7 @@ import {
   SolutionOutlined,
   TableOutlined,
   FileDoneOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -147,6 +148,16 @@ const PrivateLayout: React.FC = () => {
       icon: <FileDoneOutlined />,
       label: 'Documentos',
     },
+    {
+      key: '/consentimiento-informado',
+      icon: <FileTextOutlined />,
+      label: 'Consentimiento informado',
+    },
+    {
+      key: '/farmaco-vigilancia',
+      icon: <SafetyCertificateOutlined />,
+      label: 'Farmacovigilancia',
+    },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
     { key: '/reportes', icon: <BarChartOutlined />, label: 'Reportes' },
@@ -208,6 +219,16 @@ const PrivateLayout: React.FC = () => {
       key: '/documentos',
       icon: <FileDoneOutlined />,
       label: 'Documentos',
+    },
+    {
+      key: '/consentimiento-informado',
+      icon: <FileTextOutlined />,
+      label: 'Consentimiento informado',
+    },
+    {
+      key: '/farmaco-vigilancia',
+      icon: <SafetyCertificateOutlined />,
+      label: 'Farmacovigilancia',
     },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
@@ -271,6 +292,16 @@ const PrivateLayout: React.FC = () => {
       key: '/documentos',
       icon: <FileDoneOutlined />,
       label: 'Documentos',
+    },
+    {
+      key: '/consentimiento-informado',
+      icon: <FileTextOutlined />,
+      label: 'Consentimiento informado',
+    },
+    {
+      key: '/farmaco-vigilancia',
+      icon: <SafetyCertificateOutlined />,
+      label: 'Farmacovigilancia',
     },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
@@ -465,7 +496,9 @@ const PrivateLayout: React.FC = () => {
                 <div className="user-text-info">
                   <div className="user-name">
                     {activeUser?.nombre || 'Usuario'}{' '}
-                    {activeUser?.primer_apellido || ''}
+                    {activeUser?.primer_apellido ||
+                      activeUser?.primerApellido ||
+                      ''}
                   </div>
 
                   <div className="user-role">{getRolName()}</div>

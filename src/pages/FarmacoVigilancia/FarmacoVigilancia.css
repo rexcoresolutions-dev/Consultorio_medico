@@ -1,0 +1,395 @@
+.farmaco-page {
+  min-height: 100%;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.16), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(21, 159, 163, 0.1), transparent 32%),
+    #f6f9fb;
+}
+
+.farmaco-shell {
+  width: min(1480px, 100%);
+  margin: 0 auto;
+}
+
+.farmaco-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 18px;
+  border: 1px solid rgba(21, 159, 163, 0.12);
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(236, 253, 253, 0.92));
+  box-shadow: 0 20px 48px rgba(22, 57, 59, 0.08);
+}
+
+.farmaco-hero-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.farmaco-hero-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  color: #0f7f83;
+  font-size: 27px;
+  background:
+    linear-gradient(135deg, rgba(67, 215, 216, 0.22), rgba(255, 255, 255, 0.92));
+  border: 1px solid rgba(67, 215, 216, 0.28);
+  box-shadow: 0 16px 34px rgba(21, 159, 163, 0.12);
+  flex-shrink: 0;
+}
+
+.farmaco-hero h3.ant-typography {
+  margin: 0;
+  color: #16393b;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.farmaco-hero .ant-typography {
+  color: #60787b;
+  font-weight: 600;
+}
+
+.farmaco-hero-status {
+  flex-shrink: 0;
+}
+
+/* Barra compacta superior */
+.farmaco-control-card {
+  margin-bottom: 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(21, 159, 163, 0.12);
+  box-shadow: 0 18px 42px rgba(22, 57, 59, 0.08);
+  overflow: hidden;
+}
+
+.farmaco-control-card .ant-card-body {
+  padding: 14px;
+}
+
+.farmaco-control-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.farmaco-upload-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.16), transparent 42%),
+    #f8ffff;
+  border: 1px dashed rgba(21, 159, 163, 0.3);
+}
+
+.farmaco-upload-info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.farmaco-upload-info strong {
+  color: #16393b;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.farmaco-upload-info span {
+  color: #60787b;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.farmaco-upload-btn {
+  height: 38px;
+  border-radius: 999px;
+  color: #0f7f83;
+  border-color: rgba(21, 159, 163, 0.28);
+  background: #ffffff;
+  font-weight: 850;
+  flex-shrink: 0;
+}
+
+.farmaco-upload-btn:hover {
+  color: #087174 !important;
+  border-color: rgba(21, 159, 163, 0.52) !important;
+}
+
+/* Estado del archivo compacto */
+.farmaco-file-strip {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(21, 159, 163, 0.1);
+}
+
+.farmaco-file-strip.has-file {
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.13), transparent 36%),
+    #ffffff;
+}
+
+.farmaco-file-strip-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  color: #0f7f83;
+  font-size: 24px;
+  background: rgba(67, 215, 216, 0.15);
+  border: 1px solid rgba(21, 159, 163, 0.12);
+}
+
+.farmaco-file-strip-icon.empty {
+  color: #7b9092;
+  background: #f4f7f8;
+}
+
+.farmaco-file-strip-content {
+  min-width: 0;
+}
+
+.farmaco-file-strip-label {
+  display: block;
+  margin-bottom: 1px;
+  color: #0f7f83 !important;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.farmaco-file-strip-content strong {
+  display: block;
+  color: #16393b;
+  font-size: 15px;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.farmaco-file-strip-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.farmaco-file-strip-meta span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #60787b;
+  background: #f4f8f9;
+  border: 1px solid rgba(21, 159, 163, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.farmaco-file-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Vista previa grande */
+.farmaco-preview-card {
+  border-radius: 28px;
+  border: 1px solid rgba(21, 159, 163, 0.12);
+  box-shadow: 0 24px 60px rgba(22, 57, 59, 0.1);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.farmaco-preview-card .ant-card-body {
+  padding: 20px;
+}
+
+.farmaco-card-header {
+  margin-bottom: 16px;
+}
+
+.farmaco-card-header h4.ant-typography {
+  margin: 0 0 4px;
+  color: #16393b;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.farmaco-card-header .ant-typography {
+  color: #60787b;
+  font-weight: 600;
+}
+
+.farmaco-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.farmaco-preview-box {
+  width: 100%;
+  min-height: 980px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(21, 159, 163, 0.12);
+  background: #ffffff;
+}
+
+.farmaco-loading,
+.farmaco-empty-viewer {
+  min-height: 980px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  padding: 24px;
+}
+
+.farmaco-pdf-viewer {
+  width: 100%;
+  height: 980px;
+  min-height: 980px;
+  border: 0;
+  display: block;
+  background: #ffffff;
+}
+
+.farmaco-image-viewer {
+  min-height: 980px;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(45deg, rgba(15, 127, 131, 0.04) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(15, 127, 131, 0.04) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(15, 127, 131, 0.04) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(15, 127, 131, 0.04) 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+}
+
+.farmaco-image-viewer img {
+  max-width: 100%;
+  max-height: 930px;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgba(22, 57, 59, 0.12);
+}
+
+/* Botones */
+.farmaco-secondary-btn,
+.farmaco-danger-btn {
+  height: 38px;
+  border-radius: 999px;
+  font-weight: 850;
+}
+
+.farmaco-secondary-btn {
+  border-color: rgba(21, 159, 163, 0.25);
+  color: #0f7f83;
+  background: #ffffff;
+}
+
+.farmaco-secondary-btn:hover {
+  color: #087174 !important;
+  border-color: rgba(21, 159, 163, 0.5) !important;
+}
+
+.farmaco-danger-btn {
+  background: #ffffff;
+  font-weight: 850;
+}
+
+/* Responsive */
+@media (max-width: 1080px) {
+  .farmaco-control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .farmaco-upload-compact {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 860px) {
+  .farmaco-page {
+    padding: 16px;
+  }
+
+  .farmaco-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    border-radius: 22px;
+  }
+
+  .farmaco-hero-main {
+    align-items: flex-start;
+  }
+
+  .farmaco-hero-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 17px;
+    font-size: 23px;
+  }
+
+  .farmaco-file-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .farmaco-file-strip-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .farmaco-secondary-btn,
+  .farmaco-danger-btn,
+  .farmaco-upload-btn {
+    width: 100%;
+  }
+
+  .farmaco-upload-compact {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .farmaco-preview-card .ant-card-body,
+  .farmaco-control-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .farmaco-preview-box,
+  .farmaco-loading,
+  .farmaco-empty-viewer,
+  .farmaco-pdf-viewer,
+  .farmaco-image-viewer {
+    min-height: 620px;
+    height: 620px;
+  }
+
+  .farmaco-image-viewer img {
+    max-height: 560px;
+  }
+}

@@ -1,0 +1,389 @@
+.consent-page {
+  min-height: 100%;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(67, 215, 216, 0.16), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(21, 159, 163, 0.1), transparent 32%),
+    #f6f9fb;
+}
+
+.consent-shell {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.consent-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.consent-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.consent-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.consent-heading-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #0f7f83;
+  font-size: 25px;
+  background:
+    linear-gradient(135deg, rgba(67, 215, 216, 0.22), rgba(255, 255, 255, 0.9));
+  border: 1px solid rgba(67, 215, 216, 0.28);
+  box-shadow: 0 16px 34px rgba(21, 159, 163, 0.12);
+}
+
+.consent-heading h3.ant-typography {
+  margin: 0;
+  color: #16393b;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.consent-heading .ant-typography {
+  color: #60787b;
+  font-weight: 600;
+}
+
+.consent-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.consent-actions-divider {
+  width: 1px;
+  height: 28px;
+  margin: 0 4px;
+  background: rgba(21, 159, 163, 0.18);
+}
+
+.consent-secondary-btn,
+.consent-print-btn,
+.consent-download-btn {
+  height: 42px;
+  border-radius: 999px;
+  font-weight: 850;
+}
+
+.consent-secondary-btn {
+  border-color: rgba(21, 159, 163, 0.26);
+  color: #0f7f83;
+  background: #ffffff;
+}
+
+.consent-secondary-btn:hover {
+  color: #087174 !important;
+  border-color: rgba(21, 159, 163, 0.45) !important;
+}
+
+.consent-print-btn {
+  border-color: rgba(21, 159, 163, 0.28);
+  color: #0f7f83;
+  background: #ffffff;
+}
+
+.consent-print-btn:hover {
+  color: #087174 !important;
+  border-color: rgba(21, 159, 163, 0.48) !important;
+  transform: translateY(-1px);
+}
+
+.consent-download-btn {
+  border: none;
+  background: linear-gradient(135deg, #159fa3, #43d7d8);
+  box-shadow: 0 14px 28px rgba(21, 159, 163, 0.24);
+}
+
+.consent-download-btn:hover {
+  background: linear-gradient(135deg, #0f8d91, #35cacc) !important;
+  transform: translateY(-1px);
+}
+
+.consent-alert {
+  margin-bottom: 16px;
+  border-radius: 16px;
+}
+
+.consent-card {
+  border-radius: 28px;
+  border: 1px solid rgba(21, 159, 163, 0.12);
+  box-shadow: 0 24px 60px rgba(22, 57, 59, 0.1);
+  overflow: hidden;
+}
+
+.consent-card .ant-card-body {
+  padding: 0;
+}
+
+.consent-loading {
+  min-height: 460px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  color: #60787b;
+  font-weight: 700;
+}
+
+.consent-document {
+  width: 100%;
+  min-height: 650px;
+  padding: 72px 58px 52px;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.consent-doc-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.consent-doc-header p {
+  margin: 0 0 24px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.consent-doc-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.consent-doc-body {
+  display: grid;
+  gap: 20px;
+}
+
+.consent-doc-body p {
+  margin: 0;
+  text-align: justify;
+  font-weight: 500;
+}
+
+.consent-underline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.consent-signature-section {
+  margin-top: 86px;
+  display: flex;
+  justify-content: center;
+}
+
+.consent-signature {
+  width: min(430px, 100%);
+  text-align: center;
+}
+
+.consent-signature span {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: #1f2937;
+  margin-bottom: 10px;
+}
+
+.consent-signature p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.consent-signature strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.consent-doctor-info {
+  margin-top: 36px;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.consent-doctor-info p {
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .consent-page {
+    padding: 16px;
+  }
+
+  .consent-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .consent-toolbar-left {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .consent-heading {
+    align-items: flex-start;
+  }
+
+  .consent-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .consent-actions-divider {
+    display: none;
+  }
+
+  .consent-secondary-btn,
+  .consent-print-btn,
+  .consent-download-btn {
+    width: 100%;
+  }
+
+  .consent-document {
+    padding: 46px 28px 38px;
+    font-size: 12px;
+    min-height: auto;
+  }
+
+  .consent-doc-header {
+    margin-bottom: 42px;
+  }
+
+  .consent-doc-header h1 {
+    font-size: 16px;
+  }
+
+  .consent-doc-body {
+    gap: 18px;
+  }
+
+  .consent-signature-section {
+    margin-top: 68px;
+  }
+}
+
+/* Impresión directa con Ctrl + P */
+@media print {
+  @page {
+    size: letter;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .consent-document,
+  .consent-document * {
+    visibility: visible !important;
+  }
+
+  .no-print,
+  .ant-layout-sider,
+  .ant-layout-header,
+  .ant-menu,
+  .ant-message,
+  .ant-notification,
+  .ant-modal-root {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .consent-page {
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .consent-shell {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .consent-card {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .consent-card .ant-card-body {
+    padding: 0 !important;
+  }
+
+  .consent-document {
+    position: fixed !important;
+    inset: 0 !important;
+    width: auto !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+    color: #1f2937 !important;
+    background: #ffffff !important;
+    text-transform: none !important;
+  }
+
+  .consent-doc-header {
+    margin-bottom: 42px !important;
+  }
+
+  .consent-doc-header h1 {
+    font-size: 18px !important;
+  }
+
+  .consent-doc-body {
+    gap: 18px !important;
+  }
+
+  .consent-signature-section {
+    margin-top: 78px !important;
+  }
+
+  .consent-doctor-info {
+    margin-top: 34px !important;
+  }
+}

@@ -39,6 +39,8 @@ import EstudiosClinicos from '../pages/EstudiosClinicos/EstudiosClinicos';
 import CertificadoMedico from '../pages/CertificadoMedico/CertificadoMedico';
 import ControlDiarioPacientes from '../pages/ControlDiarioPacientes/ControlDiarioPacientes';
 import Documentos from '../pages/Documentos/Documentos';
+import ConsentimientoInformado from '../pages/ConsentimientoInformado/ConsentimientoInformado';
+import FarmacoVigilancia from '../pages/FarmacoVigilancia/FarmacoVigilancia';
 
 import {
   ROUTES,
@@ -292,6 +294,24 @@ const AppRouter: React.FC = () => {
                 element={
                   <RoleRoute>
                     <Documentos />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.CONSENTIMIENTO_INFORMADO}
+                element={
+                  <RoleRoute>
+                    <ConsentimientoInformado />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.FARMACO_VIGILANCIA}
+                element={
+                  <RoleRoute>
+                    <FarmacoVigilancia />
                   </RoleRoute>
                 }
               />
