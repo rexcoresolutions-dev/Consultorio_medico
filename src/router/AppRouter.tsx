@@ -41,6 +41,7 @@ import ControlDiarioPacientes from '../pages/ControlDiarioPacientes/ControlDiari
 import Documentos from '../pages/Documentos/Documentos';
 import ConsentimientoInformado from '../pages/ConsentimientoInformado/ConsentimientoInformado';
 import FarmacoVigilancia from '../pages/FarmacoVigilancia/FarmacoVigilancia';
+import AvisoPrivacidad from '../pages/AvisoPrivacidad/AvisoPrivacidad';
 
 import {
   ROUTES,
@@ -312,6 +313,15 @@ const AppRouter: React.FC = () => {
                 element={
                   <RoleRoute>
                     <FarmacoVigilancia />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.AVISO_PRIVACIDAD}
+                element={
+                  <RoleRoute>
+                    <AvisoPrivacidad />
                   </RoleRoute>
                 }
               />

@@ -38,6 +38,7 @@ import {
   TableOutlined,
   FileDoneOutlined,
   SafetyCertificateOutlined,
+  FileProtectOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -156,7 +157,12 @@ const PrivateLayout: React.FC = () => {
     {
       key: '/farmaco-vigilancia',
       icon: <SafetyCertificateOutlined />,
-      label: 'Farmacovigilancia',
+      label: 'Farmaco vigilancia',
+    },
+    {
+      key: '/aviso-privacidad',
+      icon: <FileProtectOutlined />,
+      label: 'Aviso de privacidad',
     },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
@@ -228,7 +234,12 @@ const PrivateLayout: React.FC = () => {
     {
       key: '/farmaco-vigilancia',
       icon: <SafetyCertificateOutlined />,
-      label: 'Farmacovigilancia',
+      label: 'Farmaco vigilancia',
+    },
+    {
+      key: '/aviso-privacidad',
+      icon: <FileProtectOutlined />,
+      label: 'Aviso de privacidad',
     },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
@@ -302,6 +313,11 @@ const PrivateLayout: React.FC = () => {
       key: '/farmaco-vigilancia',
       icon: <SafetyCertificateOutlined />,
       label: 'Farmacovigilancia',
+    },
+    {
+      key: '/aviso-privacidad',
+      icon: <FileProtectOutlined />,
+      label: 'Aviso de privacidad',
     },
     { key: '/citas', icon: <CalendarOutlined />, label: 'Citas' },
     { key: '/recetas', icon: <FileTextOutlined />, label: 'Recetas' },
