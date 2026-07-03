@@ -82,96 +82,99 @@
 }
 
 .pacientes-active-patient {
-  display: inline-flex;
+  margin-top: 16px;
+  padding: 12px 18px;
+  display: flex;
   align-items: center;
-  gap: 10px;
-
-  padding: 14px 18px;
-
-  border-radius: 18px;
-
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 16px;
   background: linear-gradient(
     135deg,
     rgba(67, 215, 216, 0.12),
-    rgba(255, 255, 255, 0.95)
+    rgba(67, 215, 216, 0.04)
   );
-
   border: 1px solid rgba(67, 215, 216, 0.25);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.05),
+    0 2px 6px rgba(67, 215, 216, 0.08);
+}
 
-  color: #243447;
+.pacientes-active-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pacientes-active-icon {
+  font-size: 18px;
+  color: #0f766e;
+}
+
+.pacientes-active-badge {
+  background: #0f766e;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.pacientes-active-name {
   font-size: 15px;
   font-weight: 700;
-
-  box-shadow: 0 10px 20px rgba(67, 215, 216, 0.08);
+  color: #1e293b;
 }
 
-.pacientes-active-patient svg {
-  color: #159fa3;
-  font-size: 18px;
+.pacientes-active-divider {
+  color: #94a3b8;
 }
 
-.pacientes-active-patient strong {
-  color: #071733;
-  font-weight: 900;
+.pacientes-active-exp {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.pacientes-finalizar-btn,
+.pacientes-finalizar-btn-outline {
+  height: 40px !important;
+  padding: 0 18px !important;
+  border-radius: 12px !important;
+  font-weight: 800;
+  color: #dc2626 !important;
+  border: 1px solid rgba(239, 68, 68, 0.28) !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.12);
+  transition: all 0.25s ease;
+}
+
+.pacientes-finalizar-btn:hover,
+.pacientes-finalizar-btn-outline:hover {
+  transform: translateY(-2px);
+  color: #b91c1c !important;
+  border-color: rgba(239, 68, 68, 0.48) !important;
+  box-shadow: 0 12px 24px rgba(239, 68, 68, 0.22);
 }
 
 .pacientes-create-btn {
   flex-shrink: 0;
-
   height: 52px !important;
   padding: 0 28px !important;
-
   border: none !important;
   border-radius: 16px !important;
-
-  background: linear-gradient(
-    135deg,
-    #43d7d8,
-    #159fa3
-  ) !important;
-
+  background: linear-gradient(135deg, #43d7d8, #159fa3) !important;
   color: #fff !important;
   font-size: 16px;
   font-weight: 900;
-
   box-shadow: 0 14px 28px rgba(67, 215, 216, 0.28);
-
-  transition: all .25s ease;
+  transition: all 0.25s ease;
 }
 
 .pacientes-create-btn:hover {
   transform: translateY(-2px);
-
-  background: linear-gradient(
-    135deg,
-    #159fa3,
-    #0f7f83
-  ) !important;
-}
-
-/* MOBILE */
-
-@media (max-width: 900px) {
-  .pacientes-header-top {
-    margin-bottom: 24px;
-  }
-
-  .pacientes-hero-main {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .pacientes-create-btn {
-    width: 100%;
-  }
-
-  .pacientes-hero h2 {
-    font-size: 42px !important;
-  }
-
-  .pacientes-active-patient {
-    width: 100%;
-  }
+  background: linear-gradient(135deg, #159fa3, #0f7f83) !important;
 }
 
 /* ==============================
@@ -313,15 +316,20 @@
 }
 
 .pacientes-filter-pill {
-  height: 50px;
+  height: 42px;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 12px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  background: #ffffff;
   border: 1px solid #d7e4ec;
+  transition: all 0.2s ease;
+}
+
+.pacientes-filter-pill:hover {
+  border-color: #43d7d8;
 }
 
 .pacientes-filter-pill > span {
@@ -332,6 +340,7 @@
 
 .pacientes-filter-pill .ant-input {
   min-width: 0;
+  height: 40px;
   border: none !important;
   box-shadow: none !important;
   padding-left: 0;
@@ -352,6 +361,135 @@
   border-radius: 14px;
   font-weight: 900;
   padding-inline: 14px;
+}
+
+/* ==============================
+   DATEPICKER PACIENTES
+============================== */
+
+.pacientes-date-picker,
+.pacientes-wizard-content .pacientes-date-picker,
+.pacientes-wizard-content .ant-picker.pacientes-date-picker {
+  width: 100%;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 14px !important;
+  border: 1px solid #d7e4ec !important;
+  background: #ffffff !important;
+  padding: 0 12px !important;
+  box-shadow: none !important;
+  line-height: 1 !important;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.pacientes-date-picker:hover,
+.pacientes-wizard-content .pacientes-date-picker:hover {
+  border-color: #43d7d8 !important;
+  background: #ffffff !important;
+}
+
+.pacientes-date-picker.ant-picker-focused,
+.pacientes-date-picker.ant-picker-focused:hover,
+.pacientes-wizard-content .pacientes-date-picker.ant-picker-focused {
+  border-color: #43d7d8 !important;
+  box-shadow: 0 0 0 4px rgba(67, 215, 216, 0.16) !important;
+}
+
+.pacientes-date-picker .ant-picker-input {
+  height: 40px !important;
+  min-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  line-height: 40px !important;
+}
+
+.pacientes-date-picker .ant-picker-input > input {
+  height: 40px !important;
+  line-height: 40px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #0f172a;
+  font-size: 14px !important;
+  font-weight: 700;
+}
+
+.pacientes-date-picker .ant-picker-input > input::placeholder {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.pacientes-date-picker .ant-picker-suffix {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  color: #159fa3;
+  font-size: 16px;
+  margin-inline-start: 8px;
+}
+
+.pacientes-birth-datepicker {
+  background: linear-gradient(180deg, #ffffff, #fbfdff) !important;
+}
+
+.ant-picker-dropdown .ant-picker-panel-container {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(21, 159, 163, 0.14);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
+}
+
+.ant-picker-dropdown .ant-picker-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(21, 159, 163, 0.1);
+}
+
+.ant-picker-dropdown .ant-picker-header button {
+  color: #159fa3;
+  font-weight: 800;
+}
+
+.ant-picker-dropdown .ant-picker-header-view {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.ant-picker-dropdown .ant-picker-content th {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.ant-picker-dropdown .ant-picker-cell {
+  padding: 3px 0;
+}
+
+.ant-picker-dropdown .ant-picker-cell .ant-picker-cell-inner {
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+  border-color: #43d7d8;
+  border-radius: 10px;
+}
+
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-range-start .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-range-end .ant-picker-cell-inner {
+  background: linear-gradient(135deg, #159fa3, #43d7d8);
+  color: #ffffff;
+}
+
+.ant-picker-dropdown .ant-picker-cell-in-view:hover .ant-picker-cell-inner {
+  background: rgba(67, 215, 216, 0.16);
+}
+
+.ant-picker-dropdown .ant-picker-cell-disabled .ant-picker-cell-inner {
+  color: #cbd5e1;
 }
 
 /* ==============================
@@ -756,20 +894,139 @@
   color: #667085;
 }
 
-.pacientes-curp-switch {
+/* ==============================
+   CAMPOS DEL REGISTRO
+============================== */
+
+.pacientes-wizard-content .ant-form-item {
+  margin-bottom: 14px;
+}
+
+.pacientes-wizard-content .ant-form-item-label {
+  padding-bottom: 5px;
+}
+
+.pacientes-wizard-content .ant-form-item-label > label {
+  color: #063f40;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.pacientes-wizard-content .ant-input,
+.pacientes-wizard-content .ant-input-affix-wrapper,
+.pacientes-wizard-content .ant-select-selector {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  border-radius: 14px !important;
+  border-color: #d7e4ec !important;
+  background: #ffffff;
+  font-size: 14px;
+}
+
+.pacientes-wizard-content .ant-input:hover,
+.pacientes-wizard-content .ant-input-affix-wrapper:hover,
+.pacientes-wizard-content .ant-select-selector:hover {
+  border-color: #43d7d8 !important;
+}
+
+.pacientes-wizard-content .ant-input:focus,
+.pacientes-wizard-content .ant-input-affix-wrapper-focused,
+.pacientes-wizard-content .ant-select-focused .ant-select-selector {
+  border-color: #43d7d8 !important;
+  box-shadow: 0 0 0 4px rgba(67, 215, 216, 0.16) !important;
+}
+
+.pacientes-wizard-content .ant-select-selector {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px;
-  border-radius: 16px;
-  background: #f7fbfc;
+  align-items: center;
+}
+
+.pacientes-wizard-content .ant-select-selection-item,
+.pacientes-wizard-content .ant-select-selection-placeholder {
+  line-height: 40px !important;
+  font-weight: 700;
+}
+
+.pacientes-wizard-content .ant-input {
+  font-weight: 700;
+}
+
+.pacientes-wizard-content .ant-input::placeholder {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.pacientes-wizard-content textarea.ant-input {
+  height: auto !important;
+  min-height: 86px !important;
+  max-height: none !important;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+/* Expediente automático */
+.pacientes-wizard-content .ant-input-affix-wrapper-disabled {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 14px !important;
+  border-color: #d7e4ec !important;
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9) !important;
+  padding: 0 10px !important;
+  overflow: hidden;
+}
+
+.pacientes-wizard-content .ant-input-affix-wrapper-disabled .ant-input-prefix {
+  margin-inline-end: 5px !important;
+  color: #94a3b8;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.pacientes-wizard-content .ant-input-affix-wrapper-disabled input.ant-input-disabled,
+.pacientes-wizard-content input.ant-input-disabled {
+  min-width: 0;
+  height: 40px !important;
+  line-height: 40px !important;
+  padding: 0 !important;
+  color: #94a3b8 !important;
+  background: transparent !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pacientes-curp-switch,
+.pacientes-curp-switch-inline {
+  min-height: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: #ffffff;
   border: 1px solid #d7e4ec;
 }
 
-.pacientes-curp-switch p {
-  margin: 4px 0 0;
-  color: #64748b;
+.pacientes-curp-switch-inline span,
+.pacientes-curp-switch span {
+  color: #53627a;
+  font-size: 12px;
+  font-weight: 800;
 }
+
+/* ==============================
+   ACCIONES WIZARD
+============================== */
 
 .pacientes-wizard-actions {
   position: sticky;
@@ -1081,7 +1338,17 @@
 
   .pacientes-active-patient {
     width: 100%;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pacientes-active-left {
+    flex-wrap: wrap;
+  }
+
+  .pacientes-finalizar-btn,
+  .pacientes-finalizar-btn-outline {
+    width: 100%;
   }
 
   .pacientes-primary-btn,
@@ -1099,10 +1366,11 @@
     grid-template-columns: 1fr;
   }
 
-  .pacientes-filter-pill {
-    height: auto;
-    min-height: 46px;
-    padding: 8px 10px;
+  .pacientes-filter-pill,
+  .pacientes-date-picker {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
   }
 
   .pacientes-search-actions,
@@ -1110,108 +1378,13 @@
     flex-direction: column;
   }
 
-  .pacientes-curp-switch {
-    flex-direction: column;
-    align-items: flex-start;
+  .pacientes-curp-switch,
+  .pacientes-curp-switch-inline {
+    width: 100%;
+    align-items: center;
   }
 
   .paciente-mobile-secondary-actions {
     grid-template-columns: 1fr;
   }
 }
-
-.pacientes-active-patient {
-  margin-top: 16px;
-  padding: 12px 18px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-
-  border-radius: 16px;
-
-  background: linear-gradient(
-    135deg,
-    rgba(67, 215, 216, .12),
-    rgba(67, 215, 216, .04)
-  );
-
-  border: 1px solid rgba(67, 215, 216, .25);
-
-  box-shadow:
-    0 8px 20px rgba(0,0,0,.05),
-    0 2px 6px rgba(67,215,216,.08);
-}
-
-.pacientes-active-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.pacientes-active-icon {
-  font-size: 18px;
-  color: #0f766e;
-}
-
-.pacientes-active-badge {
-  background: #0f766e;
-  color: white;
-
-  padding: 4px 10px;
-  border-radius: 999px;
-
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .5px;
-}
-
-.pacientes-active-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.pacientes-active-divider {
-  color: #94a3b8;
-}
-
-.pacientes-active-exp {
-  color: #64748b;
-  font-size: 14px;
-}
-
-.pacientes-finalizar-btn {
-  border-radius: 12px !important;
-  height: 40px !important;
-  padding: 0 18px !important;
-
-  font-weight: 600;
-
-  box-shadow: 0 8px 18px rgba(239, 68, 68, .18);
-
-  transition: all .25s ease;
-}
-
-.pacientes-finalizar-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(239, 68, 68, .28);
-}
-
-@media (max-width: 768px) {
-  .pacientes-active-patient {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .pacientes-active-left {
-    flex-wrap: wrap;
-  }
-
-  .pacientes-finalizar-btn {
-    width: 100%;
-  }
-}
-

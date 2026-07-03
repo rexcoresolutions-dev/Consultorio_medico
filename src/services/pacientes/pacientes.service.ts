@@ -28,6 +28,14 @@ export interface PacienteData {
 
   numero_expediente?: string;
 
+  entidad?: string;
+  municipio?: string;
+  codigo_postal?: string;
+  colonia?: string;
+  calle?: string;
+  numero_exterior?: string;
+  numero_interior?: string;
+
   activo?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -52,8 +60,10 @@ class PacientesService {
     return (
       responseData?.data?.data ||
       responseData?.data?.paciente ||
+      responseData?.data?.result ||
       responseData?.data ||
       responseData?.paciente ||
+      responseData?.result ||
       responseData
     );
   }
@@ -123,6 +133,27 @@ class PacientesService {
         paciente?.numeroExpediente ||
         '',
 
+      entidad: paciente?.entidad || '',
+      municipio: paciente?.municipio || '',
+
+      codigo_postal:
+        paciente?.codigo_postal ||
+        paciente?.codigoPostal ||
+        '',
+
+      colonia: paciente?.colonia || '',
+      calle: paciente?.calle || '',
+
+      numero_exterior:
+        paciente?.numero_exterior ||
+        paciente?.numeroExterior ||
+        '',
+
+      numero_interior:
+        paciente?.numero_interior ||
+        paciente?.numeroInterior ||
+        '',
+
       activo: paciente?.activo === true || paciente?.activo === 1,
 
       created_at: paciente?.created_at || paciente?.createdAt,
@@ -143,7 +174,7 @@ class PacientesService {
       const sucursalId = Number(
         user?.sucursalId ??
           user?.sucursal_id ??
-          null
+          null,
       );
 
       return Number.isFinite(sucursalId) && sucursalId > 0
@@ -155,14 +186,24 @@ class PacientesService {
     }
   }
 
+  private addField(payload: any, key: string, value: any) {
+    if (value === undefined || value === null) return;
+
+    if (typeof value === 'string') {
+      const cleanValue = value.trim();
+
+      if (cleanValue !== '') {
+        payload[key] = cleanValue;
+      }
+
+      return;
+    }
+
+    payload[key] = value;
+  }
+
   private buildPayload(data: any): any {
     const payload: any = {};
-
-    const addField = (key: string, value: any) => {
-      if (value !== undefined && value !== null && String(value).trim() !== '') {
-        payload[key] = typeof value === 'string' ? value.trim() : value;
-      }
-    };
 
     const sucursalId = Number(data.sucursal_id ?? data.sucursalId);
 
@@ -170,83 +211,112 @@ class PacientesService {
       payload.sucursalId = sucursalId;
     }
 
-    addField('nombre', data.nombre);
+    this.addField(payload, 'nombre', data.nombre);
 
-    addField(
+    this.addField(
+      payload,
       'primerApellido',
-      data.primer_apellido ?? data.primerApellido
+      data.primer_apellido ?? data.primerApellido,
     );
 
-    addField(
+    this.addField(
+      payload,
       'segundoApellido',
-      data.segundo_apellido ?? data.segundoApellido
+      data.segundo_apellido ?? data.segundoApellido,
     );
 
-    addField(
+    this.addField(
+      payload,
       'fechaNacimiento',
-      data.fecha_nacimiento ?? data.fechaNacimiento
+      data.fecha_nacimiento ?? data.fechaNacimiento,
     );
 
-    addField('sexo', data.sexo);
+    this.addField(payload, 'sexo', data.sexo);
 
-    addField(
+    this.addField(
+      payload,
       'tipoSangre',
-      data.tipo_sangre ?? data.tipoSangre
+      data.tipo_sangre ?? data.tipoSangre,
     );
 
-    addField('curp', data.curp?.toUpperCase());
+    this.addField(
+      payload,
+      'curp',
+      String(data.curp ?? '').trim().toUpperCase(),
+    );
 
-    addField(
+    this.addField(
+      payload,
       'curpGenerico',
-      (data.curp_generico ?? data.curpGenerico)?.toUpperCase()
+      String(data.curp_generico ?? data.curpGenerico ?? '').trim().toUpperCase(),
     );
 
-    addField(
+    this.addField(
+      payload,
       'lugarOrigen',
-      data.lugar_origen ?? data.lugarOrigen
+      data.lugar_origen ?? data.lugarOrigen,
     );
 
-    addField(
+    this.addField(
+      payload,
       'paisNacimiento',
-      data.pais_nacimiento ?? data.paisNacimiento ?? 'Mexico'
+      data.pais_nacimiento ?? data.paisNacimiento ?? 'Mexico',
     );
 
-    addField(
+    this.addField(
+      payload,
       'estadoCivil',
-      data.estado_civil ?? data.estadoCivil
+      data.estado_civil ?? data.estadoCivil,
     );
 
-    addField('escolaridad', data.escolaridad);
-    addField('ocupacion', data.ocupacion);
-    addField('telefono', data.telefono);
-    addField('celular', data.celular);
-    addField('correo', data.correo);
+    this.addField(payload, 'escolaridad', data.escolaridad);
+    this.addField(payload, 'ocupacion', data.ocupacion);
+    this.addField(payload, 'telefono', data.telefono);
+    this.addField(payload, 'celular', data.celular);
+    this.addField(payload, 'correo', data.correo);
 
-    addField(
-      'numeroExpediente',
-      data.numero_expediente ?? data.numeroExpediente
+    this.addField(payload, 'entidad', data.entidad);
+    this.addField(payload, 'municipio', data.municipio);
+
+    this.addField(
+      payload,
+      'codigoPostal',
+      data.codigo_postal ?? data.codigoPostal,
+    );
+
+    this.addField(payload, 'colonia', data.colonia);
+    this.addField(payload, 'calle', data.calle);
+
+    this.addField(
+      payload,
+      'numeroExterior',
+      data.numero_exterior ?? data.numeroExterior,
+    );
+
+    this.addField(
+      payload,
+      'numeroInterior',
+      data.numero_interior ?? data.numeroInterior,
     );
 
     return payload;
   }
 
   async getPacientes(): Promise<PacienteData[]> {
-  const response = await axiosInstance.get(this.basePath, {
+    const response = await axiosInstance.get(this.basePath, {
       params: {
-      page: 1,
-      limit: 100,
+        page: 1,
+        limit: 100,
       },
-  });
+    });
 
     const pacientes = this.normalizeArray(response.data);
 
     return pacientes.map((paciente) => this.normalizePaciente(paciente));
-    }
+  }
 
   async getPacienteById(id: number): Promise<PacienteData> {
-    const response = await axiosInstance.get(
-      `${this.basePath}/${id}`
-    );
+    const response = await axiosInstance.get(`${this.basePath}/${id}`);
 
     const paciente = this.getResponseData(response.data);
 
@@ -263,34 +333,10 @@ class PacientesService {
       throw new Error('No se pudo obtener la sucursal del usuario');
     }
 
-    const payload = {
-      sucursalId: Number(sucursalId),
-
-      nombre: String(data.nombre ?? '').trim(),
-      primerApellido: String(data.primer_apellido ?? data.primerApellido ?? '').trim(),
-      segundoApellido: String(data.segundo_apellido ?? data.segundoApellido ?? '').trim(),
-
-      fechaNacimiento: data.fecha_nacimiento ?? data.fechaNacimiento ?? '',
-      sexo: data.sexo ?? '',
-      tipoSangre: data.tipo_sangre ?? data.tipoSangre ?? '',
-
-      curp: String(data.curp ?? '').trim().toUpperCase(),
-      curpGenerico: String(data.curp_generico ?? data.curpGenerico ?? '').trim().toUpperCase(),
-
-      lugarOrigen: String(data.lugar_origen ?? data.lugarOrigen ?? '').trim(),
-      paisNacimiento: String(data.pais_nacimiento ?? data.paisNacimiento ?? 'Mexico').trim(),
-      estadoCivil: data.estado_civil ?? data.estadoCivil ?? '',
-      escolaridad: data.escolaridad ?? '',
-      ocupacion: String(data.ocupacion ?? '').trim(),
-
-      telefono: String(data.telefono ?? '').trim(),
-      celular: String(data.celular ?? '').trim(),
-      ...(String(data.correo ?? '').trim()
-      ? { correo: String(data.correo ?? '').trim() }
-      : {}),
-
-      numeroExpediente: String(data.numero_expediente ?? data.numeroExpediente ?? '').trim(),
-    };
+    const payload = this.buildPayload({
+      ...data,
+      sucursalId,
+    });
 
     console.log('BODY REAL ENVIADO A /pacientes:', payload);
 
@@ -307,13 +353,18 @@ class PacientesService {
 
   async updatePaciente(
     id: number,
-    data: Partial<PacienteData>
+    data: Partial<PacienteData>,
   ): Promise<PacienteData> {
     const payload = this.buildPayload(data);
 
     const response = await axiosInstance.patch(
       `${this.basePath}/${id}`,
-      payload
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
     );
 
     const paciente = this.getResponseData(response.data);
@@ -327,7 +378,7 @@ class PacientesService {
 
   async getAuditoriaPaciente(id: number): Promise<any[]> {
     const response = await axiosInstance.get(
-      `${this.basePath}/${id}/auditoria`
+      `${this.basePath}/${id}/auditoria`,
     );
 
     return this.normalizeArray(response.data);

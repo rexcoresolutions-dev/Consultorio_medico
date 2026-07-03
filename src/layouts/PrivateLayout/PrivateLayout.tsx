@@ -66,19 +66,64 @@ const flattenMenuItems = (items: any[]): any[] => {
   });
 };
 
+const normalizeMenuPathname = (pathname: string) => {
+  /*
+    Rutas ocultas en el menú, pero relacionadas con Confirmar atención.
+
+    La idea es:
+    - No mostrar "Pacientes" como opción independiente.
+    - Cuando el usuario esté en /pacientes, /busqueda-paciente o /consulta,
+      se debe marcar "Confirmar atención" como opción activa.
+  */
+
+  if (
+    pathname === ROUTES.PATIENTS ||
+    pathname.startsWith(`${ROUTES.PATIENTS}/`)
+  ) {
+    return ROUTES.CONFIRMAR_ATENCION;
+  }
+
+  const busquedaPacienteBase = ROUTES.BUSQUEDA_PACIENTE.split('/:')[0];
+  if (
+    pathname === busquedaPacienteBase ||
+    pathname.startsWith(`${busquedaPacienteBase}/`)
+  ) {
+    return ROUTES.CONFIRMAR_ATENCION;
+  }
+
+  const consultaBase = ROUTES.CONSULTA.split('/:')[0];
+  if (pathname === consultaBase || pathname.startsWith(`${consultaBase}/`)) {
+    return ROUTES.CONFIRMAR_ATENCION;
+  }
+
+  const procedimientoBase = ROUTES.PROCEDIMIENTO.split('/:')[0];
+  if (
+    pathname === procedimientoBase ||
+    pathname.startsWith(`${procedimientoBase}/`)
+  ) {
+    return ROUTES.PROCEDIMIENTOS;
+  }
+
+  return pathname;
+};
+
 const getActiveMenuItem = (items: any[], pathname: string) => {
+  const normalizedPathname = normalizeMenuPathname(pathname);
+
   const leaves = flattenMenuItems(items).filter((item) =>
     isRouteKey(String(item?.key || ''))
   );
 
-  const exact = leaves.find((item) => String(item.key) === pathname);
+  const exact = leaves.find(
+    (item) => String(item.key) === normalizedPathname
+  );
 
   if (exact) return exact;
 
   return leaves
     .filter((item) => {
       const key = String(item.key);
-      return pathname.startsWith(`${key}/`);
+      return normalizedPathname.startsWith(`${key}/`);
     })
     .sort((a, b) => String(b.key).length - String(a.key).length)[0];
 };
@@ -199,8 +244,11 @@ const PrivateLayout: React.FC = () => {
       'Paciente',
       'Registro, búsqueda y atención',
       [
-        // leaf(ROUTES.PATIENTS, <UserOutlined />, 'Pacientes'),
-        leaf(ROUTES.CONFIRMAR_ATENCION, <FileTextOutlined />, 'Confirmar atención'),
+        leaf(
+          ROUTES.CONFIRMAR_ATENCION,
+          <FileTextOutlined />,
+          'Confirmar atención'
+        ),
         leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos'),
       ]
     );
@@ -211,8 +259,11 @@ const PrivateLayout: React.FC = () => {
       'Paciente',
       'Atención y procedimientos',
       [
-        // leaf(ROUTES.PATIENTS, <UserOutlined />, 'Pacientes'),
-        leaf(ROUTES.CONFIRMAR_ATENCION, <FileTextOutlined />, 'Confirmar atención'),
+        leaf(
+          ROUTES.CONFIRMAR_ATENCION,
+          <FileTextOutlined />,
+          'Confirmar atención'
+        ),
         leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos'),
       ]
     );
@@ -223,8 +274,11 @@ const PrivateLayout: React.FC = () => {
       'Paciente',
       'Búsqueda y registro',
       [
-        // leaf(ROUTES.PATIENTS, <UserOutlined />, 'Pacientes'),
-        leaf(ROUTES.CONFIRMAR_ATENCION, <FileTextOutlined />, 'Confirmar atención'),
+        leaf(
+          ROUTES.CONFIRMAR_ATENCION,
+          <FileTextOutlined />,
+          'Confirmar atención'
+        ),
       ]
     );
 
@@ -241,7 +295,11 @@ const PrivateLayout: React.FC = () => {
           'Historiales disponibles'
         ),
         leaf(ROUTES.NOTA_EVOLUCION, <FormOutlined />, 'Nota de evolución'),
-        leaf(ROUTES.HISTORICO_PACIENTE, <HistoryOutlined />, 'Histórico por paciente'),
+        leaf(
+          ROUTES.HISTORICO_PACIENTE,
+          <HistoryOutlined />,
+          'Histórico por paciente'
+        ),
       ]
     );
 
@@ -251,10 +309,26 @@ const PrivateLayout: React.FC = () => {
       'Consulta',
       'Referencias, estudios y control',
       [
-        leaf(ROUTES.HOJA_REFERENCIA, <MedicineBoxOutlined />, 'Hoja de referencia'),
-        leaf(ROUTES.ESTUDIOS_CLINICOS, <ExperimentOutlined />, 'Estudios clínicos'),
-        leaf(ROUTES.CERTIFICADO_MEDICO, <SolutionOutlined />, 'Certificado médico'),
-        leaf(ROUTES.CONTROL_DIARIO_PACIENTES, <TableOutlined />, 'Control diario'),
+        leaf(
+          ROUTES.HOJA_REFERENCIA,
+          <MedicineBoxOutlined />,
+          'Hoja de referencia'
+        ),
+        leaf(
+          ROUTES.ESTUDIOS_CLINICOS,
+          <ExperimentOutlined />,
+          'Estudios clínicos'
+        ),
+        leaf(
+          ROUTES.CERTIFICADO_MEDICO,
+          <SolutionOutlined />,
+          'Certificado médico'
+        ),
+        leaf(
+          ROUTES.CONTROL_DIARIO_PACIENTES,
+          <TableOutlined />,
+          'Control diario'
+        ),
         leaf(ROUTES.APPOINTMENTS, <CalendarOutlined />, 'Citas'),
         leaf(ROUTES.PRESCRIPTIONS, <FileTextOutlined />, 'Recetas'),
       ]
@@ -277,7 +351,11 @@ const PrivateLayout: React.FC = () => {
           <SafetyCertificateOutlined />,
           'Farmacovigilancia'
         ),
-        leaf(ROUTES.AVISO_PRIVACIDAD, <FileProtectOutlined />, 'Aviso de privacidad'),
+        leaf(
+          ROUTES.AVISO_PRIVACIDAD,
+          <FileProtectOutlined />,
+          'Aviso de privacidad'
+        ),
         leaf(
           ROUTES.AVISO_MEDICO_COMODATARIO,
           <FileProtectOutlined />,
@@ -365,7 +443,7 @@ const PrivateLayout: React.FC = () => {
     return getActiveMenuItem(menuItems, location.pathname);
   }, [menuItems, location.pathname]);
 
-  const selectedKey = activeMenuItem?.key || location.pathname;
+  const selectedKey = activeMenuItem?.key || normalizeMenuPathname(location.pathname);
   const pageTitle = activeMenuItem?.title || 'Dashboard';
 
   useEffect(() => {
