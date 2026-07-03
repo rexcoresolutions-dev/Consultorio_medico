@@ -42,6 +42,7 @@ import Documentos from '../pages/Documentos/Documentos';
 import ConsentimientoInformado from '../pages/ConsentimientoInformado/ConsentimientoInformado';
 import FarmacoVigilancia from '../pages/FarmacoVigilancia/FarmacoVigilancia';
 import AvisoPrivacidad from '../pages/AvisoPrivacidad/AvisoPrivacidad';
+import AvisoMedicoComodatario from '../pages/AvisoMedicoComodatario/AvisoMedicoComodatario';
 
 import {
   ROUTES,
@@ -322,6 +323,15 @@ const AppRouter: React.FC = () => {
                 element={
                   <RoleRoute>
                     <AvisoPrivacidad />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.AVISO_MEDICO_COMODATARIO}
+                element={
+                  <RoleRoute>
+                    <AvisoMedicoComodatario />
                   </RoleRoute>
                 }
               />

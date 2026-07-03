@@ -1,69 +1,81 @@
 /* ============================================
    SIDEBAR - DESKTOP
-   ============================================ */
+============================================ */
 
 .custom-sider {
-  background: linear-gradient(180deg, #0F4C4D 0%, #1A6B6C 100%);
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+  background:
+    radial-gradient(circle at top left, rgba(80, 235, 236, 0.14), transparent 34%),
+    linear-gradient(180deg, #0f4c4d 0%, #145f60 48%, #1a6b6c 100%);
+  box-shadow: 4px 0 22px rgba(15, 23, 42, 0.14);
   height: 100vh;
   position: fixed;
   left: 0;
   top: 0;
-  overflow-y: auto;
+  overflow: hidden;
   z-index: 100;
 }
 
 .logo-container {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(80, 235, 236, 0.2);
-  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(80, 235, 236, 0.18);
+  margin-bottom: 8px;
+  padding: 0 14px;
 }
 
 .logo {
+  width: 100%;
+  min-height: 48px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 18px;
-  font-weight: 600;
-  transition: all 0.3s;
+  justify-content: center;
+  gap: 11px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(80, 235, 236, 0.12);
+  transition: all 0.25s ease;
 }
 
 .logo.collapsed {
+  width: 48px;
   gap: 0;
+  padding: 8px;
 }
 
 .logo-icon {
   font-size: 28px;
-  color: #50EBEC;
+  color: #50ebec;
+  filter: drop-shadow(0 6px 12px rgba(80, 235, 236, 0.25));
 }
 
 .logo-text {
-  background: linear-gradient(135deg, #50EBEC 0%, #2BA1A2 100%);
+  background: linear-gradient(135deg, #50ebec 0%, #bfffff 48%, #36c6c7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-weight: 700;
-  font-size: 18px;
+  font-weight: 900;
+  font-size: 19px;
+  letter-spacing: -0.02em;
 }
 
 /* ============================================
-   MENU
-   ============================================ */
+   MENU BASE
+============================================ */
 
 .custom-menu {
-  background: transparent;
-  border-right: none;
+  background: transparent !important;
+  border-right: none !important;
 }
 
 .custom-menu .ant-menu-item {
-  border-radius: 10px;
+  border-radius: 12px;
   margin: 4px 12px;
   height: 44px;
   line-height: 44px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.84);
   font-size: 14px;
 }
 
@@ -73,27 +85,244 @@
 }
 
 .custom-menu .ant-menu-item:hover {
-  background: rgba(80, 235, 236, 0.2);
-  color: #50EBEC;
+  background: rgba(80, 235, 236, 0.16) !important;
+  color: #50ebec !important;
 }
 
 .custom-menu .ant-menu-item-selected {
-  background: linear-gradient(135deg, #50EBEC 0%, #36C6C7 100%);
-  color: #0F4C4D;
-  font-weight: 600;
+  background: linear-gradient(135deg, #50ebec 0%, #36c6c7 100%) !important;
+  color: #0f4c4d !important;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(80, 235, 236, 0.22);
 }
 
 .custom-menu .ant-menu-item-selected .anticon {
-  color: #0F4C4D;
+  color: #0f4c4d !important;
+}
+
+/* ============================================
+   MENÚ LATERAL SECCIONADO / COMPACTO
+============================================ */
+
+.custom-menu-sectioned {
+  height: calc(100vh - 86px);
+  padding: 8px 12px 18px !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.custom-menu-sectioned::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-menu-sectioned::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-menu-sectioned::-webkit-scrollbar-thumb {
+  background: rgba(80, 235, 236, 0.28);
+  border-radius: 999px;
+}
+
+.custom-menu-sectioned::-webkit-scrollbar-thumb:hover {
+  background: rgba(80, 235, 236, 0.42);
+}
+
+/* Items principales y secciones */
+
+.custom-menu-sectioned .ant-menu-item,
+.custom-menu-sectioned .ant-menu-submenu-title {
+  width: 100% !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  line-height: 48px !important;
+  margin: 5px 0 !important;
+  padding-inline: 16px !important;
+  border-radius: 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-menu-sectioned .ant-menu-submenu-title {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.custom-menu-sectioned .ant-menu-item:hover,
+.custom-menu-sectioned .ant-menu-submenu-title:hover {
+  background: rgba(80, 235, 236, 0.14) !important;
+}
+
+.custom-menu-sectioned .ant-menu-item .anticon,
+.custom-menu-sectioned .ant-menu-submenu-title .anticon {
+  font-size: 19px !important;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.custom-menu-sectioned .ant-menu-title-content {
+  min-width: 0;
+}
+
+/* Label de sección */
+
+.nav-parent-label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  line-height: 1.1;
+}
+
+.nav-parent-label span {
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.nav-parent-label small {
+  max-width: 172px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11.2px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Label de opciones internas */
+
+.nav-leaf-label {
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+/* Sección abierta o seleccionada */
+
+.custom-menu-sectioned .ant-menu-submenu-open > .ant-menu-submenu-title {
+  background: rgba(80, 235, 236, 0.13) !important;
+}
+
+.custom-menu-sectioned .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background:
+    linear-gradient(135deg, rgba(80, 235, 236, 0.22), rgba(54, 198, 199, 0.12)) !important;
+  border: 1px solid rgba(80, 235, 236, 0.22);
+}
+
+.custom-menu-sectioned .ant-menu-submenu-selected > .ant-menu-submenu-title,
+.custom-menu-sectioned .ant-menu-submenu-selected > .ant-menu-submenu-title .anticon {
+  color: #50ebec !important;
+}
+
+.custom-menu-sectioned .ant-menu-submenu-selected .nav-parent-label span {
+  color: #ffffff;
+}
+
+.custom-menu-sectioned .ant-menu-submenu-selected .nav-parent-label small {
+  color: rgba(191, 255, 255, 0.72);
+}
+
+/* Contenedor de hijos */
+
+.custom-menu-sectioned .ant-menu-sub {
+  margin: 3px 0 8px !important;
+  padding: 6px 0 7px !important;
+  background:
+    linear-gradient(180deg, rgba(4, 31, 38, 0.24), rgba(4, 31, 38, 0.15)) !important;
+  border: 1px solid rgba(80, 235, 236, 0.08);
+  border-radius: 16px !important;
+}
+
+/* Hijos */
+
+.custom-menu-sectioned .ant-menu-sub .ant-menu-item {
+  min-height: 38px !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  margin: 3px 7px !important;
+  padding-left: 44px !important;
+  border-radius: 12px !important;
+  color: rgba(255, 255, 255, 0.76) !important;
+}
+
+.custom-menu-sectioned .ant-menu-sub .ant-menu-item:hover {
+  background: rgba(80, 235, 236, 0.13) !important;
+  color: #ffffff !important;
+}
+
+.custom-menu-sectioned .ant-menu-sub .ant-menu-item .anticon {
+  font-size: 15px !important;
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+.custom-menu-sectioned .ant-menu-sub .ant-menu-item-selected {
+  background:
+    linear-gradient(135deg, rgba(80, 235, 236, 0.32), rgba(54, 198, 199, 0.2)) !important;
+  color: #ffffff !important;
+  box-shadow: inset 3px 0 0 #50ebec;
+}
+
+.custom-menu-sectioned .ant-menu-sub .ant-menu-item-selected .nav-leaf-label,
+.custom-menu-sectioned .ant-menu-sub .ant-menu-item-selected .anticon {
+  color: #ffffff !important;
+}
+
+/* Flecha del submenu */
+
+.custom-menu-sectioned .ant-menu-submenu-arrow {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.custom-menu-sectioned .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow,
+.custom-menu-sectioned .ant-menu-submenu-selected > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  color: #50ebec !important;
+}
+
+/* Collapsed */
+
+.custom-sider.ant-layout-sider-collapsed .logo-container {
+  padding: 0 10px;
+}
+
+.custom-sider.ant-layout-sider-collapsed .custom-menu-sectioned {
+  padding: 8px 9px 16px !important;
+}
+
+.custom-sider.ant-layout-sider-collapsed .custom-menu-sectioned .ant-menu-item,
+.custom-sider.ant-layout-sider-collapsed
+  .custom-menu-sectioned
+  .ant-menu-submenu-title {
+  display: flex !important;
+  justify-content: center !important;
+  padding-inline: 0 !important;
+  min-height: 46px !important;
+  height: 46px !important;
+  line-height: 46px !important;
+}
+
+.custom-sider.ant-layout-sider-collapsed .custom-menu-sectioned .ant-menu-item .anticon,
+.custom-sider.ant-layout-sider-collapsed
+  .custom-menu-sectioned
+  .ant-menu-submenu-title
+  .anticon {
+  margin: 0 !important;
+  font-size: 20px !important;
+}
+
+.custom-sider.ant-layout-sider-collapsed .nav-parent-label small,
+.custom-sider.ant-layout-sider-collapsed .nav-parent-label span,
+.custom-sider.ant-layout-sider-collapsed .nav-leaf-label {
+  display: none;
 }
 
 /* ============================================
    LAYOUT
-   ============================================ */
+============================================ */
 
 .main-layout {
   margin-left: 280px;
-  transition: all .25s ease;
+  transition: all 0.25s ease;
 }
 
 .custom-sider.ant-layout-sider-collapsed + .main-layout {
@@ -102,42 +331,40 @@
 
 /* ============================================
    HEADER
-   ============================================ */
+============================================ */
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  padding: 0 20px;
-  background: #fff;
-
+  padding: 0 22px;
+  background: rgba(255, 255, 255, 0.96);
   height: 64px;
-
-  box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
-
+  box-shadow: 0 1px 8px rgba(15, 23, 42, 0.06);
   position: sticky;
   top: 0;
   z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .desktop-collapse-btn {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 18px;
-  color: #4A5568;
+  color: #475569;
 }
 
 .desktop-collapse-btn:hover {
-  background: rgba(80, 235, 236, .15);
-  color: #50EBEC;
+  background: rgba(80, 235, 236, 0.14) !important;
+  color: #159fa3 !important;
 }
 
 .mobile-menu-btn {
@@ -145,12 +372,19 @@
 }
 
 .page-title {
-  font-weight: 600;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.page-title .ant-typography {
+  color: #1f2937;
+  font-size: 16px;
+  letter-spacing: -0.01em;
 }
 
 /* ============================================
    HEADER RIGHT
-   ============================================ */
+============================================ */
 
 .header-right {
   display: flex;
@@ -159,39 +393,37 @@
 }
 
 .notification-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   font-size: 18px;
-  color: #4A5568;
+  color: #475569;
 }
 
 .notification-btn:hover {
-  color: #50EBEC;
-  background: rgba(80, 235, 236, .10);
+  color: #159fa3 !important;
+  background: rgba(80, 235, 236, 0.12) !important;
 }
 
 /* ============================================
    USER DROPDOWN
-   ============================================ */
+============================================ */
 
 .user-dropdown-trigger {
   border: none;
   background: transparent;
   outline: none;
-
   display: flex;
   align-items: center;
   gap: 12px;
-
-  padding: 8px 14px;
-
+  padding: 7px 13px;
   border-radius: 16px;
-
   cursor: pointer;
-
-  transition: all .25s ease;
+  transition: all 0.25s ease;
 }
 
 .user-dropdown-trigger:hover {
-  background: rgba(80, 235, 236, .10);
+  background: rgba(80, 235, 236, 0.1);
 }
 
 .user-dropdown-trigger:focus {
@@ -206,35 +438,33 @@
 
 .user-name {
   font-size: 14px;
-  font-weight: 700;
-  color: #0F4C4D;
+  font-weight: 800;
+  color: #0f4c4d;
   line-height: 1.2;
 }
 
 .user-role {
   font-size: 12px;
-  color: #64748B;
+  color: #64748b;
   line-height: 1.2;
 }
 
 .user-dropdown-arrow {
   font-size: 11px;
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .user-dropdown-trigger:hover .user-dropdown-arrow {
-  color: #36C6C7;
+  color: #36c6c7;
 }
 
-/* Avatar */
-
 .ant-avatar {
-  box-shadow: 0 4px 12px rgba(80, 235, 236, .25);
+  box-shadow: 0 4px 14px rgba(80, 235, 236, 0.28);
 }
 
 /* ============================================
    DROPDOWN MENU
-   ============================================ */
+============================================ */
 
 .ant-dropdown {
   min-width: 240px;
@@ -243,51 +473,47 @@
 .ant-dropdown .ant-dropdown-menu {
   border-radius: 18px;
   padding: 8px;
-
-  border: 1px solid #E2E8F0;
-
+  border: 1px solid #e2e8f0;
   box-shadow:
-    0 12px 24px rgba(15, 23, 42, .08),
-    0 2px 8px rgba(15, 23, 42, .05);
+    0 12px 24px rgba(15, 23, 42, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.05);
 }
 
 .ant-dropdown-menu-item {
   border-radius: 12px !important;
   min-height: 44px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .ant-dropdown-menu-item:hover {
-  background: rgba(80, 235, 236, .10) !important;
+  background: rgba(80, 235, 236, 0.1) !important;
 }
 
 .ant-dropdown-menu-item-danger {
-  color: #E53E3E !important;
+  color: #e53e3e !important;
 }
 
 .ant-dropdown-menu-item-danger:hover {
-  background: rgba(229, 62, 62, .08) !important;
+  background: rgba(229, 62, 62, 0.08) !important;
 }
 
 /* ============================================
    CONTENT
-   ============================================ */
+============================================ */
 
 .dashboard-content {
   margin: 16px;
   padding: 20px;
   min-height: 280px;
-
-  background: #F5F7FA;
+  background: #f5f7fa;
   border-radius: 16px;
 }
 
 /* ============================================
    MOBILE
-   ============================================ */
+============================================ */
 
 @media (max-width: 768px) {
-
   .main-layout {
     margin-left: 0 !important;
   }
@@ -298,6 +524,9 @@
 
   .mobile-menu-btn {
     display: flex;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
   }
 
   .desktop-collapse-btn {
@@ -329,15 +558,15 @@
   .dashboard-content {
     margin: 12px;
     padding: 16px;
+    border-radius: 14px;
   }
 }
 
 /* ============================================
    TABLET
-   ============================================ */
+============================================ */
 
 @media (min-width: 769px) and (max-width: 1024px) {
-
   .main-layout {
     margin-left: 280px;
   }
@@ -357,10 +586,9 @@
 
 /* ============================================
    DESKTOP
-   ============================================ */
+============================================ */
 
 @media (min-width: 1025px) {
-
   .main-layout {
     margin-left: 280px;
   }

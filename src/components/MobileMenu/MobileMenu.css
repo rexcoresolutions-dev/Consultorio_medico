@@ -1,78 +1,310 @@
 /* src/components/MobileMenu/MobileMenu.css */
 
-/* Fondo celeste igual que sidebar PC */
+.mobile-drawer-root .ant-drawer-mask {
+  background: rgba(15, 23, 42, 0.58) !important;
+  backdrop-filter: blur(2px);
+}
+
+.mobile-drawer-root .ant-drawer-content-wrapper {
+  box-shadow: 8px 0 28px rgba(15, 23, 42, 0.28) !important;
+}
+
+.mobile-drawer-root .ant-drawer-content,
 .mobile-drawer-custom .ant-drawer-content {
-  background: linear-gradient(180deg, #1E3A5F 0%, #2B5B8B 100%) !important;
+  background: #0f4c4d !important;
 }
 
-.mobile-drawer-custom .ant-drawer-header {
-  display: none !important;
-}
-
+.mobile-drawer-root .ant-drawer-body,
 .mobile-drawer-custom .ant-drawer-body {
   padding: 0 !important;
+  overflow: hidden !important;
+  background: #0f4c4d !important;
 }
 
+.mobile-menu-panel {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(80, 235, 236, 0.18), transparent 34%),
+    linear-gradient(180deg, #0f4c4d 0%, #145f60 48%, #1a6b6c 100%);
+}
+
+/* Header */
+
 .mobile-drawer-header {
-  height: 64px;
+  height: 76px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(80, 235, 236, 0.18);
+}
+
+.mobile-drawer-brand {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(80, 235, 236, 0.2);
-  margin-bottom: 16px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(80, 235, 236, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .mobile-drawer-logo {
   font-size: 28px;
-  color: #50EBEC;
+  color: #50ebec;
+  filter: drop-shadow(0 6px 12px rgba(80, 235, 236, 0.28));
 }
 
 .mobile-drawer-title {
-  font-size: 18px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #50EBEC 0%, #2BA1A2 100%);
+  display: block;
+  background: linear-gradient(135deg, #50ebec 0%, #bfffff 48%, #36c6c7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-size: 19px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
+
+.mobile-drawer-brand small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+/* Menú */
 
 .mobile-drawer-menu {
+  height: calc(100vh - 76px);
+  padding: 10px 12px 18px !important;
   background: transparent !important;
   border-right: none !important;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
+.mobile-drawer-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mobile-drawer-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mobile-drawer-menu::-webkit-scrollbar-thumb {
+  background: rgba(80, 235, 236, 0.32);
+  border-radius: 999px;
+}
+
+/* Forzar fondo oscuro en Ant Design */
+
+.mobile-drawer-menu,
+.mobile-drawer-menu.ant-menu,
+.mobile-drawer-menu .ant-menu,
+.mobile-drawer-menu .ant-menu-root,
+.mobile-drawer-menu .ant-menu-sub,
+.mobile-drawer-menu .ant-menu-inline,
+.mobile-drawer-menu .ant-menu-submenu,
+.mobile-drawer-menu .ant-menu-submenu-title,
 .mobile-drawer-menu .ant-menu-item {
-  border-radius: 10px !important;
-  margin: 4px 12px !important;
-  height: 44px !important;
-  line-height: 44px !important;
-  color: #000000 !important;  /* LETRAS NEGRAS */
-  font-size: 14px !important;
-  font-weight: 500 !important;
+  background-color: transparent !important;
 }
 
-.mobile-drawer-menu .ant-menu-item .anticon {
-  font-size: 18px !important;
+/* Items principales */
+
+.mobile-drawer-menu .ant-menu-item,
+.mobile-drawer-menu .ant-menu-submenu-title {
+  width: 100% !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  line-height: 48px !important;
+  margin: 5px 0 !important;
+  padding-inline: 16px !important;
+  border-radius: 16px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.mobile-drawer-menu .ant-menu-item .anticon,
+.mobile-drawer-menu .ant-menu-submenu-title .anticon {
   margin-right: 12px !important;
-  color: #000000 !important;  /* ICONOS NEGROS */
+  color: rgba(255, 255, 255, 0.84) !important;
+  font-size: 19px !important;
 }
 
-.mobile-drawer-menu .ant-menu-item:hover {
-  background: rgba(80, 235, 236, 0.3) !important;
-  color: #000000 !important;
+.mobile-drawer-menu .ant-menu-title-content {
+  min-width: 0;
 }
 
-.mobile-drawer-menu .ant-menu-item:hover .anticon {
-  color: #000000 !important;
+.mobile-drawer-menu .ant-menu-item:hover,
+.mobile-drawer-menu .ant-menu-submenu-title:hover {
+  background: rgba(80, 235, 236, 0.16) !important;
+  color: #50ebec !important;
 }
+
+.mobile-drawer-menu .ant-menu-item:hover .anticon,
+.mobile-drawer-menu .ant-menu-submenu-title:hover .anticon {
+  color: #50ebec !important;
+}
+
+/* Labels */
+
+.mobile-nav-parent-label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  line-height: 1.1;
+}
+
+.mobile-nav-parent-label span {
+  color: rgba(255, 255, 255, 0.98);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.mobile-nav-parent-label small {
+  max-width: 178px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11.2px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-nav-leaf-label {
+  color: inherit;
+  font-size: 13.5px;
+  font-weight: 760;
+  letter-spacing: -0.01em;
+}
+
+/* Seleccionado */
 
 .mobile-drawer-menu .ant-menu-item-selected {
-  background: linear-gradient(135deg, #50EBEC 0%, #36C6C7 100%) !important;
-  color: #000000 !important;
-  font-weight: 600 !important;
+  background: linear-gradient(135deg, #50ebec 0%, #36c6c7 100%) !important;
+  color: #0f4c4d !important;
+  font-weight: 900 !important;
+  box-shadow: 0 10px 24px rgba(80, 235, 236, 0.22);
 }
 
-.mobile-drawer-menu .ant-menu-item-selected .anticon {
-  color: #000000 !important;
+.mobile-drawer-menu .ant-menu-item-selected .anticon,
+.mobile-drawer-menu .ant-menu-item-selected .mobile-nav-leaf-label {
+  color: #0f4c4d !important;
+}
+
+.mobile-drawer-menu .ant-menu-submenu-open > .ant-menu-submenu-title {
+  background: rgba(80, 235, 236, 0.14) !important;
+}
+
+.mobile-drawer-menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background:
+    linear-gradient(135deg, rgba(80, 235, 236, 0.24), rgba(54, 198, 199, 0.12)) !important;
+  border: 1px solid rgba(80, 235, 236, 0.24);
+}
+
+.mobile-drawer-menu .ant-menu-submenu-selected > .ant-menu-submenu-title,
+.mobile-drawer-menu .ant-menu-submenu-selected > .ant-menu-submenu-title .anticon {
+  color: #50ebec !important;
+}
+
+.mobile-drawer-menu .ant-menu-submenu-arrow {
+  color: rgba(255, 255, 255, 0.64) !important;
+}
+
+.mobile-drawer-menu
+  .ant-menu-submenu-open
+  > .ant-menu-submenu-title
+  .ant-menu-submenu-arrow,
+.mobile-drawer-menu
+  .ant-menu-submenu-selected
+  > .ant-menu-submenu-title
+  .ant-menu-submenu-arrow {
+  color: #50ebec !important;
+}
+
+/* Submenú */
+
+.mobile-drawer-menu .ant-menu-sub {
+  margin: 3px 0 8px !important;
+  padding: 6px 0 7px !important;
+  background:
+    linear-gradient(180deg, rgba(4, 31, 38, 0.3), rgba(4, 31, 38, 0.18)) !important;
+  border: 1px solid rgba(80, 235, 236, 0.09);
+  border-radius: 16px !important;
+}
+
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item {
+  min-height: 38px !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  margin: 3px 7px !important;
+  padding-left: 44px !important;
+  border-radius: 12px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item .anticon {
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 15px !important;
+}
+
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item:hover {
+  background: rgba(80, 235, 236, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item-selected {
+  background:
+    linear-gradient(135deg, rgba(80, 235, 236, 0.34), rgba(54, 198, 199, 0.22)) !important;
+  color: #ffffff !important;
+  box-shadow: inset 3px 0 0 #50ebec;
+}
+
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item-selected .mobile-nav-leaf-label,
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item-selected .anticon {
+  color: #ffffff !important;
+}
+
+/* Pantallas pequeñas */
+
+@media (max-width: 420px) {
+  .mobile-drawer-header {
+    height: 70px;
+    padding: 10px 12px;
+  }
+
+  .mobile-drawer-brand {
+    min-height: 46px;
+    border-radius: 16px;
+  }
+
+  .mobile-drawer-logo {
+    font-size: 25px;
+  }
+
+  .mobile-drawer-title {
+    font-size: 18px;
+  }
+
+  .mobile-drawer-menu {
+    height: calc(100vh - 70px);
+    padding: 8px 10px 16px !important;
+  }
+
+  .mobile-drawer-menu .ant-menu-item,
+  .mobile-drawer-menu .ant-menu-submenu-title {
+    min-height: 46px !important;
+    height: 46px !important;
+    line-height: 46px !important;
+  }
 }

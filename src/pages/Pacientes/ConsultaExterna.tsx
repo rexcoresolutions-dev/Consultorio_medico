@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Avatar,
   Button,
@@ -13,6 +13,7 @@ import {
   Radio,
   Row,
   Select,
+  Spin,
   Table,
   Tag,
   Typography,
@@ -35,11 +36,11 @@ import {
   PlusOutlined,
   DeleteOutlined,
   ShareAltOutlined,
-  LogoutOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import Swal from 'sweetalert2';
 
+import axiosInstance from '../../api/axios.config';
 import type { PacienteData } from '../../services/pacientes/pacientes.service';
 import Receta from './Receta';
 import './ConsultaExterna.css';
@@ -62,6 +63,15 @@ export type DiagnosticoItem = {
   primeraVez: boolean;
   subsecuente: boolean;
   descripcion: string;
+  cie10Id?: number;
+  cie10Text?: string;
+};
+
+type Cie10Item = {
+  id: number;
+  nombre: string;
+  catalogKey: string;
+  text: string;
 };
 
 type ConsultaStorageState = {
@@ -121,7 +131,41 @@ const limpiarPacienteActivo = () => {
   }
 };
 
-const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPacienteLiberado, }) => {
+const normalizeSearch = (value?: string) =>
+  String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ');
+
+const extractCie10Results = (payload: any): Cie10Item[] => {
+  const results =
+    payload?.data?.results ||
+    payload?.results ||
+    payload?.data ||
+    payload ||
+    [];
+
+  if (!Array.isArray(results)) return [];
+
+  return results
+    .map((item) => {
+      const catalogKey = String(item?.catalogKey || item?.catalog_key || '');
+      const nombre = String(item?.nombre || '');
+
+      return {
+        id: Number(item?.id),
+        nombre,
+        catalogKey,
+        text: String(item?.text || `${catalogKey} - ${nombre}`),
+      };
+    })
+    .filter((item) => item.id && item.catalogKey && item.nombre);
+};
+
+const ConsultaExterna: React.FC<ConsultaExternaProps> = ({
+  paciente,
+  onBack,
+  onPacienteLiberado,
+}) => {
   const [form] = Form.useForm();
 
   const storageKey = useMemo(() => getConsultaStorageKey(paciente), [paciente]);
@@ -130,14 +174,21 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
   const [currentStep, setCurrentStep] = useState(estadoInicial?.currentStep ?? 0);
   const [sinPeso, setSinPeso] = useState(estadoInicial?.sinPeso ?? false);
   const [sinAltura, setSinAltura] = useState(estadoInicial?.sinAltura ?? false);
-  const [sinTemperatura, setSinTemperatura] = useState(estadoInicial?.sinTemperatura ?? false);
+  const [sinTemperatura, setSinTemperatura] = useState(
+    estadoInicial?.sinTemperatura ?? false,
+  );
+
   const [diagnosticos, setDiagnosticos] = useState<DiagnosticoItem[]>(
     estadoInicial?.diagnosticos ?? [],
   );
+
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewValues, setPreviewValues] = useState<any>({});
 
-  const [mostrarReceta, setMostrarReceta] = useState(estadoInicial?.mostrarReceta ?? false);
+  const [mostrarReceta, setMostrarReceta] = useState(
+    estadoInicial?.mostrarReceta ?? false,
+  );
+
   const [consultaGuardada, setConsultaGuardada] = useState<any>(
     estadoInicial?.consultaGuardada ?? null,
   );
@@ -151,6 +202,16 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
       guardado: false,
     },
   );
+
+  const [cie10Options, setCie10Options] = useState<Cie10Item[]>([]);
+  const [cie10Loading, setCie10Loading] = useState(false);
+  const [cie10CatalogoInicialCargado, setCie10CatalogoInicialCargado] =
+    useState(false);
+  const [cie10Seleccionado, setCie10Seleccionado] = useState<Cie10Item | null>(
+    null,
+  );
+
+  const cie10SearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const imcActual = Form.useWatch('imc', form);
   const alturaActual = Form.useWatch('altura', form);
@@ -177,6 +238,20 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
   useEffect(() => {
     if (estadoInicial?.formValues) {
       form.setFieldsValue(estadoInicial.formValues);
+
+      const motivoId = estadoInicial.formValues?.motivo_consulta_cie10_id;
+      const motivoClave = estadoInicial.formValues?.motivo_consulta_cie10_clave;
+      const motivoNombre = estadoInicial.formValues?.motivo_consulta_cie10_nombre;
+      const motivoTexto = estadoInicial.formValues?.motivo_consulta_cie10_texto;
+
+      if (motivoId && motivoClave && motivoNombre) {
+        setCie10Seleccionado({
+          id: Number(motivoId),
+          catalogKey: String(motivoClave),
+          nombre: String(motivoNombre),
+          text: String(motivoTexto || `${motivoClave} - ${motivoNombre}`),
+        });
+      }
     }
   }, [estadoInicial, form]);
 
@@ -204,6 +279,14 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
     progress,
     form,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (cie10SearchTimer.current) {
+        clearTimeout(cie10SearchTimer.current);
+      }
+    };
+  }, []);
 
   const guardarEstadoActual = (formValues?: any) => {
     guardarEstadoConsulta(storageKey, {
@@ -271,43 +354,170 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
     { value: 'SE DESCONOCE', label: 'Se desconoce' },
   ];
 
-  const opcionesDiagnostico = [
-    {
-      value: 'J00X',
-      label: 'J00X - RINOFARINGITIS AGUDA [RESFRIADO COMÚN]',
-      diagnostico: 'RINOFARINGITIS AGUDA [RESFRIADO COMÚN]',
-    },
-    {
-      value: 'H405',
-      label: 'H405 - GLAUCOMA SECUNDARIO A OTROS TRASTORNOS DEL OJO',
-      diagnostico: 'GLAUCOMA SECUNDARIO A OTROS TRASTORNOS DEL OJO',
-    },
-    {
-      value: 'H493',
-      label: 'H493 - OFTALMOPLEJIA TOTAL EXTERNA',
-      diagnostico: 'OFTALMOPLEJIA TOTAL EXTERNA',
-    },
-    {
-      value: 'H494',
-      label: 'H494 - OFTALMOPLEJIA EXTERNA PROGRESIVA',
-      diagnostico: 'OFTALMOPLEJIA EXTERNA PROGRESIVA',
-    },
-    {
-      value: 'H510',
-      label: 'H510 - PARÁLISIS DE LA CONJUGACIÓN DE LA MIRADA',
-      diagnostico: 'PARÁLISIS DE LA CONJUGACIÓN DE LA MIRADA',
-    },
-    {
-      value: 'H512',
-      label: 'H512 - OFTALMOPLEJIA INTERNUCLEAR',
-      diagnostico: 'OFTALMOPLEJIA INTERNUCLEAR',
-    },
-    {
-      value: 'H531',
-      label: 'H531 - ALTERACIONES VISUALES SUBJETIVAS',
-      diagnostico: 'ALTERACIONES VISUALES SUBJETIVAS',
-    },
-  ];
+  const getCie10Options = () => {
+    return cie10Options.map((item) => ({
+      value: item.catalogKey,
+      label: `${item.catalogKey} - ${item.nombre}`,
+    }));
+  };
+
+  const buscarCie10 = async (searchText = '', silent = false) => {
+    const query = normalizeSearch(searchText);
+    const queryToSend = query.length >= 2 ? query : 'a';
+
+    try {
+      setCie10Loading(true);
+
+      const response = await axiosInstance.get('/cie10', {
+        params: {
+          term: queryToSend,
+          q: queryToSend,
+          _type: 'query',
+          page: 1,
+          limit: 20,
+        },
+      });
+
+      const results = extractCie10Results(response.data);
+
+      setCie10Options(results);
+      setCie10CatalogoInicialCargado(true);
+    } catch (error: any) {
+      console.error('Error al consultar CIE-10:', error);
+
+      if (error?.response) {
+        console.error('❌ Response status:', error.response.status);
+        console.error('❌ Response data:', error.response.data);
+      }
+
+      setCie10Options([]);
+
+      if (!silent) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al consultar CIE-10',
+          text: 'No fue posible obtener información del catálogo CIE-10.',
+          confirmButtonColor: '#36c6c7',
+        });
+      }
+    } finally {
+      setCie10Loading(false);
+    }
+  };
+
+  const cargarCatalogoInicialCie10 = () => {
+    if (cie10Loading) return;
+
+    if (cie10CatalogoInicialCargado && cie10Options.length > 0) {
+      return;
+    }
+
+    buscarCie10('', true);
+  };
+
+  const handleOpenCie10 = (open: boolean) => {
+    if (open) {
+      cargarCatalogoInicialCie10();
+    }
+  };
+
+  const handleSearchCie10 = (searchText: string) => {
+    if (cie10SearchTimer.current) {
+      clearTimeout(cie10SearchTimer.current);
+    }
+
+    const query = normalizeSearch(searchText);
+
+    cie10SearchTimer.current = setTimeout(() => {
+      if (query.length < 2) {
+        cargarCatalogoInicialCie10();
+        return;
+      }
+
+      buscarCie10(query);
+    }, 420);
+  };
+
+  const setCie10HiddenFields = (selected: Cie10Item) => {
+    form.setFieldsValue({
+      motivo_consulta: selected.catalogKey,
+      motivo_consulta_cie10_id: selected.id,
+      motivo_consulta_cie10_clave: selected.catalogKey,
+      motivo_consulta_cie10_nombre: selected.nombre,
+      motivo_consulta_cie10_texto: selected.text,
+    });
+  };
+
+  const handleSelectCie10 = (value: string) => {
+    const selected = cie10Options.find(
+      (item) => String(item.catalogKey) === String(value),
+    );
+
+    if (!selected) return;
+
+    setCie10Seleccionado(selected);
+    setCie10HiddenFields(selected);
+
+    setProgress((prev) => ({
+      ...prev,
+      diagnostico: true,
+    }));
+
+    guardarEstadoActual(form.getFieldsValue(true));
+  };
+
+  const handleClearCie10 = () => {
+    setCie10Seleccionado(null);
+
+    form.setFieldsValue({
+      motivo_consulta: undefined,
+      motivo_consulta_cie10_id: undefined,
+      motivo_consulta_cie10_clave: '',
+      motivo_consulta_cie10_nombre: '',
+      motivo_consulta_cie10_texto: '',
+    });
+
+    cargarCatalogoInicialCie10();
+  };
+
+  const buildCie10FromForm = (): Cie10Item | null => {
+    const values = form.getFieldsValue(true);
+
+    if (
+      !values.motivo_consulta_cie10_id ||
+      !values.motivo_consulta_cie10_clave ||
+      !values.motivo_consulta_cie10_nombre
+    ) {
+      return null;
+    }
+
+    return {
+      id: Number(values.motivo_consulta_cie10_id),
+      catalogKey: String(values.motivo_consulta_cie10_clave),
+      nombre: String(values.motivo_consulta_cie10_nombre),
+      text: String(
+        values.motivo_consulta_cie10_texto ||
+          `${values.motivo_consulta_cie10_clave} - ${values.motivo_consulta_cie10_nombre}`,
+      ),
+    };
+  };
+
+  const renderCie10Info = (item: Cie10Item | null, emptyText: string) => {
+    if (!item) {
+      return <div className="consulta-cie10-empty">{emptyText}</div>;
+    }
+
+    return (
+      <div className="consulta-cie10-info">
+        <div className="consulta-cie10-main">
+          <Tag color="cyan">{item.catalogKey}</Tag>
+          <strong>{item.nombre}</strong>
+        </div>
+
+        <p>{item.text}</p>
+      </div>
+    );
+  };
 
   const calcularEdad = () => {
     if (!paciente.fecha_nacimiento) return '-';
@@ -426,31 +636,47 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
   };
 
   const agregarDiagnostico = () => {
-    const clave = form.getFieldValue('motivo_consulta');
-    const descripcion = form.getFieldValue('descripcion_diagnostico') || '';
+    const seleccionado = cie10Seleccionado || buildCie10FromForm();
     const primeraVezValue = form.getFieldValue('primera_vez') ?? true;
+    const descripcionDetalle =
+      form.getFieldValue('descripcion_diagnostico_detalle') || '';
 
-    if (!clave) return;
+    if (!seleccionado) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Diagnóstico requerido',
+        text: 'Busca y selecciona un diagnóstico CIE-10 antes de agregarlo.',
+        confirmButtonColor: '#36c6c7',
+      });
 
-    const seleccionado = opcionesDiagnostico.find((item) => item.value === clave);
+      return;
+    }
 
     const nuevo: DiagnosticoItem = {
-      key: `${clave}-${Date.now()}`,
+      key: `${seleccionado.catalogKey}-${Date.now()}`,
       no: diagnosticos.length + 1,
-      clave,
-      diagnostico: seleccionado?.diagnostico || clave,
+      clave: seleccionado.catalogKey,
+      diagnostico: seleccionado.nombre,
       primeraVez: primeraVezValue === true,
       subsecuente: primeraVezValue === false,
-      descripcion,
+      descripcion: descripcionDetalle || seleccionado.text,
+      cie10Id: seleccionado.id,
+      cie10Text: seleccionado.text,
     };
 
     setDiagnosticos((prev) => [...prev, nuevo]);
 
     form.setFieldsValue({
       motivo_consulta: undefined,
-      descripcion_diagnostico: undefined,
+      motivo_consulta_cie10_id: undefined,
+      motivo_consulta_cie10_clave: '',
+      motivo_consulta_cie10_nombre: '',
+      motivo_consulta_cie10_texto: '',
+      descripcion_diagnostico_detalle: undefined,
       primera_vez: true,
     });
+
+    setCie10Seleccionado(null);
 
     setProgress((prev) => ({
       ...prev,
@@ -498,7 +724,11 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
       align: 'center',
       render: (_, record) => (
         <Tag
-          className={record.primeraVez ? 'consulta-type-tag primera' : 'consulta-type-tag subsecuente'}
+          className={
+            record.primeraVez
+              ? 'consulta-type-tag primera'
+              : 'consulta-type-tag subsecuente'
+          }
         >
           {record.primeraVez ? 'Primera vez' : 'Subsecuente'}
         </Tag>
@@ -529,9 +759,8 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
     },
   ];
 
-  const columnasVistaPrevia: ColumnsType<DiagnosticoItem> = columnasDiagnostico.filter(
-    (col) => col.key !== 'acciones',
-  );
+  const columnasVistaPrevia: ColumnsType<DiagnosticoItem> =
+    columnasDiagnostico.filter((col) => col.key !== 'acciones');
 
   const nextStep = () => {
     setCurrentStep((prev) => Math.min(prev + 1, 3));
@@ -600,7 +829,7 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
       diagnosticos,
       fecha_consulta: new Date().toISOString(),
     };
-    
+
     guardarHistorialClinico(payload);
 
     setProgress((prev) => ({
@@ -717,28 +946,28 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
 
   if (mostrarReceta) {
     return (
-    <Receta
-      paciente={paciente}
-      consulta={consultaGuardada}
-      diagnosticos={diagnosticos}
-      onBack={() => {
-        setMostrarReceta(false);
-        setCurrentStep(3);
+      <Receta
+        paciente={paciente}
+        consulta={consultaGuardada}
+        diagnosticos={diagnosticos}
+        onBack={() => {
+          setMostrarReceta(false);
+          setCurrentStep(3);
 
-        guardarEstadoConsulta(storageKey, {
-          currentStep: 3,
-          sinPeso,
-          sinAltura,
-          sinTemperatura,
-          diagnosticos,
-          mostrarReceta: false,
-          consultaGuardada,
-          progress,
-          formValues: form.getFieldsValue(true),
-        });
-      }}
-      onPacienteLiberado={onPacienteLiberado}
-    />
+          guardarEstadoConsulta(storageKey, {
+            currentStep: 3,
+            sinPeso,
+            sinAltura,
+            sinTemperatura,
+            diagnosticos,
+            mostrarReceta: false,
+            consultaGuardada,
+            progress,
+            formValues: form.getFieldsValue(true),
+          });
+        }}
+        onPacienteLiberado={onPacienteLiberado}
+      />
     );
   }
 
@@ -894,6 +1123,22 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
               contrarreferencia: 'NO',
             }}
           >
+            <Form.Item name="motivo_consulta_cie10_id" hidden>
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="motivo_consulta_cie10_clave" hidden>
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="motivo_consulta_cie10_nombre" hidden>
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="motivo_consulta_cie10_texto" hidden>
+              <Input />
+            </Form.Item>
+
             {currentStep === 0 && (
               <section className="consulta-section consulta-step-section">
                 <div className="consulta-section-title">
@@ -1208,19 +1453,44 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
                 <div className="consulta-diagnostico-box">
                   <Row gutter={[16, 12]} align="bottom">
                     <Col xs={24} lg={12}>
-                      <Form.Item name="motivo_consulta" label="Motivo de consulta">
+                      <Form.Item name="motivo_consulta" label="Diagnóstico CIE-10">
                         <Select
                           showSearch
-                          placeholder="Seleccione..."
-                          optionFilterProp="label"
-                          options={opcionesDiagnostico}
+                          allowClear
+                          filterOption={false}
+                          placeholder="Buscar o seleccionar diagnóstico CIE-10..."
+                          options={getCie10Options()}
+                          onOpenChange={handleOpenCie10}
+                          onSearch={handleSearchCie10}
+                          onSelect={(value) => handleSelectCie10(String(value))}
+                          onClear={handleClearCie10}
+                          notFoundContent={
+                            cie10Loading ? (
+                              <Spin size="small" />
+                            ) : (
+                              'No se encontraron resultados'
+                            )
+                          }
                         />
                       </Form.Item>
                     </Col>
 
-                    <Col xs={24} lg={8}>
-                      <Form.Item name="descripcion_diagnostico" label="Descripción">
-                        <Input placeholder="Escribe una descripción" />
+                    <Col xs={24} lg={12}>
+                      {renderCie10Info(
+                        cie10Seleccionado,
+                        'Abre el catálogo o busca un diagnóstico CIE-10 para seleccionarlo.',
+                      )}
+                    </Col>
+
+                    <Col xs={24} lg={20}>
+                      <Form.Item
+                        name="descripcion_diagnostico_detalle"
+                        label="Descripción clínica"
+                      >
+                        <Input.TextArea
+                          rows={3}
+                          placeholder="Escribe aquí la descripción clínica del diagnóstico, observaciones o detalle complementario."
+                        />
                       </Form.Item>
                     </Col>
 
@@ -1393,10 +1663,13 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({paciente, onBack, onPa
         <div className="consulta-preview">
           <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} size="small">
             <Descriptions.Item label="Paciente">{nombreCompleto || '-'}</Descriptions.Item>
+
             <Descriptions.Item label="Expediente">
               {paciente.numero_expediente || '-'}
             </Descriptions.Item>
+
             <Descriptions.Item label="Edad">{calcularEdad()}</Descriptions.Item>
+
             <Descriptions.Item label="Fecha">
               {new Date().toLocaleString('es-MX')}
             </Descriptions.Item>
