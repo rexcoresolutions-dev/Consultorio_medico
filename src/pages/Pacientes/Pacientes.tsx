@@ -259,7 +259,8 @@ const Pacientes: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
 
   const [consultaPaciente, setConsultaPaciente] = useState<PacienteData | null>(() => {
-    const consultaAbierta = localStorage.getItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY) === 'true';
+    const consultaAbierta =
+      localStorage.getItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY) === 'true';
 
     if (!consultaAbierta) return null;
 
@@ -280,7 +281,8 @@ const Pacientes: React.FC = () => {
   const [coloniasCp, setColoniasCp] = useState<{ value: string; label: string }[]>([]);
   const [cpInfo, setCpInfo] = useState<CodigoPostalLocalData | null>(null);
 
-  const [datosPrimerPaso, setDatosPrimerPaso] = useState<Partial<PacienteFormData> | null>(null);
+  const [datosPrimerPaso, setDatosPrimerPaso] =
+    useState<Partial<PacienteFormData> | null>(null);
 
   const lastAutoOpenKey = useRef('');
   const desktopPageSize = 10;
@@ -317,6 +319,64 @@ const Pacientes: React.FC = () => {
     guardarPacienteAtencion(paciente);
     localStorage.setItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY, 'true');
     setConsultaPaciente(paciente);
+  };
+
+  const activarPacienteParaExpediente = (paciente: PacienteData) => {
+    localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
+
+    setPacienteAtencion(paciente);
+    guardarPacienteAtencion(paciente);
+    setConsultaPaciente(null);
+
+    message.success('Paciente seleccionado correctamente');
+
+    navigate('/pacientes');
+  };
+
+  const mostrarDecisionPaciente = async (paciente: PacienteData) => {
+    const result = await Swal.fire({
+      icon: 'question',
+      title: 'Seleccionar paciente',
+      html: `
+        <div style="text-align:center">
+          <p style="margin:0 0 6px;color:#475569;">
+            Paciente:
+          </p>
+
+          <p style="margin:0;font-weight:700;color:#111827;font-size:16px;">
+            ${getFullName(paciente)}
+          </p>
+
+          <p style="margin:6px 0 0;color:#64748b;font-size:13px;">
+            Expediente: ${paciente.numero_expediente || 'Sin expediente'}
+          </p>
+
+          <p style="margin:14px 0 0;color:#475569;font-size:13px;">
+            Elige si deseas iniciar consulta externa o dejarlo activo para usar sus módulos del expediente.
+          </p>
+        </div>
+      `,
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'Consulta externa',
+      denyButtonText: 'Usar paciente',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+      denyButtonColor: '#475569',
+      cancelButtonColor: '#9ca3af',
+      reverseButtons: true,
+      allowOutsideClick: false,
+      allowEscapeKey: true,
+    });
+
+    if (result.isConfirmed) {
+      abrirConsultaPaciente(paciente);
+      return;
+    }
+
+    if (result.isDenied) {
+      activarPacienteParaExpediente(paciente);
+    }
   };
 
   const cerrarConsultaPaciente = () => {
@@ -943,6 +1003,12 @@ const Pacientes: React.FC = () => {
 
   const getActionItems = (paciente: PacienteData): MenuProps['items'] => [
     {
+      key: 'flujo',
+      icon: <MedicineBoxOutlined />,
+      label: 'Seleccionar flujo',
+      onClick: () => mostrarDecisionPaciente(paciente),
+    },
+    {
       key: 'detalle',
       icon: <EyeOutlined />,
       label: 'Ver detalle',
@@ -1037,14 +1103,14 @@ const Pacientes: React.FC = () => {
       align: 'center',
       render: (_, paciente) => (
         <div className="paciente-actions-wrap">
-          <Tooltip title="Abrir consulta externa y dejar paciente activo">
+          <Tooltip title="Seleccionar paciente para consulta o expediente">
             <Button
               type="primary"
               icon={<MedicineBoxOutlined />}
               className="paciente-consulta-btn"
-              onClick={() => abrirConsultaPaciente(paciente)}
+              onClick={() => mostrarDecisionPaciente(paciente)}
             >
-              <span className="consulta-text">Consulta</span>
+              <span className="consulta-text">Atender</span>
             </Button>
           </Tooltip>
 
@@ -1121,17 +1187,13 @@ const Pacientes: React.FC = () => {
                     <div className="pacientes-active-left">
                       <MedicineBoxOutlined className="pacientes-active-icon" />
 
-                      <span className="pacientes-active-badge">
-                        EN ATENCIÓN
-                      </span>
+                      <span className="pacientes-active-badge">EN ATENCIÓN</span>
 
                       <span className="pacientes-active-name">
                         {getFullName(pacienteAtencion)}
                       </span>
 
-                      <span className="pacientes-active-divider">
-                        •
-                      </span>
+                      <span className="pacientes-active-divider">•</span>
 
                       <span className="pacientes-active-exp">
                         Exp. {pacienteAtencion.numero_expediente || 'Sin expediente'}
@@ -1312,9 +1374,9 @@ const Pacientes: React.FC = () => {
                         type="primary"
                         icon={<MedicineBoxOutlined />}
                         className="paciente-consulta-mobile-btn"
-                        onClick={() => abrirConsultaPaciente(paciente)}
+                        onClick={() => mostrarDecisionPaciente(paciente)}
                       >
-                        Consulta externa
+                        Seleccionar paciente
                       </Button>
 
                       <div className="paciente-mobile-secondary-actions">
@@ -1663,8 +1725,8 @@ const Pacientes: React.FC = () => {
                       <div>
                         <strong>Domicilio del paciente</strong>
                         <p>
-                          Ingresa el código postal. Si existe en el catálogo local,
-                          se llenarán algunos datos automáticamente.
+                          Ingresa el código postal. Si existe en el catálogo local, se llenarán
+                          algunos datos automáticamente.
                         </p>
                       </div>
                     </div>
@@ -1692,10 +1754,7 @@ const Pacientes: React.FC = () => {
 
                       <Col xs={24} md={8}>
                         <Form.Item name="entidad" label="Entidad">
-                          <Input
-                            placeholder="Ej. Jalisco"
-                            disabled={Boolean(cpInfo?.entidad)}
-                          />
+                          <Input placeholder="Ej. Jalisco" disabled={Boolean(cpInfo?.entidad)} />
                         </Form.Item>
                       </Col>
 
@@ -1712,9 +1771,7 @@ const Pacientes: React.FC = () => {
                         <Form.Item name="colonia" label="Colonia">
                           <AutoComplete
                             placeholder={
-                              coloniasCp.length
-                                ? 'Selecciona una colonia'
-                                : 'Escribe la colonia'
+                              coloniasCp.length ? 'Selecciona una colonia' : 'Escribe la colonia'
                             }
                             options={coloniasCp}
                             filterOption={(inputValue, option) =>
@@ -1805,7 +1862,7 @@ const Pacientes: React.FC = () => {
         onClose={() => setDetailOpen(false)}
         onConsulta={(paciente) => {
           setDetailOpen(false);
-          abrirConsultaPaciente(paciente);
+          mostrarDecisionPaciente(paciente);
         }}
       />
 
