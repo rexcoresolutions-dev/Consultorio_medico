@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Avatar,
   Button,
   Card,
@@ -26,39 +27,16 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 import type { PacienteData } from '../../services/pacientes/pacientes.service';
+import { getHistoriaClinicaApiError } from '../../services/historia-clinica/historia-clinica.service';
+import expedienteClinicoService, {
+  type ExpedienteClinicoItem,
+} from '../../services/expediente-clinico/expediente-clinico.service';
 import './HistorialClinico.css';
 
 const { Title, Text } = Typography;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
-const HISTORIAL_CLINICO_STORAGE_KEY = 'historial_clinico_pacientes';
-
-type DiagnosticoHistorial = {
-  key?: string;
-  no?: number;
-  clave?: string;
-  diagnostico?: string;
-  descripcion?: string;
-  primeraVez?: boolean;
-  subsecuente?: boolean;
-};
-
-type HistorialClinicoItem = {
-  id: string;
-  pacienteId?: number | string;
-  paciente: {
-    id?: number | string;
-    nombre: string;
-    numero_expediente?: string;
-    curp?: string;
-    sexo?: string;
-    fecha_nacimiento?: string;
-  };
-  consulta: Record<string, any>;
-  diagnosticos: DiagnosticoHistorial[];
-  fecha_consulta: string;
-};
 
 type DetailField = {
   key: string;
@@ -80,15 +58,6 @@ const cargarPacienteActivo = (): PacienteData | null => {
     return data ? JSON.parse(data) : null;
   } catch {
     return null;
-  }
-};
-
-const cargarHistoriales = (): HistorialClinicoItem[] => {
-  try {
-    const data = localStorage.getItem(HISTORIAL_CLINICO_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
   }
 };
 
@@ -157,7 +126,7 @@ const seccionesWizard: DetailSection[] = [
     columns: { xs: 1, md: 3 },
     fields: [
       { key: 'peso', label: 'Peso' },
-      { key: 'altura', label: 'Talla' },
+      { key: 'altura', label: 'Altura' },
       { key: 'imc', label: 'IMC' },
       { key: 'temperatura', label: 'Temperatura' },
       { key: 'presion_arterial', label: 'Presión arterial' },
@@ -279,12 +248,17 @@ const backgroundSections = [
   'Referencia / Contrarreferencia',
 ];
 
-const knownConsultaKeys = new Set(
-  seccionesWizard.flatMap((section) => section.fields.map((field) => field.key)).concat([
-    'fecha_consulta',
-    'origen_historial',
-  ]),
-);
+
+const recordSourceText = (record: ExpedienteClinicoItem) =>
+  `${record.sourceLabel || ''} ${record.sourceType || ''}`.toLowerCase();
+
+const hasValue = (value: any) =>
+  value !== undefined && value !== null && value !== '' && value !== '-';
+
+const countSectionValues = (record: ExpedienteClinicoItem, fields: DetailField[]) =>
+  fields.filter((field) => hasValue(record.consulta?.[field.key])).length;
+
+
 
 const HistorialesDisponibles: React.FC = () => {
   const navigate = useNavigate();
@@ -292,15 +266,74 @@ const HistorialesDisponibles: React.FC = () => {
   const [pacienteActivo, setPacienteActivo] = useState<PacienteData | null>(() =>
     cargarPacienteActivo(),
   );
-  const [historiales] = useState<HistorialClinicoItem[]>(() => cargarHistoriales());
+  const [historiales, setHistoriales] = useState<ExpedienteClinicoItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errorCarga, setErrorCarga] = useState('');
+  const [detailLoading, setDetailLoading] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [historialSeleccionado, setHistorialSeleccionado] =
-    useState<HistorialClinicoItem | null>(null);
+    useState<ExpedienteClinicoItem | null>(null);
   const [activeDetailPart, setActiveDetailPart] = useState<'clinico' | 'antecedentes'>(
     'clinico',
   );
 
   const pacienteNombre = getFullName(pacienteActivo);
+
+  useEffect(() => {
+    let activo = true;
+
+    const cargar = async () => {
+      const pacienteId = Number(pacienteActivo?.id);
+
+      if (!Number.isInteger(pacienteId) || pacienteId <= 0) {
+        if (activo) {
+          setHistoriales([]);
+          setErrorCarga(
+            pacienteActivo
+              ? 'No fue posible identificar al paciente para consultar sus historias clínicas.'
+              : '',
+          );
+        }
+        return;
+      }
+
+      try {
+        if (activo) {
+          setLoading(true);
+          setErrorCarga('');
+        }
+
+        const expediente = await expedienteClinicoService.findByPaciente(
+          pacienteId,
+          pacienteActivo,
+        );
+
+        if (activo) {
+          setHistoriales(expediente.items);
+          setErrorCarga(expediente.warnings.join(' '));
+        }
+      } catch (error) {
+        console.error('Error consultando historia clínica:', error);
+        if (activo) {
+          setHistoriales([]);
+          setErrorCarga(
+            getHistoriaClinicaApiError(
+              error,
+              'No fue posible consultar los registros de historia clínica.',
+            ),
+          );
+        }
+      } finally {
+        if (activo) setLoading(false);
+      }
+    };
+
+    void cargar();
+
+    return () => {
+      activo = false;
+    };
+  }, [pacienteActivo?.id]);
 
   const historialesPaciente = useMemo(() => {
     if (!pacienteActivo) return [];
@@ -337,6 +370,7 @@ const HistorialesDisponibles: React.FC = () => {
         return (
           diagnosticosTexto.includes(texto) ||
           consultaTexto.includes(texto) ||
+          recordSourceText(item).includes(texto) ||
           String(item.paciente.numero_expediente || '').toLowerCase().includes(texto) ||
           formatDateTime(item.fecha_consulta).toLowerCase().includes(texto)
         );
@@ -347,22 +381,23 @@ const HistorialesDisponibles: React.FC = () => {
       );
   }, [historiales, pacienteActivo, busqueda]);
 
-  const extraConsultaFields = useMemo(() => {
-    if (!historialSeleccionado?.consulta) return [];
 
-    return Object.keys(historialSeleccionado.consulta)
-      .filter((key) => !knownConsultaKeys.has(key))
-      .map((key) => ({
-        key,
-        label: key
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (letter) => letter.toUpperCase()),
-      }));
-  }, [historialSeleccionado]);
 
-  const openDetalle = (record: HistorialClinicoItem) => {
+  const openDetalle = async (record: ExpedienteClinicoItem) => {
     setActiveDetailPart('clinico');
     setHistorialSeleccionado(record);
+
+    if (!record.apiId || !pacienteActivo) return;
+
+    try {
+      setDetailLoading(true);
+      const detalle = await expedienteClinicoService.findOne(record, pacienteActivo);
+      setHistorialSeleccionado(detalle);
+    } catch (error) {
+      console.error('No fue posible cargar el detalle de la historia clínica:', error);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const closeDetalle = () => {
@@ -403,7 +438,7 @@ const HistorialesDisponibles: React.FC = () => {
     navigate('/pacientes', { replace: true });
   };
 
-  const columns: ColumnsType<HistorialClinicoItem> = [
+  const columns: ColumnsType<ExpedienteClinicoItem> = [
     {
       title: 'Fecha',
       dataIndex: 'fecha_consulta',
@@ -413,6 +448,16 @@ const HistorialesDisponibles: React.FC = () => {
           <CalendarOutlined />
           <span>{formatDateTime(fecha)}</span>
         </div>
+      ),
+    },
+    {
+      title: 'Tipo de registro',
+      key: 'sourceType',
+      width: 170,
+      render: (_, record) => (
+        <Tag color={record.sourceType === 'CONSULTA_EXTERNA' ? 'cyan' : 'blue'}>
+          {record.sourceLabel}
+        </Tag>
       ),
     },
     {
@@ -442,14 +487,26 @@ const HistorialesDisponibles: React.FC = () => {
       title: 'Resumen clínico',
       key: 'signos',
       width: 330,
-      render: (_, record) => (
-        <div className="historial-tags">
-          <Tag>Peso: {formatValue(record.consulta?.peso)}</Tag>
-          <Tag>Talla: {formatValue(record.consulta?.altura)}</Tag>
-          <Tag>IMC: {formatValue(record.consulta?.imc)}</Tag>
-          <Tag>Temp: {formatValue(record.consulta?.temperatura)}</Tag>
-        </div>
-      ),
+      render: (_, record) => {
+        const signos = [
+          record.consulta?.peso ? `Peso ${formatValue(record.consulta.peso)} kg` : null,
+          record.consulta?.altura ? `Altura ${formatValue(record.consulta.altura)} m` : null,
+          record.consulta?.imc ? `IMC ${formatValue(record.consulta.imc)}` : null,
+          record.consulta?.temperatura
+            ? `Temp. ${formatValue(record.consulta.temperatura)} °C`
+            : null,
+        ].filter(Boolean);
+
+        return signos.length ? (
+          <div className="historial-tags">
+            {signos.map((signo) => (
+              <Tag key={String(signo)}>{signo}</Tag>
+            ))}
+          </div>
+        ) : (
+          <Text type="secondary">Sin signos vitales registrados</Text>
+        );
+      },
     },
     {
       title: 'Acciones',
@@ -518,7 +575,7 @@ const HistorialesDisponibles: React.FC = () => {
             <Text className="historial-eyebrow">Historiales disponibles</Text>
             <Title level={2}>Registros clínicos guardados</Title>
             <Text type="secondary">
-              Aquí se muestran únicamente los historiales registrados del paciente activo.
+              Aquí se integran las consultas externas y las historias clínicas registradas para el paciente activo.
             </Text>
           </div>
 
@@ -564,10 +621,20 @@ const HistorialesDisponibles: React.FC = () => {
           </div>
         </section>
 
+        {errorCarga && (
+          <Alert
+            type="error"
+            showIcon
+            message="No fue posible cargar completamente el expediente"
+            description={errorCarga}
+            style={{ marginBottom: 18 }}
+          />
+        )}
+
         <Card className="historial-table-card historial-table-card-full">
           <div className="historial-table-head">
             <div>
-              <h3>Historiales registrados</h3>
+              <h3>Registros clínicos del paciente</h3>
               <span>{historialesPaciente.length} registro(s)</span>
             </div>
 
@@ -586,16 +653,16 @@ const HistorialesDisponibles: React.FC = () => {
             columns={columns}
             dataSource={historialesPaciente}
             rowKey="id"
+            loading={loading}
             pagination={{
               pageSize: 6,
               showSizeChanger: false,
               position: ['bottomCenter'],
               showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
             }}
-            scroll={{ x: 900 }}
             locale={{
               emptyText: (
-                <Empty description="Aún no hay historiales clínicos para este paciente" />
+                <Empty description="Aún no hay consultas externas ni historias clínicas para este paciente" />
               ),
             }}
           />
@@ -620,12 +687,29 @@ const HistorialesDisponibles: React.FC = () => {
             </div>
 
             <div>
-              <strong>Detalle del historial clínico</strong>
-              <span>Consulta médica registrada del paciente</span>
+              <strong>
+                {historialSeleccionado?.sourceType === 'CONSULTA_EXTERNA'
+                  ? 'Detalle de consulta externa'
+                  : 'Detalle de historia clínica'}
+              </strong>
+              <span>
+                {historialSeleccionado?.sourceType === 'CONSULTA_EXTERNA'
+                  ? 'Atención registrada desde Consulta Externa'
+                  : 'Historia clínica integral registrada en el expediente'}
+              </span>
             </div>
           </div>
         }
       >
+        {detailLoading && (
+          <Alert
+            type="info"
+            showIcon
+            message="Cargando detalle completo..."
+            style={{ marginBottom: 14 }}
+          />
+        )}
+
         {historialSeleccionado && (
           <div className="historial-full-detail">
             <div className="historial-detail-switch">
@@ -698,11 +782,13 @@ const HistorialesDisponibles: React.FC = () => {
                           <h3>{section.title}</h3>
                         </div>
 
-                        <Tag>{section.fields.length} datos</Tag>
+                        <Tag>{countSectionValues(historialSeleccionado, section.fields)} datos</Tag>
                       </div>
 
                       <div className="historial-info-grid">
-                        {section.fields.map((field) => (
+                        {section.fields
+                          .filter((field) => hasValue(historialSeleccionado.consulta?.[field.key]))
+                          .map((field) => (
                           <div className="historial-info-item" key={field.key}>
                             <span>{field.label}</span>
                             <strong>
@@ -762,11 +848,13 @@ const HistorialesDisponibles: React.FC = () => {
                           <h3>{section.title}</h3>
                         </div>
 
-                        <Tag>{section.fields.length} datos</Tag>
+                        <Tag>{countSectionValues(historialSeleccionado, section.fields)} datos</Tag>
                       </div>
 
                       <div className="historial-info-grid">
-                        {section.fields.map((field) => (
+                        {section.fields
+                          .filter((field) => hasValue(historialSeleccionado.consulta?.[field.key]))
+                          .map((field) => (
                           <div className="historial-info-item" key={field.key}>
                             <span>{field.label}</span>
                             <strong>

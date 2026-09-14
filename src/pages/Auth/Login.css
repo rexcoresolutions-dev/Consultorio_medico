@@ -337,3 +337,78 @@
     font-size: 12px;
   }
 }
+.login-system-logo-image {
+  width: 64%;
+  height: 64%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ===== Identidad global desde API ===== */
+.brand-icon--image {
+  width: 260px;
+  height: 178px;
+  margin-bottom: 18px;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.brand-icon--image::after {
+  display: none;
+}
+
+.brand-icon--image .login-system-logo-image,
+.login-system-logo-image {
+  width: 100%;
+  height: 100%;
+  max-width: 260px;
+  max-height: 178px;
+  object-fit: contain;
+  display: block;
+  filter: none;
+}
+
+.brand-title,
+.form-title,
+.login-input .anticon,
+.forgot-link,
+.remember-checkbox:hover {
+  color: var(--system-brand-color, #20aeb5) !important;
+}
+
+.login-input:hover,
+.login-input:focus,
+.login-input.ant-input-affix-wrapper-focused {
+  border-color: var(--system-brand-color, #20b9bf) !important;
+  box-shadow: 0 0 0 3px var(--system-brand-color-soft, rgba(32, 185, 191, 0.12)) !important;
+}
+
+.remember-checkbox .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--system-brand-color, #20aeb5) !important;
+  border-color: var(--system-brand-color, #20aeb5) !important;
+}
+
+.login-button,
+.login-button:hover,
+.login-button:focus {
+  background: var(--system-brand-color, #20aeb5) !important;
+  border-color: var(--system-brand-color, #20aeb5) !important;
+  box-shadow: 0 12px 24px var(--system-brand-color-shadow, rgba(24, 174, 180, 0.25));
+}
+
+@media (max-width: 900px) {
+  .brand-icon--image {
+    width: 196px;
+    height: 124px;
+    margin-bottom: 14px;
+    border-radius: 0;
+  }
+
+  .brand-icon--image .login-system-logo-image {
+    max-width: 196px;
+    max-height: 124px;
+  }
+}

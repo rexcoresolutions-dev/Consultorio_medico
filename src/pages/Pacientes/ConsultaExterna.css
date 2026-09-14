@@ -1905,3 +1905,632 @@
   color: #0f766e !important;
   transform: translateY(-1px);
 }
+
+/* CIE-10: búsqueda remota progresiva */
+.consulta-cie10-option {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 4px 0;
+}
+
+.consulta-cie10-option-code {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(54, 198, 199, 0.12);
+  color: #0f766e;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.consulta-cie10-option-name {
+  color: #172033;
+  font-weight: 650;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.consulta-cie10-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 54px;
+  color: #64748b;
+}
+
+.consulta-diagnostico-box .ant-form-item-explain {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* Validación automática discreta de primera consulta del año */
+.consulta-history-hint {
+  display: inline-block;
+  margin-top: 4px;
+  color: #718096;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.consulta-auto-select.ant-select-disabled .ant-select-selector {
+  background: #f2fbfa !important;
+  border-color: #bde9e5 !important;
+  color: #0f5f5d !important;
+  cursor: default !important;
+}
+
+.consulta-auto-select.ant-select-disabled .ant-select-selection-item {
+  color: #0f5f5d !important;
+  font-weight: 700;
+}
+
+/* =========================================================
+   SIGNOS VITALES — distribución final
+   Mantener al final para prevalecer sobre estilos legacy.
+   ========================================================= */
+.consulta-section .consulta-vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+  margin-top: 12px;
+}
+
+.consulta-section .consulta-vital-card {
+  min-width: 0;
+  min-height: 158px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 16px;
+  border: 1px solid #d8e8ed;
+  border-radius: 18px;
+  background: #f9fcfd;
+  box-shadow: none;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.consulta-section .consulta-vital-card:hover {
+  transform: translateY(-1px);
+  border-color: #bce7e8;
+  box-shadow: 0 9px 24px rgba(15, 83, 85, .06);
+}
+
+.consulta-section .consulta-vital-card-header {
+  min-width: 0;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+
+.consulta-section .consulta-vital-card-header > strong {
+  min-width: 0;
+  color: #0b1c35;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 900;
+  white-space: normal;
+}
+
+.consulta-section .consulta-vital-checkbox.ant-checkbox-wrapper {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  color: #718096;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.consulta-section .consulta-vital-checkbox .ant-checkbox {
+  top: 0;
+}
+
+.consulta-section .consulta-vital-form-item {
+  width: 100%;
+  margin: auto 0 0 !important;
+}
+
+.consulta-section .consulta-vital-form-item .ant-form-item-control,
+.consulta-section .consulta-vital-form-item .ant-form-item-control-input,
+.consulta-section .consulta-vital-form-item .ant-form-item-control-input-content,
+.consulta-section .consulta-vital-form-item .ant-input-group-wrapper,
+.consulta-section .consulta-vital-form-item .ant-input-wrapper,
+.consulta-section .consulta-vital-form-item .ant-input-group {
+  width: 100%;
+  min-width: 0;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input {
+  min-width: 0;
+  height: 46px;
+  padding-inline: 13px;
+  border-radius: 13px 0 0 13px !important;
+  font-size: 14px;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input-group-addon {
+  width: 72px;
+  min-width: 72px;
+  height: 46px;
+  padding-inline: 8px;
+  border-radius: 0 13px 13px 0 !important;
+  background: #f7fafb;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input[disabled] {
+  background: #f2f5f6;
+  color: #7c8798;
+}
+
+.consulta-section .consulta-imc-card {
+  background:
+    radial-gradient(circle at top right, rgba(60, 207, 210, .12), transparent 48%),
+    linear-gradient(145deg, #fbffff 0%, #f4fbfb 100%);
+  border-color: #c9ecee;
+}
+
+.consulta-section .consulta-vital-card-header-imc {
+  align-items: center;
+}
+
+.consulta-section .consulta-imc-tag.ant-tag {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 800;
+}
+
+.consulta-section .consulta-imc-card .consulta-vital-form-item {
+  margin-top: 0 !important;
+}
+
+.consulta-section .consulta-imc-result {
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 11px;
+  padding: 10px 12px;
+  border: 1px dashed #93e0e2;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .9);
+}
+
+.consulta-section .consulta-imc-result span {
+  display: block;
+  color: #748196;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: .45px;
+  text-transform: uppercase;
+}
+
+.consulta-section .consulta-imc-result strong {
+  display: block;
+  margin-top: 4px;
+  color: #07585a;
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.consulta-section .consulta-extra-vitals {
+  margin-top: 14px;
+}
+
+@media (min-width: 1420px) {
+  .consulta-section .consulta-vitals-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .consulta-section .consulta-vital-card {
+    min-height: 176px;
+  }
+}
+
+@media (max-width: 760px) {
+  .consulta-section .consulta-vitals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .consulta-section .consulta-vital-card {
+    min-height: 0;
+  }
+
+  .consulta-section .consulta-vital-card-header {
+    align-items: center;
+  }
+}
+
+@media (max-width: 390px) {
+  .consulta-section .consulta-vital-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .consulta-section .consulta-vital-form-item .ant-input-group-addon {
+    width: 62px;
+    min-width: 62px;
+  }
+}
+
+/* =========================================================
+   SIGNOS VITALES — ajuste limpio y legible
+   Peso / Altura / Temperatura arriba + IMC horizontal.
+   ========================================================= */
+.consulta-section .consulta-vitals-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch;
+  margin-top: 12px;
+}
+
+.consulta-section .consulta-vital-card {
+  min-width: 0;
+  min-height: 132px !important;
+  padding: 16px 18px !important;
+  border: 1px solid #d8e8ed;
+  border-radius: 18px;
+  background: #fbfdfe;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: none;
+}
+
+.consulta-section .consulta-vital-card:hover {
+  transform: none !important;
+  border-color: #b9e6e7;
+  box-shadow: 0 8px 20px rgba(18, 89, 93, .05);
+}
+
+.consulta-section .consulta-vital-card-header,
+.consulta-section .consulta-vital-card > div:first-child {
+  min-width: 0;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.consulta-section .consulta-vital-card-header > strong,
+.consulta-section .consulta-vital-card > div:first-child > strong {
+  flex: 0 1 auto !important;
+  min-width: 0;
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  color: #0b1c35;
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.consulta-section .consulta-vital-checkbox.ant-checkbox-wrapper,
+.consulta-section .consulta-vital-card .ant-checkbox-wrapper {
+  flex: 0 0 auto !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  margin: 0;
+  color: #718096;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.consulta-section .consulta-vital-form-item {
+  width: 100%;
+  margin: 0 !important;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input,
+.consulta-section .consulta-vital-form-item .ant-input-group-addon {
+  height: 44px;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input {
+  padding-inline: 13px;
+  font-size: 14px;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input-group-addon {
+  width: auto !important;
+  min-width: 64px !important;
+  padding-inline: 10px;
+  background: #f7fafb;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+}
+
+.consulta-section .consulta-imc-card {
+  grid-column: 1 / -1;
+  min-height: 96px !important;
+  display: grid !important;
+  grid-template-columns: minmax(210px, .85fr) minmax(240px, 1fr) minmax(190px, .75fr);
+  gap: 18px;
+  align-items: center;
+  padding: 15px 18px !important;
+  background: linear-gradient(135deg, #f3fdfd 0%, #fbffff 100%);
+  border-color: #bfe9eb;
+}
+
+.consulta-section .consulta-imc-card .consulta-vital-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  margin: 0;
+}
+
+.consulta-imc-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.consulta-section .consulta-imc-title-wrap > strong {
+  color: #0b1c35;
+  font-size: 17px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.consulta-section .consulta-imc-tag.ant-tag {
+  margin: 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 800;
+}
+
+.consulta-imc-caption {
+  color: #7d899b;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.consulta-section .consulta-imc-card .consulta-imc-input {
+  margin: 0 !important;
+}
+
+.consulta-section .consulta-imc-result {
+  min-height: 62px;
+  margin: 0 !important;
+  padding: 10px 14px;
+  border: 1px dashed #8fdfe1;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .92);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.consulta-section .consulta-imc-result span {
+  color: #748196;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.consulta-section .consulta-imc-result strong {
+  margin-top: 3px;
+  color: #07585a;
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+@media (max-width: 1050px) {
+  .consulta-section .consulta-vitals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .consulta-section .consulta-vital-card:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .consulta-section .consulta-imc-card {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .consulta-section .consulta-imc-card .consulta-vital-card-header {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .consulta-section .consulta-vitals-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .consulta-section .consulta-vital-card:nth-child(3),
+  .consulta-section .consulta-imc-card {
+    grid-column: auto;
+  }
+
+  .consulta-section .consulta-imc-card {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .consulta-section .consulta-vital-card-header,
+  .consulta-section .consulta-vital-card > div:first-child {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+}
+
+/* =========================================================
+   SIGNOS VITALES — versión compacta final
+   Mantiene la lógica actual y reduce altura / espacios.
+   ========================================================= */
+.consulta-section .consulta-vitals-grid {
+  gap: 12px !important;
+  margin-top: 10px !important;
+}
+
+.consulta-section .consulta-vital-card {
+  min-height: 108px !important;
+  padding: 12px 16px !important;
+  border-radius: 16px !important;
+  justify-content: flex-start !important;
+}
+
+.consulta-section .consulta-vital-card-header,
+.consulta-section .consulta-vital-card > div:first-child {
+  min-height: 24px !important;
+  margin-bottom: 8px !important;
+  gap: 8px !important;
+}
+
+.consulta-section .consulta-vital-card-header > strong,
+.consulta-section .consulta-vital-card > div:first-child > strong {
+  font-size: 15px !important;
+  line-height: 1.15 !important;
+}
+
+.consulta-section .consulta-vital-checkbox.ant-checkbox-wrapper,
+.consulta-section .consulta-vital-card .ant-checkbox-wrapper {
+  font-size: 11.5px !important;
+  line-height: 1.1 !important;
+}
+
+.consulta-section .consulta-vital-checkbox .ant-checkbox-inner,
+.consulta-section .consulta-vital-card .ant-checkbox-inner {
+  width: 17px;
+  height: 17px;
+}
+
+.consulta-section .consulta-vital-form-item {
+  margin-top: auto !important;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input,
+.consulta-section .consulta-vital-form-item .ant-input-group-addon {
+  height: 40px !important;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input {
+  padding-inline: 12px !important;
+  font-size: 13px !important;
+}
+
+.consulta-section .consulta-vital-form-item .ant-input-group-addon {
+  min-width: 60px !important;
+  padding-inline: 9px !important;
+  font-size: 12px !important;
+}
+
+.consulta-section .consulta-imc-card {
+  min-height: 76px !important;
+  grid-template-columns: minmax(185px, .8fr) minmax(230px, 1fr) minmax(175px, .72fr) !important;
+  gap: 14px !important;
+  padding: 10px 16px !important;
+  border-radius: 16px !important;
+}
+
+.consulta-section .consulta-imc-card .consulta-vital-card-header {
+  gap: 3px !important;
+  margin: 0 !important;
+}
+
+.consulta-imc-title-wrap {
+  gap: 7px !important;
+}
+
+.consulta-section .consulta-imc-title-wrap > strong {
+  font-size: 16px !important;
+}
+
+.consulta-section .consulta-imc-tag.ant-tag {
+  padding: 1px 8px !important;
+  font-size: 10.5px !important;
+  line-height: 17px !important;
+}
+
+.consulta-imc-caption {
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+}
+
+.consulta-section .consulta-imc-result {
+  min-height: 52px !important;
+  padding: 7px 12px !important;
+  border-radius: 12px !important;
+}
+
+.consulta-section .consulta-imc-result span {
+  font-size: 9.5px !important;
+}
+
+.consulta-section .consulta-imc-result strong {
+  margin-top: 2px !important;
+  font-size: 15px !important;
+}
+
+.consulta-section .consulta-extra-vitals {
+  margin-top: 12px !important;
+}
+
+@media (max-width: 1050px) {
+  .consulta-section .consulta-vital-card {
+    min-height: 102px !important;
+  }
+
+  .consulta-section .consulta-imc-card {
+    min-height: auto !important;
+    padding: 12px 14px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .consulta-section .consulta-vital-card {
+    min-height: 96px !important;
+    padding: 11px 13px !important;
+  }
+
+  .consulta-section .consulta-imc-card {
+    gap: 9px !important;
+    padding: 11px 13px !important;
+  }
+}

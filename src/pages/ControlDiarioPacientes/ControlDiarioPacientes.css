@@ -1092,3 +1092,62 @@
     padding: 14px;
   }
 }
+/* =========================================================
+   CONTROL DIARIO - DATOS REALES / SINCRONIZACIÓN
+   ========================================================= */
+.control-title-buttons {
+  display: grid;
+  grid-template-columns: 0.9fr 1.25fr;
+  gap: 8px;
+}
+
+.control-refresh-btn {
+  height: 42px;
+  border-radius: 14px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 900;
+  border: 1px solid rgba(21, 159, 163, 0.28);
+  background: #ffffff;
+}
+
+.control-refresh-btn:hover {
+  color: #0f8f94 !important;
+  border-color: rgba(21, 159, 163, 0.48) !important;
+  background: #ecfeff !important;
+}
+
+.control-detail-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 980px) {
+  .control-title-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .control-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Control diario: versión sólo APIs confirmadas */
+.control-source-alert {
+  margin: 0 0 14px;
+  border-radius: 16px;
+}
+
+.control-mobile-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.control-detail-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .control-mobile-grid,
+  .control-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

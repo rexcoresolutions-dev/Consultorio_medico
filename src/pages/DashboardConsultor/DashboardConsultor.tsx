@@ -23,7 +23,7 @@ const DashboardConsultor: React.FC = () => {
         <div>
           <p className="consultor-subtitle">Panel de consulta general</p>
 
-          <h1>Dashboard Consultor</h1>
+          <h1>Inicio</h1>
 
           <span>
             Consulta estadísticas, pacientes, citas y actividad clínica sin permisos de edición.

@@ -308,3 +308,25 @@
     line-height: 46px !important;
   }
 }
+.mobile-system-logo-image {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex: 0 0 38px;
+}
+
+/* ===== Color de identidad global ===== */
+.mobile-drawer-menu .ant-menu-item-selected {
+  background: var(--system-brand-color, #36c6c7) !important;
+}
+
+.mobile-drawer-menu .ant-menu-submenu-selected > .ant-menu-submenu-title,
+.mobile-drawer-menu .ant-menu-submenu-selected > .ant-menu-submenu-title .anticon,
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item-selected .mobile-nav-leaf-label,
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item-selected .anticon {
+  color: var(--system-brand-color, #50ebec) !important;
+}
+
+.mobile-drawer-menu .ant-menu-sub .ant-menu-item-selected {
+  box-shadow: inset 3px 0 0 var(--system-brand-color, #50ebec) !important;
+}

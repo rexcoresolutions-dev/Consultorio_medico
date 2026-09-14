@@ -51,7 +51,16 @@ class UserService {
       segundo_apellido: user?.segundoApellido || user?.segundo_apellido || '',
       email: user?.correo || user?.email || '',
       telefono: user?.telefono || '',
-      rol_id: Number(user?.rolId || user?.rol_id || 2),
+      rol_id:
+        Number(
+          user?.rolId ??
+            user?.rol_id ??
+            user?.roleId ??
+            user?.role_id ??
+            user?.rol?.id ??
+            user?.role?.id ??
+            0
+        ) || undefined,
 
       empresa_id: user?.empresaId || user?.empresa_id || user?.empresa?.id,
       sucursal_id: user?.sucursalId ?? user?.sucursal_id ?? user?.sucursal?.id ?? null,

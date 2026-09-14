@@ -593,3 +593,73 @@
     margin-left: 280px;
   }
 }
+.system-sidebar-logo-image {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex: 0 0 34px;
+}
+
+.logo.collapsed .system-sidebar-logo-image {
+  width: 36px;
+  height: 36px;
+}
+
+/* ===== Color de identidad global ===== */
+.logo-icon,
+.custom-menu-sectioned .ant-menu-submenu-selected > .ant-menu-submenu-title,
+.custom-menu-sectioned .ant-menu-submenu-selected > .ant-menu-submenu-title .anticon {
+  color: var(--system-brand-color, #50ebec) !important;
+}
+
+.custom-menu .ant-menu-item:hover,
+.custom-menu-sectioned .ant-menu-item:hover,
+.custom-menu-sectioned .ant-menu-submenu-title:hover {
+  color: var(--system-brand-color, #50ebec) !important;
+}
+
+.custom-menu .ant-menu-item-selected {
+  background: var(--system-brand-color, #36c6c7) !important;
+  box-shadow: 0 10px 24px var(--system-brand-color-shadow, rgba(80, 235, 236, .22));
+}
+
+.custom-menu-sectioned .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background: var(--system-brand-color-soft, rgba(80, 235, 236, .14)) !important;
+  border-color: var(--system-brand-color, #50ebec) !important;
+}
+
+/* ===== Tema global real: header, usuario y navegación ===== */
+.dashboard-header .ant-avatar,
+.header-right .ant-avatar,
+.user-dropdown-trigger .ant-avatar {
+  background: var(--system-brand-color, #36c6c7) !important;
+  color: var(--system-brand-contrast, #ffffff) !important;
+  box-shadow: 0 5px 16px var(--system-brand-color-shadow, rgba(54, 198, 199, .26)) !important;
+}
+
+.user-name {
+  color: var(--system-brand-dark, #0f4c4d) !important;
+}
+
+.desktop-collapse-btn:hover,
+.mobile-menu-btn:hover,
+.notification-btn:hover,
+.user-dropdown-trigger:hover .user-dropdown-arrow {
+  color: var(--system-brand-color, #36c6c7) !important;
+}
+
+.desktop-collapse-btn:hover,
+.mobile-menu-btn:hover,
+.notification-btn:hover,
+.user-dropdown-trigger:hover,
+.ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger):hover {
+  background: var(--system-brand-color-soft, rgba(54, 198, 199, .12)) !important;
+}
+
+.logo-icon {
+  filter: drop-shadow(0 6px 12px var(--system-brand-color-shadow, rgba(80, 235, 236, .25))) !important;
+}
+
+.custom-menu-sectioned::-webkit-scrollbar-thumb {
+  background: var(--system-brand-border, rgba(80, 235, 236, .28)) !important;
+}

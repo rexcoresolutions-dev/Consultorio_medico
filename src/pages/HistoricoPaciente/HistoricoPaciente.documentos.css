@@ -1,0 +1,315 @@
+.historico-receta-document-modal .ant-modal-content {
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: 18px !important;
+  background: #f2f6f7;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, .24) !important;
+}
+
+.historico-receta-document-modal .ant-modal-body { padding: 0 !important; }
+.historico-receta-viewer { min-height: 0; }
+
+.historico-receta-viewer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px;
+  border-bottom: 1px solid #dfeaec;
+  background: #fff;
+}
+
+.historico-receta-viewer__bar > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.historico-receta-viewer__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 11px;
+  background: #e8fbf8;
+  color: #0d847d;
+  font-size: 17px;
+}
+
+.historico-receta-viewer__bar strong {
+  display: block;
+  color: #10213a;
+  font-size: 14px;
+}
+
+.historico-receta-viewer__bar small {
+  display: block;
+  max-width: 430px;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #8190a4;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historico-receta-viewer__actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.historico-receta-viewer__actions .ant-btn {
+  height: 35px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.historico-receta-viewer__actions .ant-btn-primary {
+  background: #16aaa1;
+  border-color: #16aaa1;
+}
+
+.historico-receta-viewer__body {
+  max-height: min(76vh, 780px);
+  overflow: auto;
+  padding: 20px;
+  background:
+    linear-gradient(#eef3f4 1px, transparent 1px),
+    linear-gradient(90deg, #eef3f4 1px, transparent 1px),
+    #f5f8f9;
+  background-size: 18px 18px;
+}
+
+.historico-receta-viewer__loading {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 360px;
+  color: #738195;
+}
+
+.historico-receta-viewer__loading svg {
+  color: #16aaa1;
+  font-size: 30px;
+}
+
+.historico-receta-viewer__loading span { font-size: 12px; }
+.historico-documents-card .historico-eyebrow svg { margin-right: 5px; }
+
+@media (max-width: 860px) {
+  .historico-receta-document-modal { width: calc(100vw - 24px) !important; max-width: none; }
+  .historico-receta-viewer__bar { align-items: flex-start; }
+  .historico-receta-viewer__actions { flex-direction: column; }
+  .historico-receta-viewer__body { padding: 12px; }
+}
+
+/* Visor documental con las dos copias de la receta */
+.historico-receta-document-modal {
+  max-width: calc(100vw - 30px) !important;
+}
+
+.historico-receta-viewer__body {
+  max-height: min(80vh, 860px);
+  padding: 16px;
+}
+
+#historico-receta-documento {
+  width: 100%;
+}
+
+@media (max-width: 980px) {
+  .historico-receta-document-modal {
+    width: calc(100vw - 20px) !important;
+  }
+}
+
+/* Tabla documental: lectura compacta y sin columnas desperdiciadas */
+.historico-documents-table .ant-table {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.historico-documents-table .ant-table-container {
+  border: 1px solid #e1edef;
+  border-radius: 16px;
+}
+
+.historico-documents-table .ant-table-thead > tr > th {
+  padding: 13px 18px !important;
+  background: #eafafb !important;
+  color: #087872 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: .01em;
+}
+
+.historico-documents-table .ant-table-tbody > tr > td {
+  padding: 15px 18px !important;
+  vertical-align: middle !important;
+  border-bottom-color: #edf2f3 !important;
+}
+
+.historico-documents-table .ant-table-tbody > tr:hover > td {
+  background: #fbfefe !important;
+}
+
+.historico-document-date {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.historico-document-date__day,
+.historico-document-date__time {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1.15;
+}
+
+.historico-document-date__day {
+  color: #13243e;
+  font-size: 13px;
+}
+
+.historico-document-date__time {
+  padding-left: 1px;
+  color: #7a899d;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.historico-document-date svg {
+  flex: 0 0 auto;
+  color: #627188;
+  font-size: 13px;
+}
+
+.historico-document-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.historico-document-type__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  background: #f2f7f8;
+  color: #65758b;
+  font-size: 15px;
+}
+
+.historico-document-type__icon.is-receta {
+  background: #e8fbf8;
+  color: #0c968e;
+}
+
+.historico-document-type strong,
+.historico-document-type small {
+  display: block;
+  min-width: 0;
+}
+
+.historico-document-type strong {
+  overflow: hidden;
+  color: #10213a;
+  font-size: 12.5px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historico-document-type small {
+  margin-top: 2px;
+  color: #8b98aa;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.historico-document-description {
+  min-width: 0;
+}
+
+.historico-document-description > strong {
+  display: block;
+  overflow: hidden;
+  color: #172842;
+  font-size: 12.5px;
+  font-weight: 750;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historico-document-followup,
+.historico-document-description__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  color: #75859a;
+  font-size: 10.5px;
+  font-weight: 650;
+}
+
+.historico-document-followup {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f0fbf9;
+  color: #0c827b;
+}
+
+.historico-open-document-btn.ant-btn {
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid #b9e9e4;
+  border-radius: 10px;
+  background: #eefbf9;
+  color: #0b817a;
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.historico-open-document-btn.ant-btn:hover,
+.historico-open-document-btn.ant-btn:focus {
+  border-color: #54cec6 !important;
+  background: #e1f8f5 !important;
+  color: #08736d !important;
+}
+
+.historico-no-action {
+  color: #c2cad3;
+}
+
+.historico-documents-table .ant-pagination {
+  margin: 16px 18px !important;
+}
+
+@media (max-width: 900px) {
+  .historico-documents-table .ant-table-thead > tr > th,
+  .historico-documents-table .ant-table-tbody > tr > td {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .historico-open-document-btn.ant-btn span:not(.anticon) {
+    display: none;
+  }
+
+  .historico-open-document-btn.ant-btn {
+    width: 34px;
+    padding: 0;
+  }
+}

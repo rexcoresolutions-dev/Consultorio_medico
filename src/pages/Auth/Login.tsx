@@ -9,6 +9,9 @@ import {
   EyeTwoTone,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
+import useSystemConfig from '../../hooks/useSystemConfig';
+import { getDashboardByRole } from '../../router/routes';
+import { getUserRoleId } from '../../utils/role.utils';
 import './Login.css';
 
 const { Title, Text } = Typography;
@@ -25,6 +28,7 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { message } = App.useApp();
+  const systemConfig = useSystemConfig();
 
   useEffect(() => {
     const remembered = localStorage.getItem('remember_me') === 'true';
@@ -62,21 +66,8 @@ const Login: React.FC = () => {
     return 'No fue posible iniciar sesión. Intente nuevamente';
   };
 
-  const getRedirectByRole = (rolId?: number) => {
-    switch (Number(rolId)) {
-      case 1:
-        return '/dashboard';
-
-      case 2:
-        return '/dashboard-medico';
-
-      case 3:
-        return '/dashboard-consultor';
-
-      default:
-        return '/dashboard';
-    }
-  };
+  const getRedirectByRole = (userData: any) =>
+    getDashboardByRole(getUserRoleId(userData));
 
   const onFinish = async (values: LoginFormValues) => {
     setLoading(true);
@@ -96,7 +87,7 @@ const Login: React.FC = () => {
         localStorage.getItem('user') || '{}'
       );
 
-      const redirectPath = getRedirectByRole(user?.rol_id);
+      const redirectPath = getRedirectByRole(user);
 
       message.success({
         content: user?.nombre
@@ -124,16 +115,24 @@ const Login: React.FC = () => {
         <div className="circle-top" />
 
         <div className="brand-content">
-          <div className="brand-icon">
-            <LoginOutlined />
+          <div className={`brand-icon ${systemConfig.logoDataUrl ? 'brand-icon--image' : ''}`}>
+            {systemConfig.logoDataUrl ? (
+              <img
+                src={systemConfig.logoDataUrl}
+                alt={systemConfig.nombreSistema}
+                className="login-system-logo-image"
+              />
+            ) : (
+              <LoginOutlined />
+            )}
           </div>
 
           <Title className="brand-title">
-            Consultorio Médico
+            {systemConfig.nombreSistema}
           </Title>
 
           <Text className="brand-subtitle">
-            Sistema Integral de Gestión Médica
+            {systemConfig.descripcion}
           </Text>
         </div>
 
@@ -229,7 +228,7 @@ const Login: React.FC = () => {
 
           <div className="version">
             <span></span>
-            <p>Versión 1.0.0</p>
+            <p>Versión {systemConfig.version}</p>
             <span></span>
           </div>
         </div>

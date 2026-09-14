@@ -1385,3 +1385,533 @@
   text-align: center;
 }
 
+
+/* Integración Inventario / Receta libre */
+.rx-medication-source {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #ccecea;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.rx-medication-source .ant-form-item {
+  margin-bottom: 0;
+}
+
+.rx-source-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 5px;
+  border: 1px solid #d7ecef;
+  border-radius: 14px;
+  background: #f4fafa;
+}
+
+.rx-source-switch button {
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.rx-source-switch button.is-active {
+  background: #ffffff;
+  color: #0f766e;
+  box-shadow: 0 5px 14px rgba(15, 118, 110, 0.12);
+}
+
+.rx-inventory-med-preview {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 0.65fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rx-inventory-med-preview > div {
+  min-width: 0;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: #f2fbfa;
+}
+
+.rx-inventory-med-preview span,
+.rx-inventory-med-preview strong {
+  display: block;
+}
+
+.rx-inventory-med-preview span {
+  margin-bottom: 3px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rx-inventory-med-preview strong {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rx-inventory-med-preview strong.is-low {
+  color: #dc2626;
+}
+
+.rx-builder-grid > .ant-form-item:nth-child(2),
+.rx-builder-grid > .ant-form-item:nth-child(3),
+.rx-builder-grid > .ant-form-item:nth-child(4),
+.rx-builder-grid > .ant-form-item:nth-child(5),
+.rx-builder-grid > .ant-form-item:nth-child(6),
+.rx-builder-grid > .ant-form-item:nth-child(7) {
+  grid-column: span 2;
+}
+
+.rx-builder-grid > .ant-form-item:nth-child(8) {
+  grid-column: span 4;
+}
+
+.rx-builder-grid > .rx-field-notes {
+  grid-column: span 5;
+}
+
+.rx-builder-grid > .rx-add-treatment-btn {
+  grid-column: span 3;
+}
+
+.rx-med-substance,
+.rx-treatment-source {
+  display: block;
+  margin-top: 2px;
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+@media (max-width: 1180px) {
+  .rx-medication-source {
+    grid-column: 1 / -1 !important;
+  }
+
+  .rx-inventory-med-preview {
+    grid-template-columns: 1fr 1fr 0.75fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .rx-medication-source,
+  .rx-builder-grid > .ant-form-item,
+  .rx-builder-grid > .rx-field-notes,
+  .rx-builder-grid > .rx-add-treatment-btn {
+    grid-column: 1 / -1 !important;
+  }
+
+  .rx-inventory-med-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .rx-inventory-med-preview strong {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .rx-source-switch {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   AJUSTE RECETA API - DATOS CLÍNICOS MÁS COMPACTOS
+   ========================================================= */
+.rx-card--clinical {
+  padding: 18px 20px;
+}
+
+.rx-card--clinical .rx-card-title {
+  margin-bottom: 14px;
+  padding-bottom: 11px;
+}
+
+.rx-card--clinical .rx-card-title h3 {
+  font-size: 19px;
+}
+
+.rx-card--clinical .rx-card-title svg {
+  font-size: 22px;
+}
+
+.rx-card--clinical .rx-card-title span {
+  font-size: 11px;
+}
+
+.rx-card--clinical .ant-form-item {
+  margin-bottom: 10px;
+}
+
+.rx-card--clinical .ant-form-item-label {
+  padding-bottom: 4px;
+}
+
+.rx-card--clinical .ant-form-item-label > label {
+  font-size: 11px;
+}
+
+.rx-card--clinical .ant-input,
+.rx-card--clinical textarea.ant-input,
+.rx-card--clinical .ant-input-affix-wrapper {
+  min-height: 40px;
+  font-size: 13px;
+  border-radius: 13px !important;
+}
+
+.rx-card--clinical textarea.ant-input {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.rx-card--clinical .rx-vitals-grid {
+  gap: 9px 12px;
+}
+
+.rx-card--clinical .ant-input-group-addon {
+  padding-inline: 9px;
+  font-size: 12px;
+}
+
+/* =========================================================
+   DOS COPIAS DE RECETA: MÉDICO + PACIENTE
+   ========================================================= */
+.rx-print-sheet {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.rx-print-copy {
+  position: relative;
+}
+
+.rx-copy-label {
+  position: absolute;
+  z-index: 4;
+  top: 10px;
+  right: 12px;
+  padding: 5px 9px;
+  border: 1px solid #bde9e8;
+  border-radius: 999px;
+  background: #f0fdfa;
+  color: #0f766e;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.45px;
+}
+
+.rx-print-cut {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.rx-print-cut div {
+  flex: 1;
+  border-top: 1px dashed #94a3b8;
+}
+
+.rx-preview-modal .rx-print-sheet {
+  max-width: 1060px;
+  gap: 14px;
+}
+
+.rx-preview-modal .rx-print-copy {
+  max-width: 1060px;
+  min-height: auto;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html,
+  body {
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .rx-print-only {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+
+  .rx-print-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-rows: 139mm 4mm 139mm !important;
+    gap: 0 !important;
+    padding: 7mm 6mm 8mm !important;
+    background: #fff !important;
+  }
+
+  .rx-print-copy.rx-print-template {
+    width: 198mm !important;
+    height: 139mm !important;
+    min-height: 139mm !important;
+    max-height: 139mm !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 4mm 5mm !important;
+    border: 0.35mm solid #d7ecef !important;
+    border-radius: 2.5mm !important;
+    overflow: hidden !important;
+  }
+
+  .rx-print-cut {
+    height: 4mm !important;
+    gap: 2mm !important;
+    font-size: 8px !important;
+  }
+
+  .rx-copy-label {
+    top: 2.2mm !important;
+    right: 2.5mm !important;
+    padding: 1mm 1.8mm !important;
+    font-size: 6.5px !important;
+  }
+
+  .rx-print-watermark {
+    font-size: 48px !important;
+  }
+
+  .rx-template-header {
+    gap: 3mm !important;
+    padding-bottom: 1.7mm !important;
+    border-bottom-width: 2px !important;
+  }
+
+  .rx-template-brand {
+    gap: 2mm !important;
+  }
+
+  .rx-template-logo {
+    width: 9mm !important;
+    height: 9mm !important;
+    border-radius: 2.5mm !important;
+    font-size: 14px !important;
+  }
+
+  .rx-template-brand h1 {
+    font-size: 15px !important;
+  }
+
+  .rx-template-brand p {
+    margin-top: 0 !important;
+    font-size: 7px !important;
+  }
+
+  .rx-template-date span,
+  .rx-template-doctor span,
+  .rx-template-section span,
+  .rx-template-follow span,
+  .rx-template-mini-grid span {
+    font-size: 6px !important;
+  }
+
+  .rx-template-date strong {
+    margin-top: 1px !important;
+    font-size: 8px !important;
+  }
+
+  .rx-print-layout {
+    grid-template-columns: 48mm 1fr !important;
+    gap: 3mm !important;
+    margin-top: 2mm !important;
+  }
+
+  .rx-print-sidebar {
+    gap: 1.4mm !important;
+  }
+
+  .rx-template-doctor,
+  .rx-template-box,
+  .rx-template-mini-grid > div,
+  .rx-template-follow > div {
+    padding: 1.4mm 1.7mm !important;
+    border-radius: 1.8mm !important;
+  }
+
+  .rx-template-doctor strong {
+    margin-top: 1px !important;
+    font-size: 8px !important;
+  }
+
+  .rx-template-doctor small {
+    margin-top: 0 !important;
+    font-size: 6.5px !important;
+  }
+
+  .rx-template-section {
+    margin-top: 1.5mm !important;
+  }
+
+  .rx-print-sidebar .rx-template-section {
+    margin-top: 0 !important;
+  }
+
+  .rx-template-section h2 {
+    margin-bottom: 1.2mm !important;
+    padding-bottom: 0.8mm !important;
+    font-size: 7.5px !important;
+  }
+
+  .rx-template-box p {
+    margin-top: 1px !important;
+    font-size: 7.2px !important;
+    line-height: 1.2 !important;
+  }
+
+  .rx-template-box--diagnostic {
+    min-height: 9mm !important;
+  }
+
+  .rx-template-box--diagnostic p {
+    font-size: 7.5px !important;
+  }
+
+  .rx-template-mini-grid {
+    gap: 1.2mm !important;
+    margin-top: 1.2mm !important;
+  }
+
+  .rx-template-mini-grid strong,
+  .rx-template-follow strong {
+    margin-top: 1px !important;
+    font-size: 7px !important;
+  }
+
+  .rx-template-rx {
+    min-height: 0 !important;
+  }
+
+  .rx-template-treatment-list {
+    gap: 0.8mm !important;
+    padding-left: 3.5mm !important;
+  }
+
+  .rx-template-treatment-list li {
+    grid-template-columns: 1.55fr 0.75fr !important;
+    gap: 2mm !important;
+    padding-bottom: 0.8mm !important;
+  }
+
+  .rx-template-treatment-list strong {
+    font-size: 7.4px !important;
+  }
+
+  .rx-template-treatment-list p {
+    margin-top: 1px !important;
+    font-size: 7px !important;
+  }
+
+  .rx-template-treatment-list small,
+  .rx-template-treatment-list em {
+    margin-top: 1px !important;
+    font-size: 6.4px !important;
+  }
+
+  .rx-template-note {
+    min-height: 8mm !important;
+    padding: 1.5mm !important;
+    border-radius: 1.8mm !important;
+    font-size: 6.8px !important;
+    line-height: 1.2 !important;
+  }
+
+  .rx-template-follow {
+    gap: 1.2mm !important;
+    margin-top: 1.4mm !important;
+  }
+
+  .rx-template-footer {
+    grid-template-columns: 42mm 1fr !important;
+    gap: 4mm !important;
+    margin-top: 2mm !important;
+  }
+
+  .rx-sign-line {
+    margin-bottom: 1mm !important;
+  }
+
+  .rx-template-footer strong {
+    font-size: 6.5px !important;
+  }
+
+  .rx-template-footer p {
+    margin: 0 !important;
+    font-size: 5.8px !important;
+    line-height: 1.2 !important;
+  }
+}
+
+/* Seguimiento: fecha y hora en una sola captura */
+.rx-follow-datetime.ant-picker {
+  min-height: 44px;
+  border-radius: 14px;
+}
+
+.rx-follow-datetime.ant-picker-disabled {
+  background: #f8fafc;
+}
+
+.rx-check-panel .ant-form-item-explain-error {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* Agenda de seguimiento: disponibilidad visible en tiempo real */
+.rx-availability-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -4px 0 12px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: rgba(54, 198, 199, 0.08);
+  color: #5f7187;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rx-availability-note .anticon {
+  margin-top: 2px;
+  color: #16aeb0;
+}

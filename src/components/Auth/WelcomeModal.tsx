@@ -1,526 +1,279 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Modal, Typography, Avatar, Button, Divider, Progress, Row, Col } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Modal, Spin } from 'antd';
 import {
-  HeartOutlined,
-  UserOutlined,
-  SmileOutlined,
-  StarOutlined,
-  MedicineBoxOutlined,
+  BulbOutlined,
   CalendarOutlined,
-  TeamOutlined,
   CheckCircleOutlined,
-  WomanOutlined,
-  ManOutlined,
-  EyeOutlined,
-  ShopOutlined,
+  HeartOutlined,
+  MedicineBoxOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
-import WelcomeService, { type WelcomeStats } from '../../services/welcome/welcome.service';
+
+import welcomeService, {
+  type WelcomeMetrics,
+} from '../../services/welcome/welcome.service';
+import useSystemConfig from '../../hooks/useSystemConfig';
+import {
+  getRoleGreeting,
+  getRoleLabel,
+  getUserRoleId,
+  ROLE_IDS,
+} from '../../utils/role.utils';
 import './WelcomeModal.css';
 
-const { Title, Text, Paragraph } = Typography;
-
-type GenderType = 'FEMALE' | 'MALE' | 'UNKNOWN';
-
-interface WelcomeModalProps {
-  visible: boolean;
-  user: any | null;
-  onClose: () => void;
+export interface WelcomeModalProps {
+  open?: boolean;
+  visible?: boolean;
+  isOpen?: boolean;
+  show?: boolean;
+  isVisible?: boolean;
+  onClose?: () => void;
+  onCancel?: () => void;
+  onStart?: () => void;
+  onContinue?: () => void;
+  onStartWorking?: () => void;
+  onConfirm?: () => void;
+  onOk?: () => void;
+  user?: any;
+  usuario?: any;
+  [key: string]: any;
 }
 
-const removeAccents = (value: string): string => {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+const EMPTY_METRICS: WelcomeMetrics = {
+  pacientesHoy: 0,
+  proximasCitas: 0,
+  pendientes: 0,
+  consultasHoy: 0,
+  recetasHoy: 0,
 };
 
-const normalizeGender = (gender?: string): GenderType => {
-  const value = removeAccents(String(gender || '').toUpperCase().trim());
-
-  if (['MALE', 'MASCULINO', 'HOMBRE', 'M'].includes(value)) return 'MALE';
-  if (['FEMALE', 'FEMENINO', 'MUJER', 'F'].includes(value)) return 'FEMALE';
-
-  return 'UNKNOWN';
+const parseStoredJson = (key: string) => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 };
 
-const detectGender = (nombre: string): GenderType => {
-  if (!nombre) return 'UNKNOWN';
+const getStoredUser = () =>
+  parseStoredJson('user') ??
+  parseStoredJson('usuario') ??
+  parseStoredJson('auth_user') ??
+  {};
 
-  const primerNombre = removeAccents(nombre)
-    .toLowerCase()
-    .trim()
-    .split(' ')[0];
+const buildName = (user: any) => {
+  const fullName = [
+    user?.nombre ?? user?.name,
+    user?.primerApellido ?? user?.primer_apellido,
+    user?.segundoApellido ?? user?.segundo_apellido,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-  const maleNames = [
-    'jose',
-    'juan',
-    'carlos',
-    'miguel',
-    'angel',
-    'jesus',
-    'pedro',
-    'pablo',
-    'francisco',
-    'javier',
-    'manuel',
-    'andres',
-    'alejandro',
-    'roberto',
-    'antonio',
-    'fernando',
-    'sergio',
-    'ramon',
-    'ricardo',
-    'alberto',
-    'gerardo',
-    'omar',
-    'edgar',
-    'ivan',
-    'david',
-    'jorge',
-    'luis',
-    'daniel',
-    'arturo',
-    'mario',
-    'hugo',
-    'ruben',
-    'gabriel',
-    'oscar',
-  ];
-
-  const femaleNames = [
-    'maria',
-    'ana',
-    'laura',
-    'carmen',
-    'josefina',
-    'isabel',
-    'luisa',
-    'patricia',
-    'martha',
-    'teresa',
-    'gloria',
-    'silvia',
-    'veronica',
-    'elena',
-    'sofia',
-    'valentina',
-    'camila',
-    'daniela',
-    'paula',
-    'andrea',
-    'fernanda',
-    'alejandra',
-    'monica',
-    'lorena',
-    'janeth',
-    'karla',
-    'karen',
-    'liliana',
-    'jessica',
-    'vanessa',
-    'gabriela',
-    'adriana',
-  ];
-
-  if (maleNames.includes(primerNombre)) return 'MALE';
-  if (femaleNames.includes(primerNombre)) return 'FEMALE';
-
-  if (primerNombre.endsWith('a')) return 'FEMALE';
-  if (primerNombre.endsWith('o')) return 'MALE';
-
-  return 'UNKNOWN';
+  return fullName || 'Usuario';
 };
 
-const WelcomeModal: React.FC<WelcomeModalProps> = ({ visible, user, onClose }) => {
-  const [progress, setProgress] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [userGender, setUserGender] = useState<GenderType>('UNKNOWN');
-  const [welcomeStats, setWelcomeStats] = useState<WelcomeStats | null>(null);
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Buenos días';
+  if (hour < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+};
 
-  const usuario = useMemo(() => {
-    if (!user) return null;
+const getLongDate = () => {
+  const text = new Date().toLocaleDateString('es-MX', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
 
-    return (
-      user?.data?.data ||
-      user?.data?.user ||
-      user?.data?.usuario ||
-      user?.data ||
-      user?.user ||
-      user?.usuario ||
-      user
-    );
-  }, [user]);
+const getRolePresentation = (user: any) => {
+  const roleId = getUserRoleId(user);
+  const baseLabel = getRoleLabel(user);
 
-  const getNombre = () => {
-    return usuario?.nombre || usuario?.name || usuario?.firstName || '';
-  };
+  if (roleId === ROLE_IDS.MEDICO) {
+    const specialty = String(
+      user?.especialidad ?? user?.especialidadNombre ?? user?.especialidad_nombre ?? '',
+    ).trim();
 
-  const getPrimerApellido = () => {
-    return (
-      usuario?.primer_apellido ||
-      usuario?.primerApellido ||
-      usuario?.apellidoPaterno ||
-      usuario?.lastName ||
-      ''
-    );
-  };
+    return {
+      label: specialty || baseLabel,
+      icon: <MedicineBoxOutlined />,
+    };
+  }
 
-  const getSegundoApellido = () => {
-    return (
-      usuario?.segundo_apellido ||
-      usuario?.segundoApellido ||
-      usuario?.apellidoMaterno ||
-      ''
-    );
-  };
+  if (roleId === ROLE_IDS.ADMIN) {
+    return { label: 'Administrador', icon: <SettingOutlined /> };
+  }
 
-  const getNombreCompleto = () => {
-    return `${getNombre()} ${getPrimerApellido()} ${getSegundoApellido()}`
-      .replace(/\s+/g, ' ')
-      .trim();
-  };
+  if (roleId === ROLE_IDS.AUDITOR) {
+    return { label: 'Auditor', icon: <AuditOutlined /> };
+  }
 
-  const getRolId = () => {
-    return Number(
-      usuario?.rol_id ??
-        usuario?.rolId ??
-        usuario?.perfil_id ??
-        usuario?.perfilId ??
-        0
-    );
-  };
+  return { label: baseLabel || 'Usuario', icon: <TeamOutlined /> };
+};
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
+export const WelcomeModal: React.FC<WelcomeModalProps> = (props) => {
+  const systemConfig = useSystemConfig();
+  const user = useMemo(
+    () => props.user ?? props.usuario ?? getStoredUser(),
+    [props.user, props.usuario],
+  );
 
-    if (hour < 12) return 'Buenos días';
-    if (hour < 18) return 'Buenas tardes';
-    return 'Buenas noches';
-  };
-
-  const getRoleIcon = () => {
-    const rolId = getRolId();
-
-    switch (rolId) {
-      case 1:
-        return <StarOutlined />;
-      case 2:
-        return <MedicineBoxOutlined />;
-      case 3:
-        return <EyeOutlined />;
-      default:
-        return <UserOutlined />;
-    }
-  };
-
-  const getRoleName = () => {
-    const rolId = getRolId();
-
-    switch (rolId) {
-      case 1:
-        return 'Administrador del Sistema';
-      case 2:
-        return 'Médico Especialista';
-      case 3:
-        return 'Consultor';
-      default:
-        return 'Usuario';
-    }
-  };
-
-  const getGreetingTitle = () => {
-    const rolId = getRolId();
-
-    if (rolId === 2) {
-      if (userGender === 'FEMALE') return `${getGreeting()}, Doctora`;
-      if (userGender === 'MALE') return `${getGreeting()}, Doctor`;
-    }
-
-    return getGreeting();
-  };
-
-  const getWelcomeText = () => {
-    const fullName = getNombreCompleto();
-    const rolId = getRolId();
-
-    if (!fullName) {
-      if (rolId === 2 && userGender === 'FEMALE') return '¡Bienvenida, Doctora!';
-      if (rolId === 2 && userGender === 'MALE') return '¡Bienvenido, Doctor!';
-      if (userGender === 'FEMALE') return '¡Bienvenida!';
-      if (userGender === 'MALE') return '¡Bienvenido!';
-      return '¡Bienvenido(a)!';
-    }
-
-    if (rolId === 2 && userGender === 'FEMALE') {
-      return `¡Bienvenida, Dra. ${fullName}!`;
-    }
-
-    if (rolId === 2 && userGender === 'MALE') {
-      return `¡Bienvenido, Dr. ${fullName}!`;
-    }
-
-    if (userGender === 'FEMALE') {
-      return `¡Bienvenida, ${fullName}!`;
-    }
-
-    if (userGender === 'MALE') {
-      return `¡Bienvenido, ${fullName}!`;
-    }
-
-    return `¡Bienvenido(a), ${fullName}!`;
-  };
-
-  const getGenderBadgeIcon = () => {
-    if (userGender === 'FEMALE') return <WomanOutlined />;
-    if (userGender === 'MALE') return <ManOutlined />;
-
-    return <SmileOutlined />;
-  };
-
-  const stats = useMemo(() => {
-    const rolId = getRolId();
-
-    if (rolId === 1) {
-      return [
-        {
-          icon: <TeamOutlined />,
-          label: 'Usuarios activos',
-          value: String(welcomeStats?.usuariosActivos ?? 0),
-        },
-        {
-          icon: <MedicineBoxOutlined />,
-          label: 'Médicos activos',
-          value: String(welcomeStats?.medicosActivos ?? 0),
-        },
-        {
-          icon: <ShopOutlined />,
-          label: 'Sucursales activas',
-          value: String(welcomeStats?.sucursalesActivas ?? 0),
-        },
-      ];
-    }
-
-    if (rolId === 2) {
-      return [
-        {
-          icon: <TeamOutlined />,
-          label: 'Pacientes hoy',
-          value: String(welcomeStats?.pacientesHoy ?? 0),
-        },
-        {
-          icon: <CalendarOutlined />,
-          label: 'Próximas citas',
-          value: String(welcomeStats?.proximasCitas ?? 0),
-        },
-        {
-          icon: <CheckCircleOutlined />,
-          label: 'Pendientes',
-          value: String(welcomeStats?.pendientes ?? 0),
-        },
-      ];
-    }
-
-    if (rolId === 3) {
-      return [
-        {
-          icon: <TeamOutlined />,
-          label: 'Usuarios activos',
-          value: String(welcomeStats?.usuariosActivos ?? 0),
-        },
-        {
-          icon: <MedicineBoxOutlined />,
-          label: 'Médicos activos',
-          value: String(welcomeStats?.medicosActivos ?? 0),
-        },
-        {
-          icon: <ShopOutlined />,
-          label: 'Sucursales activas',
-          value: String(welcomeStats?.sucursalesActivas ?? 0),
-        },
-      ];
-    }
-
-    return [
-      { icon: <TeamOutlined />, label: 'Usuarios', value: '0' },
-      { icon: <CalendarOutlined />, label: 'Citas', value: '0' },
-      { icon: <CheckCircleOutlined />, label: 'Pendientes', value: '0' },
-    ];
-  }, [usuario, welcomeStats]);
+  const controlledOpen =
+    props.open ?? props.visible ?? props.isOpen ?? props.show ?? props.isVisible;
+  const [internalOpen, setInternalOpen] = useState<boolean>(controlledOpen ?? true);
+  const [metrics, setMetrics] = useState<WelcomeMetrics>(EMPTY_METRICS);
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [metricsError, setMetricsError] = useState(false);
 
   useEffect(() => {
-    if (!visible) return;
+    if (typeof controlledOpen === 'boolean') setInternalOpen(controlledOpen);
+  }, [controlledOpen]);
 
-    let interval: ReturnType<typeof setInterval>;
+  useEffect(() => {
+    if (!internalOpen) return;
+    let cancelled = false;
 
-    const loadWelcome = async () => {
-      if (usuario) {
-        const nombre = getNombre();
-        const genderFromUser = normalizeGender(usuario?.genero);
-
-        const gender =
-          genderFromUser !== 'UNKNOWN' ? genderFromUser : detectGender(nombre);
-
-        setUserGender(gender);
-
-        console.log('WELCOME USER:', usuario);
-        console.log('WELCOME ROL ID:', getRolId());
-        console.log('WELCOME NOMBRE COMPLETO:', getNombreCompleto());
-        console.log('WELCOME GÉNERO:', gender);
-      } else {
-        setUserGender('UNKNOWN');
-      }
-
-      setProgress(0);
-      setLoading(true);
-
+    const loadMetrics = async () => {
+      setLoadingMetrics(true);
+      setMetricsError(false);
       try {
-        const data = await WelcomeService.getWelcomeStats();
-        setWelcomeStats(data);
+        const next = await welcomeService.getMetrics(user);
+        if (!cancelled) setMetrics(next);
       } catch (error) {
-        console.error('Error cargando métricas del welcome:', error);
-        setWelcomeStats(null);
+        console.error('No fue posible actualizar las métricas de bienvenida:', error);
+        if (!cancelled) {
+          setMetrics(EMPTY_METRICS);
+          setMetricsError(true);
+        }
+      } finally {
+        if (!cancelled) setLoadingMetrics(false);
       }
-
-      interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setLoading(false);
-            return 100;
-          }
-
-          return prev + 20;
-        });
-      }, 200);
     };
 
-    loadWelcome();
-
+    void loadMetrics();
     return () => {
-      if (interval) clearInterval(interval);
+      cancelled = true;
     };
-  }, [visible, usuario]);
+  }, [internalOpen, user]);
+
+  const close = () => {
+    if (typeof controlledOpen !== 'boolean') setInternalOpen(false);
+    const actionCallback =
+      props.onStart ??
+      props.onContinue ??
+      props.onStartWorking ??
+      props.onConfirm ??
+      props.onOk;
+    const closeCallback = props.onClose ?? props.onCancel;
+    actionCallback?.();
+    closeCallback?.();
+  };
+
+  const nombre = buildName(user);
+  const roleId = getUserRoleId(user);
+  const treatment = getRoleGreeting(user);
+  const rolePresentation = getRolePresentation(user);
+  const greetingTitle = `${getGreeting()}, ${treatment.salutation}`;
+  const welcomeName =
+    roleId === ROLE_IDS.MEDICO && treatment.prefix
+      ? `${treatment.prefix} ${nombre}`
+      : nombre;
+
+  const renderValue = (value: number) =>
+    loadingMetrics ? <Spin size="small" /> : <>{value}</>;
 
   return (
     <Modal
-      open={visible}
+      open={internalOpen}
+      centered
       footer={null}
       closable={false}
-      className="welcome-modal"
-      width={600}
-      mask={{ closable: false }}
-      keyboard={false}
-      centered
+      maskClosable={false}
+      keyboard
+      width={620}
+      className="welcome-real-modal"
+      destroyOnHidden
+      onCancel={close}
     >
-      {loading ? (
-        <div className="welcome-loading">
-          <div className="loading-spinner">
-            <HeartOutlined style={{ fontSize: 48, color: '#50EBEC' }} />
-          </div>
+      <div className="welcome-real-card">
+        <div className="welcome-real-decoration welcome-real-decoration--top" />
+        <div className="welcome-real-decoration welcome-real-decoration--left" />
+        <div className="welcome-real-decoration welcome-real-decoration--center" />
 
-          <Title level={4} style={{ marginTop: 24 }}>
-            Accediendo al sistema...
-          </Title>
-
-          <Progress
-            percent={progress}
-            strokeColor="#50EBEC"
-            railColor="#E6F7F7"
-            showInfo={false}
-            style={{ width: '80%', marginTop: 16 }}
-          />
-
-          <Text type="secondary" style={{ marginTop: 16, display: 'block' }}>
-            Cargando información del consultorio
-          </Text>
-        </div>
-      ) : (
-        <div className="welcome-content">
-          <div className="welcome-header">
-            <div className="welcome-decoration">
-              <div className="decoration-circle circle-1"></div>
-              <div className="decoration-circle circle-2"></div>
-              <div className="decoration-circle circle-3"></div>
-            </div>
-
-            <div className="welcome-avatar-wrapper">
-              <Avatar
-                size={80}
-                icon={getRoleIcon()}
-                className="welcome-avatar"
-                style={{
-                  background: 'linear-gradient(135deg, #50EBEC 0%, #36C6C7 100%)',
-                  boxShadow: '0 8px 20px rgba(80, 235, 236, 0.3)',
-                }}
+        <div className="welcome-real-heading">
+          <div className="welcome-real-main-icon">
+            {systemConfig.logoDataUrl ? (
+              <img
+                src={systemConfig.logoDataUrl}
+                alt={systemConfig.nombreCorto}
+                className="welcome-system-logo-image"
               />
+            ) : roleId === ROLE_IDS.ADMIN ? (
+              <SettingOutlined />
+            ) : roleId === ROLE_IDS.AUDITOR ? (
+              <AuditOutlined />
+            ) : (
+              <MedicineBoxOutlined />
+            )}
+            <span><BulbOutlined /></span>
+          </div>
 
-              <div className="welcome-badge">
-                {getGenderBadgeIcon()}
-              </div>
+          <div className="welcome-real-greeting">
+            <h1>{greetingTitle}</h1>
+            <div className="welcome-real-name-row">
+              <strong>{nombre}</strong>
+              <span className="welcome-real-role">
+                {rolePresentation.icon} {rolePresentation.label}
+              </span>
             </div>
-
-            <Title level={2} className="welcome-greeting">
-              {getGreetingTitle()}
-            </Title>
-
-            <Title level={3} className="welcome-name">
-              {getNombreCompleto() || 'Usuario sin nombre'}
-            </Title>
-
-            <div className="welcome-role">
-              {getRoleIcon()} {getRoleName()}
-            </div>
           </div>
-
-          <Divider className="welcome-divider" />
-
-          <div className="welcome-stats">
-            <Row gutter={[16, 16]}>
-              {stats.map((stat, index) => (
-                <Col span={8} key={index}>
-                  <div className="stat-card-mini">
-                    <div className="stat-icon" style={{ color: '#50EBEC' }}>
-                      {stat.icon}
-                    </div>
-
-                    <div className="stat-value">{stat.value}</div>
-
-                    <div className="stat-label">{stat.label}</div>
-                  </div>
-                </Col>
-              ))}
-            </Row>
-          </div>
-
-          <div className="welcome-message">
-            <Paragraph style={{ marginBottom: 8 }}>
-              <HeartOutlined style={{ color: '#50EBEC', marginRight: 8 }} />
-              <Text strong>{getWelcomeText()}</Text>
-            </Paragraph>
-
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              Hoy es{' '}
-              {new Date().toLocaleDateString('es-MX', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </Text>
-          </div>
-
-          <Button
-            type="primary"
-            size="large"
-            block
-            onClick={onClose}
-            className="welcome-button"
-            icon={<HeartOutlined />}
-          >
-            Comenzar a trabajar
-          </Button>
         </div>
-      )}
+
+        <div className="welcome-real-divider" />
+
+        <div className="welcome-real-metrics">
+          <div className="welcome-real-metric">
+            <span className="welcome-real-metric-icon"><TeamOutlined /></span>
+            <strong>{renderValue(metrics.pacientesHoy)}</strong>
+            <small>Pacientes hoy</small>
+          </div>
+
+          <div className="welcome-real-metric">
+            <span className="welcome-real-metric-icon"><CalendarOutlined /></span>
+            <strong>{renderValue(metrics.proximasCitas)}</strong>
+            <small>Próximas citas</small>
+          </div>
+
+          <div className="welcome-real-metric">
+            <span className="welcome-real-metric-icon"><CheckCircleOutlined /></span>
+            <strong>{renderValue(metrics.pendientes)}</strong>
+            <small>Pendientes hoy</small>
+          </div>
+        </div>
+
+        <div className="welcome-real-message">
+          <strong><HeartOutlined /> ¡Qué gusto verte, {welcomeName}!</strong>
+          <span>Hoy es {getLongDate()}</span>
+          {metricsError && (
+            <small>No fue posible actualizar las métricas. Puedes continuar normalmente.</small>
+          )}
+        </div>
+
+        <button type="button" className="welcome-real-start" onClick={close}>
+          <HeartOutlined /> Comenzar a trabajar
+        </button>
+      </div>
     </Modal>
   );
 };

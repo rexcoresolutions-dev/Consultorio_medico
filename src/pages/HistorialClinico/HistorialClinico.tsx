@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Avatar,
@@ -6,8 +6,9 @@ import {
   Card,
   Col,
   Descriptions,
-  Empty,
   Form,
+  DatePicker,
+  ConfigProvider,
   Input,
   Modal,
   Radio,
@@ -19,6 +20,7 @@ import {
 } from 'antd';
 import {
   ArrowLeftOutlined,
+  CheckCircleOutlined,
   EyeOutlined,
   FileTextOutlined,
   HistoryOutlined,
@@ -30,42 +32,74 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import esES from 'antd/locale/es_ES';
+import dayjs, { type Dayjs } from 'dayjs';
 import Swal from 'sweetalert2';
 
 import type { PacienteData } from '../../services/pacientes/pacientes.service';
+import historiaClinicaService, {
+  getHistoriaClinicaApiError,
+  type HistoriaClinicaItem,
+} from '../../services/historia-clinica/historia-clinica.service';
+import expedienteClinicoService, {
+  type ExpedienteClinicoItem,
+} from '../../services/expediente-clinico/expediente-clinico.service';
 import './HistorialClinico.css';
 
 const { Title, Text } = Typography;
 
+const parseClinicalDate = (value?: string | null): Dayjs | null => {
+  if (!value) return null;
+
+  const text = String(value).trim();
+  const mxDate = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (mxDate) {
+    const [, day, month, year] = mxDate;
+    const parsed = dayjs(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+    return parsed.isValid() ? parsed : null;
+  }
+
+  const parsed = dayjs(text);
+  return parsed.isValid() ? parsed : null;
+};
+
+const formatClinicalDate = (value?: string | null) => {
+  const parsed = parseClinicalDate(value);
+  return parsed ? parsed.format('DD/MM/YYYY') : '-';
+};
+
+const clinicalDatePickerTheme = {
+  token: {
+    colorPrimary: '#27c7ca',
+    colorPrimaryHover: '#16b9bd',
+    borderRadius: 12,
+    controlHeight: 42,
+  },
+};
+
+const disableFutureClinicalDates = (current: Dayjs) =>
+  current && current.startOf('day').isAfter(dayjs().startOf('day'));
+
+const unwrapClinicalApiData = (input: any) => {
+  let current = input;
+  for (let i = 0; i < 5; i += 1) {
+    if (!current || typeof current !== 'object' || Array.isArray(current)) break;
+    const hasClinicalFields =
+      current.signosVitales !== undefined ||
+      current.signos_vitales !== undefined ||
+      current.peso !== undefined ||
+      current.pacienteId !== undefined ||
+      current.id !== undefined;
+    if (hasClinicalFields) break;
+    if (!current.data || typeof current.data !== 'object' || Array.isArray(current.data)) break;
+    current = current.data;
+  }
+  return current ?? input;
+};
+
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
-const HISTORIAL_CLINICO_STORAGE_KEY = 'historial_clinico_pacientes';
 
-type DiagnosticoHistorial = {
-  key?: string;
-  no?: number;
-  clave?: string;
-  diagnostico?: string;
-  descripcion?: string;
-  primeraVez?: boolean;
-  subsecuente?: boolean;
-};
-
-type HistorialClinicoItem = {
-  id: string;
-  pacienteId?: number | string;
-  paciente: {
-    id?: number | string;
-    nombre: string;
-    numero_expediente?: string;
-    curp?: string;
-    sexo?: string;
-    fecha_nacimiento?: string;
-  };
-  consulta: any;
-  diagnosticos: DiagnosticoHistorial[];
-  fecha_consulta: string;
-};
 
 type HistorialFormValues = {
   peso?: string;
@@ -176,6 +210,21 @@ const siNoOptions = [
   { value: 'NO', label: 'No' },
 ];
 
+const habitosOptions = [
+  { value: 'NUNCA', label: 'Nunca' },
+  { value: 'ACTUAL', label: 'Actual' },
+  { value: 'ANTERIOR', label: 'Anterior' },
+  { value: 'DESCONOCIDO', label: 'Desconocido' },
+];
+
+const menopausiaOptions = [
+  { value: 'PREMENOPAUSIA', label: 'Premenopausia' },
+  { value: 'PERIMENOPAUSIA', label: 'Perimenopausia' },
+  { value: 'POSTMENOPAUSIA', label: 'Postmenopausia' },
+  { value: 'NO_APLICA', label: 'No aplica' },
+  { value: 'DESCONOCIDO', label: 'Desconocido' },
+];
+
 const noAplicaOptions = [
   { value: 'NO APLICA', label: 'NO APLICA' },
   { value: 'SI', label: 'Sí' },
@@ -199,23 +248,6 @@ const cargarPacienteActivo = (): PacienteData | null => {
     return data ? JSON.parse(data) : null;
   } catch {
     return null;
-  }
-};
-
-const cargarHistoriales = (): HistorialClinicoItem[] => {
-  try {
-    const data = localStorage.getItem(HISTORIAL_CLINICO_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
-
-const guardarHistoriales = (historiales: HistorialClinicoItem[]) => {
-  try {
-    localStorage.setItem(HISTORIAL_CLINICO_STORAGE_KEY, JSON.stringify(historiales));
-  } catch {
-    message.error('No fue posible guardar el historial clínico.');
   }
 };
 
@@ -285,15 +317,93 @@ const HistorialClinico: React.FC = () => {
   const [pacienteActivo, setPacienteActivo] = useState<PacienteData | null>(() =>
     cargarPacienteActivo(),
   );
-  const [historiales, setHistoriales] = useState<HistorialClinicoItem[]>(() =>
-    cargarHistoriales(),
-  );
+  const [historiales, setHistoriales] = useState<HistoriaClinicaItem[]>([]);
+  const [expedienteItems, setExpedienteItems] = useState<ExpedienteClinicoItem[]>([]);
+  const [ultimaConsultaExterna, setUltimaConsultaExterna] =
+    useState<ExpedienteClinicoItem | null>(null);
+  const [consultaBasePrecarga, setConsultaBasePrecarga] =
+    useState<ExpedienteClinicoItem | null>(null);
+  const [loadingHistoriales, setLoadingHistoriales] = useState(false);
+  const [historialError, setHistorialError] = useState('');
   const [registroOpen, setRegistroOpen] = useState(false);
   const [registroStep, setRegistroStep] = useState(0);
   const [vistaPreviaOpen, setVistaPreviaOpen] = useState(false);
   const [vistaPreviaData, setVistaPreviaData] = useState<HistorialFormValues | null>(null);
+  const [prefillValues, setPrefillValues] = useState<HistorialFormValues | null>(null);
 
   const pacienteNombre = getFullName(pacienteActivo);
+
+  useEffect(() => {
+    let activo = true;
+
+    const cargarExpediente = async () => {
+      const pacienteId = Number(pacienteActivo?.id);
+
+      if (!Number.isInteger(pacienteId) || pacienteId <= 0) {
+        if (activo) {
+          setHistoriales([]);
+          setExpedienteItems([]);
+          setUltimaConsultaExterna(null);
+          setConsultaBasePrecarga(null);
+          setHistorialError(
+            pacienteActivo
+              ? 'No fue posible identificar al paciente para consultar su expediente.'
+              : '',
+          );
+        }
+        return;
+      }
+
+      try {
+        if (activo) {
+          setLoadingHistoriales(true);
+          setHistorialError('');
+        }
+
+        const expediente = await expedienteClinicoService.findByPaciente(
+          pacienteId,
+          pacienteActivo,
+        );
+
+        if (!activo) return;
+
+        setExpedienteItems(expediente.items);
+        setHistoriales(
+          expediente.items
+            .filter((item) => item.sourceType === 'HISTORIA_CLINICA')
+            .map((item) => item as HistoriaClinicaItem),
+        );
+        setUltimaConsultaExterna(expediente.ultimaConsultaExterna);
+        setConsultaBasePrecarga(expediente.consultaBasePrecarga);
+
+        if (expediente.warnings.length) {
+          setHistorialError(expediente.warnings.join(' '));
+        }
+      } catch (error) {
+        console.error('Error cargando expediente clínico:', error);
+        if (activo) {
+          setHistoriales([]);
+          setExpedienteItems([]);
+          setUltimaConsultaExterna(null);
+          setConsultaBasePrecarga(null);
+          setHistorialError(
+            getHistoriaClinicaApiError(
+              error,
+              'No fue posible consultar el expediente clínico del paciente.',
+            ),
+          );
+        }
+      } finally {
+        if (activo) setLoadingHistoriales(false);
+      }
+    };
+
+    void cargarExpediente();
+
+    return () => {
+      activo = false;
+    };
+  }, [pacienteActivo?.id]);
 
   const historialesPaciente = useMemo(() => {
     if (!pacienteActivo) return [];
@@ -319,6 +429,50 @@ const HistorialClinico: React.FC = () => {
   }, [historiales, pacienteActivo]);
 
   const ultimoHistorial = historialesPaciente[0];
+  const totalRegistrosExpediente = expedienteItems.length;
+
+  const consultaBaseTieneDatosClinicos = useMemo(() => {
+    if (!consultaBasePrecarga) return false;
+    const c = consultaBasePrecarga.consulta || {};
+    const raw = unwrapClinicalApiData(consultaBasePrecarga.raw || {});
+    const signosRaw =
+      unwrapClinicalApiData(
+        raw?.signosVitales ??
+          raw?.signos_vitales ??
+          raw?.consulta?.signosVitales ??
+          raw?.consulta?.signos_vitales ??
+          {},
+      ) || {};
+
+    return [
+      c.peso, c.altura, c.imc, c.temperatura, c.presion_arterial,
+      c.frecuencia_cardiaca, c.frecuencia_respiratoria, c.spo2,
+      c.circunferencia_abdomen, signosRaw?.peso, signosRaw?.altura,
+      signosRaw?.imc, signosRaw?.temperatura, signosRaw?.presionArterial,
+      signosRaw?.frecuenciaCardiaca, signosRaw?.frecuenciaRespiratoria,
+      signosRaw?.spo2, signosRaw?.cinturaAbdominal,
+    ].some((value) => value !== undefined && value !== null && value !== '');
+  }, [consultaBasePrecarga]);
+
+  useEffect(() => {
+    if (!registroOpen || !prefillValues) return;
+
+    // El formulario vive dentro de un Modal. En la primera apertura los campos
+    // todavía no están montados cuando se pulsa "Iniciar registro". Aplicamos
+    // la precarga después de que el modal ya conectó el Form para que los valores
+    // queden realmente visibles en los inputs.
+    const frame = window.requestAnimationFrame(() => {
+      form.resetFields();
+      form.setFieldsValue(prefillValues);
+
+      if (!prefillValues.imc && prefillValues.peso && prefillValues.altura) {
+        const imc = calcularIMC(prefillValues.peso, prefillValues.altura);
+        if (imc) form.setFieldValue('imc', imc);
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [registroOpen, prefillValues, form]);
 
   const actualizarIMC = () => {
     const peso = form.getFieldValue('peso');
@@ -328,104 +482,205 @@ const HistorialClinico: React.FC = () => {
     form.setFieldValue('imc', imc);
   };
 
-  const renderToggleRadio = (name: string) => (
-    <Form.Item noStyle shouldUpdate>
-      {() => (
-        <Radio
-          checked={Boolean(form.getFieldValue(name))}
-          onClick={() => form.setFieldValue(name, !form.getFieldValue(name))}
-        />
-      )}
+  const renderToggleRadio = (name: string, fieldsToClear: string[] = []) => (
+    <Form.Item noStyle shouldUpdate={(prev, current) => prev?.[name] !== current?.[name]}>
+      {() => {
+        const checked = Boolean(form.getFieldValue(name));
+
+        return (
+          <Radio
+            checked={checked}
+            onClick={() => {
+              const nextChecked = !checked;
+              form.setFieldValue(name, nextChecked);
+
+              if (!nextChecked && fieldsToClear.length) {
+                const clearedValues = fieldsToClear.reduce<Record<string, undefined>>(
+                  (acc, fieldName) => {
+                    acc[fieldName] = undefined;
+                    return acc;
+                  },
+                  {},
+                );
+                form.setFieldsValue(clearedValues);
+              }
+            }}
+          />
+        );
+      }}
     </Form.Item>
   );
 
   const abrirRegistroHistorial = () => {
-    const consultaBase = ultimoHistorial?.consulta || {};
+    // La historia clínica conserva antecedentes longitudinales del último registro
+    // y usa la Consulta Externa más reciente como punto de partida clínico.
+    const historiaBase = ultimoHistorial?.consulta || {};
+    const consultaReciente = consultaBasePrecarga?.consulta || {};
+    const rawConsulta = unwrapClinicalApiData(consultaBasePrecarga?.raw || {});
+    const rawConsultaNested = unwrapClinicalApiData(rawConsulta?.consulta || {});
+    const rawSignos = unwrapClinicalApiData(
+      rawConsulta?.signosVitales ??
+        rawConsulta?.signos_vitales ??
+        rawConsulta?.signos ??
+        rawConsultaNested?.signosVitales ??
+        rawConsultaNested?.signos_vitales ??
+        rawConsultaNested?.signos ??
+        rawConsulta ??
+        {},
+    );
+    const diagnosticoReciente = consultaBasePrecarga?.diagnosticos?.[0];
 
-    form.setFieldsValue({
-      peso: consultaBase.peso || '',
-      altura: consultaBase.altura || '',
-      imc: consultaBase.imc || '',
-      temperatura: consultaBase.temperatura || '',
-      presion_arterial: consultaBase.presion_arterial || '',
-      frecuencia_cardiaca: consultaBase.frecuencia_cardiaca || '',
-      frecuencia_respiratoria: consultaBase.frecuencia_respiratoria || '',
-      spo2: consultaBase.spo2 || '',
-      circunferencia_abdomen: consultaBase.circunferencia_abdomen || '',
+    const firstValue = (...values: any[]) =>
+      values.find((value) => value !== undefined && value !== null && value !== '');
 
-      diabetes_check: consultaBase.diabetes_check || false,
-      diabetes_parentesco: consultaBase.diabetes_parentesco || undefined,
-      cardiovascular_check: consultaBase.cardiovascular_check || false,
-      cardiovascular_parentesco: consultaBase.cardiovascular_parentesco || undefined,
-      epilepsias_check: consultaBase.epilepsias_check || false,
-      epilepsias_parentesco: consultaBase.epilepsias_parentesco || undefined,
-      neoplasicos_check: consultaBase.neoplasicos_check || false,
-      neoplasicos_parentesco: consultaBase.neoplasicos_parentesco || undefined,
-      lueticos_check: consultaBase.lueticos_check || false,
-      lueticos_parentesco: consultaBase.lueticos_parentesco || undefined,
-      hipertension_check: consultaBase.hipertension_check || false,
-      hipertension_parentesco: consultaBase.hipertension_parentesco || undefined,
-      fimicos_check: consultaBase.fimicos_check || false,
-      fimicos_parentesco: consultaBase.fimicos_parentesco || undefined,
-      dislipidemia_check: consultaBase.dislipidemia_check || false,
-      dislipidemia_parentesco: consultaBase.dislipidemia_parentesco || undefined,
-      otros_check: consultaBase.otros_check || false,
-      otros_antecedentes: consultaBase.otros_antecedentes || '',
-      tipos_antecedentes: consultaBase.tipos_antecedentes || '',
+    const values: HistorialFormValues = {
+      peso: firstValue(consultaReciente.peso, rawSignos?.peso, rawConsulta?.peso, rawConsultaNested?.peso, historiaBase.peso, ''),
+      altura: firstValue(consultaReciente.altura, rawSignos?.altura, rawConsulta?.altura, rawConsultaNested?.altura, historiaBase.altura, ''),
+      imc: firstValue(consultaReciente.imc, rawSignos?.imc, rawConsulta?.imc, rawConsultaNested?.imc, historiaBase.imc, ''),
+      temperatura: firstValue(
+        consultaReciente.temperatura,
+        rawSignos?.temperatura,
+        historiaBase.temperatura,
+        '',
+      ),
+      presion_arterial: firstValue(
+        consultaReciente.presion_arterial,
+        rawSignos?.presionArterial,
+        rawSignos?.presion_arterial,
+        historiaBase.presion_arterial,
+        '',
+      ),
+      frecuencia_cardiaca: firstValue(
+        consultaReciente.frecuencia_cardiaca,
+        rawSignos?.frecuenciaCardiaca,
+        rawSignos?.frecuencia_cardiaca,
+        historiaBase.frecuencia_cardiaca,
+        '',
+      ),
+      frecuencia_respiratoria: firstValue(
+        consultaReciente.frecuencia_respiratoria,
+        rawSignos?.frecuenciaRespiratoria,
+        rawSignos?.frecuencia_respiratoria,
+        historiaBase.frecuencia_respiratoria,
+        '',
+      ),
+      spo2: firstValue(
+        consultaReciente.spo2,
+        rawSignos?.spo2,
+        rawSignos?.spO2,
+        historiaBase.spo2,
+        '',
+      ),
+      circunferencia_abdomen: firstValue(
+        consultaReciente.circunferencia_abdomen,
+        rawSignos?.cinturaAbdominal,
+        rawSignos?.cintura_abdominal,
+        rawSignos?.circunferenciaAbdomen,
+        historiaBase.circunferencia_abdomen,
+        '',
+      ),
 
-      alimentacion: consultaBase.alimentacion || '',
-      higiene: consultaBase.higiene || '',
+      diabetes_check: historiaBase.diabetes_check || false,
+      diabetes_parentesco: historiaBase.diabetes_parentesco || undefined,
+      cardiovascular_check: historiaBase.cardiovascular_check || false,
+      cardiovascular_parentesco: historiaBase.cardiovascular_parentesco || undefined,
+      epilepsias_check: historiaBase.epilepsias_check || false,
+      epilepsias_parentesco: historiaBase.epilepsias_parentesco || undefined,
+      neoplasicos_check: historiaBase.neoplasicos_check || false,
+      neoplasicos_parentesco: historiaBase.neoplasicos_parentesco || undefined,
+      lueticos_check: historiaBase.lueticos_check || false,
+      lueticos_parentesco: historiaBase.lueticos_parentesco || undefined,
+      hipertension_check: historiaBase.hipertension_check || false,
+      hipertension_parentesco: historiaBase.hipertension_parentesco || undefined,
+      fimicos_check: historiaBase.fimicos_check || false,
+      fimicos_parentesco: historiaBase.fimicos_parentesco || undefined,
+      dislipidemia_check: historiaBase.dislipidemia_check || false,
+      dislipidemia_parentesco: historiaBase.dislipidemia_parentesco || undefined,
+      otros_check: historiaBase.otros_check || false,
+      otros_antecedentes: historiaBase.otros_antecedentes || '',
+      tipos_antecedentes: historiaBase.tipos_antecedentes || '',
+
+      alimentacion: historiaBase.alimentacion || '',
+      higiene: historiaBase.higiene || '',
       inmunizaciones_incompletas_check:
-        consultaBase.inmunizaciones_incompletas_check || false,
-      inmunizaciones_incompletas: consultaBase.inmunizaciones_incompletas || '',
-      grupo_sanguineo: consultaBase.grupo_sanguineo || undefined,
-      otros_no_patologicos_check: consultaBase.otros_no_patologicos_check || false,
-      otros_no_patologicos: consultaBase.otros_no_patologicos || '',
+        historiaBase.inmunizaciones_incompletas_check || false,
+      inmunizaciones_incompletas: historiaBase.inmunizaciones_incompletas || '',
+      grupo_sanguineo: historiaBase.grupo_sanguineo || undefined,
+      otros_no_patologicos_check: historiaBase.otros_no_patologicos_check || false,
+      otros_no_patologicos: historiaBase.otros_no_patologicos || '',
 
-      enfermedades_infancia: consultaBase.enfermedades_infancia || '',
-      alergias: consultaBase.alergias || '',
-      cirugias: consultaBase.cirugias || '',
-      transfusiones: consultaBase.transfusiones || '',
-      fracturas: consultaBase.fracturas || '',
-      traumatismos: consultaBase.traumatismos || '',
-      hospitalizaciones: consultaBase.hospitalizaciones || '',
-      medicamentos_actuales: consultaBase.medicamentos_actuales || '',
-      tabaquismo: consultaBase.tabaquismo || '',
-      alcoholismo: consultaBase.alcoholismo || '',
-      toxicomanias: consultaBase.toxicomanias || '',
-      dislipidemia_patologica: consultaBase.dislipidemia_patologica || '',
-      tuberculosis_pulmonar: consultaBase.tuberculosis_pulmonar || '',
-      otros_patologicos_check: consultaBase.otros_patologicos_check || false,
-      otros_patologicos: consultaBase.otros_patologicos || '',
+      enfermedades_infancia: historiaBase.enfermedades_infancia || '',
+      alergias: historiaBase.alergias || '',
+      cirugias: historiaBase.cirugias || '',
+      transfusiones: historiaBase.transfusiones || '',
+      fracturas: historiaBase.fracturas || '',
+      traumatismos: historiaBase.traumatismos || '',
+      hospitalizaciones: historiaBase.hospitalizaciones || '',
+      medicamentos_actuales: historiaBase.medicamentos_actuales || '',
+      tabaquismo: historiaBase.tabaquismo || '',
+      alcoholismo: historiaBase.alcoholismo || '',
+      toxicomanias: historiaBase.toxicomanias || '',
+      dislipidemia_patologica: historiaBase.dislipidemia_patologica || '',
+      tuberculosis_pulmonar:
+        consultaReciente.tuberculosis_pulmonar ??
+        historiaBase.tuberculosis_pulmonar ??
+        '',
+      otros_patologicos_check: historiaBase.otros_patologicos_check || false,
+      otros_patologicos: historiaBase.otros_patologicos || '',
 
-      ivsa: consultaBase.ivsa || '',
-      numero_parejas: consultaBase.numero_parejas || '',
-      metodo_anticonceptivo: consultaBase.metodo_anticonceptivo || '',
-      gestas: consultaBase.gestas || '',
-      partos: consultaBase.partos || '',
-      abortos: consultaBase.abortos || '',
-      cesareas: consultaBase.cesareas || '',
-      fum: consultaBase.fum || '',
-      menarca: consultaBase.menarca || '',
-      ritmo: consultaBase.ritmo || '',
-      ultimo_papanicolaou: consultaBase.ultimo_papanicolaou || '',
-      terapia_hormonal: consultaBase.terapia_hormonal || 'NO APLICA',
-      peri_post_menopausia: consultaBase.peri_post_menopausia || 'NO APLICA',
+      ivsa: historiaBase.ivsa || '',
+      numero_parejas: historiaBase.numero_parejas || '',
+      metodo_anticonceptivo: historiaBase.metodo_anticonceptivo || '',
+      gestas: historiaBase.gestas || '',
+      partos: historiaBase.partos || '',
+      abortos: historiaBase.abortos || '',
+      cesareas: historiaBase.cesareas || '',
+      fum: historiaBase.fum || '',
+      menarca: historiaBase.menarca || '',
+      ritmo: historiaBase.ritmo || '',
+      ultimo_papanicolaou: historiaBase.ultimo_papanicolaou || '',
+      terapia_hormonal:
+        consultaReciente.terapia_hormonal ?? historiaBase.terapia_hormonal ?? 'NO APLICA',
+      peri_post_menopausia:
+        consultaReciente.peri_post_menopausia ??
+        historiaBase.peri_post_menopausia ??
+        'NO_APLICA',
       infeccion_transmision_sexual:
-        consultaBase.infeccion_transmision_sexual || 'NO APLICA',
+        consultaReciente.infeccion_transmision_sexual ??
+        historiaBase.infeccion_transmision_sexual ??
+        'NO APLICA',
       patologia_mamaria_benigna:
-        consultaBase.patologia_mamaria_benigna || 'NO APLICA',
-      colposcopia: consultaBase.colposcopia || 'NO APLICA',
+        consultaReciente.patologia_mamaria_benigna ??
+        historiaBase.patologia_mamaria_benigna ??
+        'NO APLICA',
+      colposcopia: consultaReciente.colposcopia ?? historiaBase.colposcopia ?? 'NO APLICA',
 
-      motivo_consulta: consultaBase.motivo_consulta || '',
-      diagnostico: ultimoHistorial?.diagnosticos?.[0]?.diagnostico || '',
-      descripcion_diagnostico: ultimoHistorial?.diagnosticos?.[0]?.descripcion || '',
-      referir_paciente: consultaBase.referir_paciente || 'NO',
-      referido_por: consultaBase.referido_por || '',
-      contrarreferencia: consultaBase.contrarreferencia || 'NO',
-      detalle_contrarreferencia: consultaBase.detalle_contrarreferencia || '',
-    });
+      motivo_consulta:
+        consultaReciente.motivo_consulta ?? historiaBase.motivo_consulta ?? '',
+      diagnostico:
+        diagnosticoReciente?.diagnostico ??
+        ultimoHistorial?.diagnosticos?.[0]?.diagnostico ??
+        '',
+      descripcion_diagnostico:
+        diagnosticoReciente?.descripcion ??
+        ultimoHistorial?.diagnosticos?.[0]?.descripcion ??
+        '',
+      referir_paciente:
+        consultaReciente.referir_paciente ?? historiaBase.referir_paciente ?? 'NO',
+      referido_por: consultaReciente.referido_por ?? historiaBase.referido_por ?? '',
+      contrarreferencia:
+        consultaReciente.contrarreferencia === true
+          ? 'SI'
+          : consultaReciente.contrarreferencia === false
+            ? 'NO'
+            : historiaBase.contrarreferencia || 'NO',
+      detalle_contrarreferencia:
+        consultaReciente.detalle_contrarreferencia ??
+        historiaBase.detalle_contrarreferencia ??
+        '',
+    };
 
+    setPrefillValues(values);
     setRegistroStep(0);
     setRegistroOpen(true);
   };
@@ -433,6 +688,7 @@ const HistorialClinico: React.FC = () => {
   const cerrarRegistro = () => {
     setRegistroOpen(false);
     setRegistroStep(0);
+    setPrefillValues(null);
     form.resetFields();
   };
 
@@ -475,53 +731,75 @@ const HistorialClinico: React.FC = () => {
   const guardarNuevoHistorial = async () => {
     if (!pacienteActivo) return;
 
+    const pacienteId = Number(pacienteActivo.id);
+    if (!Number.isInteger(pacienteId) || pacienteId <= 0) {
+      message.error('No fue posible identificar al paciente para guardar su historia clínica.');
+      return;
+    }
+
     try {
       actualizarIMC();
 
-      const values = await form.validateFields();
+      await form.validateFields();
+      const values = form.getFieldsValue(true);
       const imcCalculado = calcularIMC(values.peso, values.altura);
 
-      const diagnosticoNuevo: DiagnosticoHistorial = {
-        key: `manual-${Date.now()}`,
-        no: 1,
-        clave: values.motivo_consulta || 'S/C',
-        diagnostico: values.diagnostico || 'Historial clínico',
-        descripcion: values.descripcion_diagnostico || '',
-        primeraVez: false,
-        subsecuente: true,
+      const payloadValues: HistorialFormValues = {
+        ...values,
+        imc: values.imc || imcCalculado || undefined,
       };
 
-      const nuevoHistorial: HistorialClinicoItem = {
-        id: `${pacienteActivo.id || pacienteActivo.numero_expediente || 'paciente'}-${Date.now()}`,
-        pacienteId: pacienteActivo.id,
-        paciente: {
-          id: pacienteActivo.id,
-          nombre: pacienteNombre || 'Paciente sin nombre',
-          numero_expediente: pacienteActivo.numero_expediente,
-          curp: pacienteActivo.curp,
-          sexo: pacienteActivo.sexo,
-          fecha_nacimiento: pacienteActivo.fecha_nacimiento,
-        },
-        consulta: {
-          ...values,
-          imc: values.imc || imcCalculado || undefined,
-          fecha_consulta: new Date().toISOString(),
-          origen_historial: 'manual',
-        },
-        diagnosticos: [diagnosticoNuevo],
-        fecha_consulta: new Date().toISOString(),
+      const creado = await historiaClinicaService.create(
+        pacienteId,
+        payloadValues,
+        pacienteActivo,
+      );
+
+      setHistoriales((prev) => {
+        const sinDuplicado = creado.apiId
+          ? prev.filter((item) => item.apiId !== creado.apiId)
+          : prev;
+        return [creado, ...sinDuplicado].sort(
+          (a, b) =>
+            new Date(b.fecha_consulta || 0).getTime() -
+            new Date(a.fecha_consulta || 0).getTime(),
+        );
+      });
+
+      const expedienteCreado: ExpedienteClinicoItem = {
+        ...creado,
+        sourceType: 'HISTORIA_CLINICA',
+        sourceId: creado.apiId,
+        sourceLabel: 'Historia clínica',
       };
+      setExpedienteItems((prev) => [
+        expedienteCreado,
+        ...prev.filter(
+          (item) =>
+            !(
+              expedienteCreado.sourceId &&
+              item.sourceType === 'HISTORIA_CLINICA' &&
+              item.sourceId === expedienteCreado.sourceId
+            ),
+        ),
+      ]);
 
-      const nuevosHistoriales = [nuevoHistorial, ...historiales];
-
-      setHistoriales(nuevosHistoriales);
-      guardarHistoriales(nuevosHistoriales);
-
-      message.success('Historial clínico creado correctamente.');
+      message.success('Historia clínica guardada correctamente en el servidor.');
       setVistaPreviaOpen(false);
       cerrarRegistro();
-    } catch {
-      message.warning('Completa la información necesaria del historial.');
+    } catch (error: any) {
+      if (error?.errorFields) {
+        message.warning('Completa la información necesaria de la historia clínica.');
+        return;
+      }
+
+      console.error('Error guardando historia clínica:', error);
+      message.error(
+        getHistoriaClinicaApiError(
+          error,
+          'No fue posible guardar la historia clínica.',
+        ),
+      );
     }
   };
 
@@ -609,7 +887,7 @@ const HistorialClinico: React.FC = () => {
             <Title level={2}>Historial clínico</Title>
 
             <Text type="secondary">
-              Consulta, crea y administra los registros clínicos del paciente activo.
+              Consulta el expediente, registra historia clínica y reutiliza los datos más recientes de Consulta Externa.
             </Text>
           </div>
 
@@ -649,18 +927,39 @@ const HistorialClinico: React.FC = () => {
 
           <div className="historial-summary">
             <div>
-              <span>Historiales</span>
-              <strong>{historialesPaciente.length}</strong>
+              <span>Registros clínicos</span>
+              <strong>{totalRegistrosExpediente}</strong>
             </div>
 
             <div>
-              <span>Última consulta</span>
+              <span>Última consulta externa</span>
               <strong>
-                {ultimoHistorial ? formatDateTime(ultimoHistorial.fecha_consulta) : '-'}
+                {ultimaConsultaExterna
+                  ? formatDateTime(ultimaConsultaExterna.fecha_consulta)
+                  : '-'}
               </strong>
             </div>
           </div>
         </section>
+
+        {historialError && (
+          <Alert
+            type="error"
+            showIcon
+            message="No fue posible cargar la historia clínica"
+            description={historialError}
+            style={{ marginBottom: 18 }}
+          />
+        )}
+
+        {loadingHistoriales && !historialError && (
+          <Alert
+            type="info"
+            showIcon
+            message="Consultando historia clínica..."
+            style={{ marginBottom: 18 }}
+          />
+        )}
 
         <Row gutter={[18, 18]} align="stretch" className="historial-actions-row">
           <Col xs={24} lg={8}>
@@ -676,16 +975,20 @@ const HistorialClinico: React.FC = () => {
               <h3>Consultar historiales</h3>
 
               <p>
-                Revisa todas las consultas externas guardadas para el paciente seleccionado.
+                Revisa en un solo lugar las consultas externas y las historias clínicas del paciente seleccionado.
               </p>
 
               <Button
                 type="primary"
                 icon={<FileTextOutlined />}
-                disabled={historialesPaciente.length === 0}
+                disabled={loadingHistoriales || !Number(pacienteActivo?.id)}
                 onClick={() => navigate('/historiales-disponibles')}
               >
-                {historialesPaciente.length ? 'Ver historiales disponibles' : 'Sin historiales'}
+                {loadingHistoriales
+                  ? 'Consultando...'
+                  : totalRegistrosExpediente > 0
+                    ? `Ver ${totalRegistrosExpediente} registro${totalRegistrosExpediente === 1 ? '' : 's'}`
+                    : 'Consultar registros'}
               </Button>
             </Card>
           </Col>
@@ -720,7 +1023,7 @@ const HistorialClinico: React.FC = () => {
                 type="info"
                 showIcon
                 message="El historial puede generarse automáticamente"
-                description="Cada consulta guardada se agrega al historial, pero también puedes crear un registro clínico manual."
+                description="Los registros de este módulo se guardan mediante la API de historia clínica y permanecen asociados al paciente."
               />
             </Card>
           </Col>
@@ -735,6 +1038,7 @@ const HistorialClinico: React.FC = () => {
         footer={null}
         width={1120}
         centered
+        forceRender
         className="historial-wizard-modal"
         title={null}
       >
@@ -812,6 +1116,18 @@ const HistorialClinico: React.FC = () => {
             </div>
           </div>
 
+          {registroStep === 0 && consultaBasePrecarga && consultaBaseTieneDatosClinicos && (
+            <div className="historial-prefill-note">
+              <CheckCircleOutlined />
+              <span>
+                <strong>Datos recientes cargados</strong>
+                <span className="historial-prefill-separator">·</span>
+                Consulta externa del {formatDateTime(consultaBasePrecarga.fecha_consulta)}.
+                Puedes actualizarlos si cambiaron.
+              </span>
+            </div>
+          )}
+
           {registroStep === 0 && (
             <>
               <section className="historial-wizard-section">
@@ -871,7 +1187,7 @@ const HistorialClinico: React.FC = () => {
                             <Input addonAfter="Kg" placeholder="Ej. 70" />
                           </Form.Item>
 
-                          <Form.Item name="altura" label="Talla">
+                          <Form.Item name="altura" label="Altura">
                             <Input addonAfter="m/cm" placeholder="Ej. 1.70 o 170" />
                           </Form.Item>
 
@@ -918,28 +1234,55 @@ const HistorialClinico: React.FC = () => {
 
                     <div className="historial-antecedentes-box">
                       <div className="historial-antecedentes-grid">
-                        {antecedentesFamiliares.map(([name, label]) => (
-                          <div className="historial-antecedente-row" key={name}>
-                            {renderToggleRadio(`${name}_check`)}
+                        {antecedentesFamiliares.map(([name, label]) => {
+                          const checkName = `${name}_check`;
+                          const parentescoName = `${name}_parentesco`;
 
-                            <span>{label}</span>
+                          return (
+                            <div className="historial-antecedente-row" key={name}>
+                              {renderToggleRadio(checkName, [parentescoName])}
 
-                            <Form.Item name={`${name}_parentesco`} noStyle>
-                              <Select
-                                placeholder="Seleccione parentesco..."
-                                options={parentescoOptions}
-                              />
-                            </Form.Item>
-                          </div>
-                        ))}
+                              <span>{label}</span>
+
+                              <Form.Item
+                                noStyle
+                                shouldUpdate={(prev, current) =>
+                                  prev?.[checkName] !== current?.[checkName]
+                                }
+                              >
+                                {() => (
+                                  <Form.Item name={parentescoName} noStyle>
+                                    <Select
+                                      placeholder="Seleccione parentesco..."
+                                      options={parentescoOptions}
+                                      disabled={!Boolean(form.getFieldValue(checkName))}
+                                    />
+                                  </Form.Item>
+                                )}
+                              </Form.Item>
+                            </div>
+                          );
+                        })}
 
                         <div className="historial-antecedente-row">
-                          {renderToggleRadio('otros_check')}
+                          {renderToggleRadio('otros_check', ['otros_antecedentes'])}
 
                           <span>Otros</span>
 
-                          <Form.Item name="otros_antecedentes" noStyle>
-                            <Input />
+                          <Form.Item
+                            noStyle
+                            shouldUpdate={(prev, current) =>
+                              prev?.otros_check !== current?.otros_check
+                            }
+                          >
+                            {() => (
+                              <Form.Item name="otros_antecedentes" noStyle>
+                                <Input
+                                  disabled={!Boolean(form.getFieldValue('otros_check'))}
+                                  placeholder="Especifica el antecedente"
+                                />
+                              </Form.Item>
+                            )}
                           </Form.Item>
                         </div>
 
@@ -988,12 +1331,32 @@ const HistorialClinico: React.FC = () => {
 
                         <Col xs={24} md={12}>
                           <div className="historial-inline-check-field">
-                            {renderToggleRadio('inmunizaciones_incompletas_check')}
+                            {renderToggleRadio(
+                              'inmunizaciones_incompletas_check',
+                              ['inmunizaciones_incompletas'],
+                            )}
 
                             <span>Inmunizaciones incompletas</span>
 
-                            <Form.Item name="inmunizaciones_incompletas" noStyle>
-                              <Input placeholder="Detalle" />
+                            <Form.Item
+                              noStyle
+                              shouldUpdate={(prev, current) =>
+                                prev?.inmunizaciones_incompletas_check !==
+                                current?.inmunizaciones_incompletas_check
+                              }
+                            >
+                              {() => (
+                                <Form.Item name="inmunizaciones_incompletas" noStyle>
+                                  <Input
+                                    disabled={
+                                      !Boolean(
+                                        form.getFieldValue('inmunizaciones_incompletas_check'),
+                                      )
+                                    }
+                                    placeholder="Detalle"
+                                  />
+                                </Form.Item>
+                              )}
                             </Form.Item>
                           </div>
                         </Col>
@@ -1016,12 +1379,30 @@ const HistorialClinico: React.FC = () => {
 
                         <Col xs={24}>
                           <div className="historial-inline-check-field wide">
-                            {renderToggleRadio('otros_no_patologicos_check')}
+                            {renderToggleRadio(
+                              'otros_no_patologicos_check',
+                              ['otros_no_patologicos'],
+                            )}
 
                             <span>Otros</span>
 
-                            <Form.Item name="otros_no_patologicos" noStyle>
-                              <Input placeholder="Especifica otros antecedentes no patológicos" />
+                            <Form.Item
+                              noStyle
+                              shouldUpdate={(prev, current) =>
+                                prev?.otros_no_patologicos_check !==
+                                current?.otros_no_patologicos_check
+                              }
+                            >
+                              {() => (
+                                <Form.Item name="otros_no_patologicos" noStyle>
+                                  <Input
+                                    disabled={
+                                      !Boolean(form.getFieldValue('otros_no_patologicos_check'))
+                                    }
+                                    placeholder="Especifica otros antecedentes no patológicos"
+                                  />
+                                </Form.Item>
+                              )}
                             </Form.Item>
                           </div>
                         </Col>
@@ -1098,30 +1479,45 @@ const HistorialClinico: React.FC = () => {
 
                         <Col xs={24} md={8}>
                           <Form.Item name="tabaquismo" label="Tabaquismo">
-                            <Select allowClear options={siNoOptions} placeholder="Seleccione" />
+                            <Select allowClear options={habitosOptions} placeholder="Seleccione" />
                           </Form.Item>
                         </Col>
 
                         <Col xs={24} md={8}>
                           <Form.Item name="alcoholismo" label="Alcoholismo">
-                            <Select allowClear options={siNoOptions} placeholder="Seleccione" />
+                            <Select allowClear options={habitosOptions} placeholder="Seleccione" />
                           </Form.Item>
                         </Col>
 
                         <Col xs={24} md={8}>
                           <Form.Item name="toxicomanias" label="Toxicomanías">
-                            <Select allowClear options={siNoOptions} placeholder="Seleccione" />
+                            <Select allowClear options={habitosOptions} placeholder="Seleccione" />
                           </Form.Item>
                         </Col>
 
                         <Col xs={24}>
                           <div className="historial-inline-check-field wide">
-                            {renderToggleRadio('otros_patologicos_check')}
+                            {renderToggleRadio(
+                              'otros_patologicos_check',
+                              ['otros_patologicos'],
+                            )}
 
                             <span>Otros</span>
 
-                            <Form.Item name="otros_patologicos" noStyle>
-                              <Input placeholder="Especifique otros antecedentes patológicos" />
+                            <Form.Item
+                              noStyle
+                              shouldUpdate={(prev, current) =>
+                                prev?.otros_patologicos_check !== current?.otros_patologicos_check
+                              }
+                            >
+                              {() => (
+                                <Form.Item name="otros_patologicos" noStyle>
+                                  <Input
+                                    disabled={!Boolean(form.getFieldValue('otros_patologicos_check'))}
+                                    placeholder="Especifique otros antecedentes patológicos"
+                                  />
+                                </Form.Item>
+                              )}
                             </Form.Item>
                           </div>
                         </Col>
@@ -1201,8 +1597,26 @@ const HistorialClinico: React.FC = () => {
                         </Col>
 
                         <Col xs={24} md={6}>
-                          <Form.Item name="fum" label="FUM">
-                            <Input placeholder="dd/mm/aaaa" />
+                          <Form.Item
+                            name="fum"
+                            label="FUM"
+                            getValueProps={(value) => ({ value: parseClinicalDate(value) })}
+                            normalize={(value: Dayjs | null) =>
+                              value ? value.format('YYYY-MM-DD') : ''
+                            }
+                          >
+                            <ConfigProvider locale={esES} theme={clinicalDatePickerTheme}>
+                              <DatePicker
+                                className="historia-clinica-datepicker"
+                                popupClassName="historia-clinica-calendar-popup"
+                                format="DD/MM/YYYY"
+                                placeholder="Seleccionar fecha"
+                                allowClear
+                                inputReadOnly
+                                disabledDate={disableFutureClinicalDates}
+                                style={{ width: '100%' }}
+                              />
+                            </ConfigProvider>
                           </Form.Item>
                         </Col>
 
@@ -1219,8 +1633,26 @@ const HistorialClinico: React.FC = () => {
                         </Col>
 
                         <Col xs={24} md={6}>
-                          <Form.Item name="ultimo_papanicolaou" label="F. Último Papanicolaou">
-                            <Input placeholder="dd/mm/aaaa" />
+                          <Form.Item
+                            name="ultimo_papanicolaou"
+                            label="F. Último Papanicolaou"
+                            getValueProps={(value) => ({ value: parseClinicalDate(value) })}
+                            normalize={(value: Dayjs | null) =>
+                              value ? value.format('YYYY-MM-DD') : ''
+                            }
+                          >
+                            <ConfigProvider locale={esES} theme={clinicalDatePickerTheme}>
+                              <DatePicker
+                                className="historia-clinica-datepicker"
+                                popupClassName="historia-clinica-calendar-popup"
+                                format="DD/MM/YYYY"
+                                placeholder="Seleccionar fecha"
+                                allowClear
+                                inputReadOnly
+                                disabledDate={disableFutureClinicalDates}
+                                style={{ width: '100%' }}
+                              />
+                            </ConfigProvider>
                           </Form.Item>
                         </Col>
 
@@ -1231,8 +1663,8 @@ const HistorialClinico: React.FC = () => {
                         </Col>
 
                         <Col xs={24} md={6}>
-                          <Form.Item name="peri_post_menopausia" label="PeriPost menopausia">
-                            <Select options={noAplicaOptions} />
+                          <Form.Item name="peri_post_menopausia" label="Estado de menopausia">
+                            <Select options={menopausiaOptions} />
                           </Form.Item>
                         </Col>
 
@@ -1395,7 +1827,7 @@ const HistorialClinico: React.FC = () => {
                 <Descriptions.Item label="Cesáreas">
                   {vistaPreviaData.cesareas || '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="FUM">{vistaPreviaData.fum || '-'}</Descriptions.Item>
+                <Descriptions.Item label="FUM">{formatClinicalDate(vistaPreviaData.fum)}</Descriptions.Item>
                 <Descriptions.Item label="Menarca">
                   {vistaPreviaData.menarca || '-'}
                 </Descriptions.Item>
@@ -1403,7 +1835,7 @@ const HistorialClinico: React.FC = () => {
                   {vistaPreviaData.ritmo || '-'}
                 </Descriptions.Item>
                 <Descriptions.Item label="Último Papanicolaou">
-                  {vistaPreviaData.ultimo_papanicolaou || '-'}
+                  {formatClinicalDate(vistaPreviaData.ultimo_papanicolaou)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Terapia hormonal">
                   {vistaPreviaData.terapia_hormonal || '-'}

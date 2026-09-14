@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Avatar,
   Button,
   Card,
@@ -7,16 +8,23 @@ import {
   Col,
   Empty,
   Input,
+  Modal,
   Row,
   Select,
   Table,
   Tag,
+  Tooltip,
   Typography,
 } from 'antd';
 import {
   CalendarOutlined,
   ClockCircleOutlined,
+  FileDoneOutlined,
+  FileTextOutlined,
+  FolderOpenOutlined,
+  PrinterOutlined,
   HistoryOutlined,
+  MedicineBoxOutlined,
   IdcardOutlined,
   LogoutOutlined,
   SearchOutlined,
@@ -28,20 +36,26 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 import type { PacienteData } from '../../services/pacientes/pacientes.service';
+import consultasService from '../../services/consultas/consultas.service';
+import recetasService from '../../services/recetas/recetas.service';
+import RecetaDocumento from '../../components/RecetaDocumento/RecetaDocumento';
 import './HistoricoPaciente.css';
+import './HistoricoPaciente.documentos.css';
+import '../../components/RecetaDocumento/RecetaDocumento.css';
 
 const { Title, Text } = Typography;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
-const HISTORIAL_CLINICO_STORAGE_KEY = 'historial_clinico_pacientes';
 const NOTAS_EVOLUCION_STORAGE_KEY = 'notas_evolucion_pacientes';
 
 type DocumentoHistorico = {
   id: string;
-  tipo: string;
+  tipo: 'Historial clínico' | 'Nota de evolución' | 'Receta médica';
   fecha: string;
   descripcion: string;
+  recetaId?: number;
+  proximaCita?: string;
 };
 
 const cargarPacienteActivo = (): PacienteData | null => {
@@ -85,6 +99,18 @@ const calcularEdad = (fechaNacimiento?: string) => {
   return `${edad} años`;
 };
 
+const extractFecha = (item: any): string =>
+  String(
+    item?.fecha ??
+      item?.fechaConsulta ??
+      item?.fecha_consulta ??
+      item?.createdAt ??
+      item?.created_at ??
+      item?.updatedAt ??
+      item?.updated_at ??
+      '',
+  );
+
 const formatDate = (fecha?: string) => {
   if (!fecha) return '-';
 
@@ -119,6 +145,112 @@ const formatValue = (value: any) => {
   return String(value);
 };
 
+const extractConsultaId = (item: any): number | null => {
+  const parsed = Number(
+    item?.id ??
+      item?.consultaId ??
+      item?.consulta_id ??
+      item?.consulta?.id ??
+      0,
+  );
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const extractRecetaConsultaId = (item: any): number | null => {
+  const parsed = Number(
+    item?.consultaId ??
+      item?.consulta_id ??
+      item?.consulta?.id ??
+      0,
+  );
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const extractRecetaId = (item: any): number | null => {
+  const parsed = Number(
+    item?.id ??
+      item?.recetaId ??
+      item?.receta_id ??
+      0,
+  );
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const extractPacienteId = (item: any): number | null => {
+  const parsed = Number(
+    item?.pacienteId ??
+      item?.paciente_id ??
+      item?.paciente?.id ??
+      item?.consulta?.pacienteId ??
+      item?.consulta?.paciente_id ??
+      item?.consulta?.paciente?.id ??
+      0,
+  );
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const extractDiagnostico = (consulta: any) => {
+  const diagnostico = consulta?.diagnosticos?.[0];
+
+  return (
+    diagnostico?.diagnostico?.nombre ??
+    diagnostico?.diagnostico?.text ??
+    diagnostico?.nombre ??
+    diagnostico?.text ??
+    diagnostico?.descripcion ??
+    consulta?.descripcion ??
+    consulta?.motivoConsulta ??
+    consulta?.motivo_consulta ??
+    'Consulta externa registrada'
+  );
+};
+
+const extractMedicamentos = (receta: any): any[] => {
+  const value =
+    receta?.medicamentos ??
+    receta?.detalleMedicamentos ??
+    receta?.detalle_medicamentos ??
+    receta?.items ??
+    [];
+
+  return Array.isArray(value) ? value : [];
+};
+
+const describeReceta = (receta: any) => {
+  const medicamentos = extractMedicamentos(receta);
+  const nombres = medicamentos
+    .map(
+      (item: any) =>
+        item?.medicamentoNombre ??
+        item?.medicamento_nombre ??
+        item?.nombre ??
+        item?.sustanciaActiva ??
+        item?.sustancia_activa,
+    )
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const cantidadExtra = Math.max(0, medicamentos.length - nombres.length);
+
+  return nombres.length > 0
+    ? `${nombres.join(', ')}${cantidadExtra ? ` +${cantidadExtra}` : ''}`
+    : 'Tratamiento prescrito';
+};
+
+const extractProximaCita = (receta: any) => {
+  const programada = Boolean(
+    receta?.programarSeguimiento ?? receta?.programar_seguimiento,
+  );
+  const fechaSeguimiento =
+    receta?.fechaSeguimiento ?? receta?.fecha_seguimiento ?? '';
+
+  return programada && fechaSeguimiento ? String(fechaSeguimiento) : '';
+};
+
 const HistoricoPaciente: React.FC = () => {
   const navigate = useNavigate();
 
@@ -128,11 +260,242 @@ const HistoricoPaciente: React.FC = () => {
   const [tipoDocumento, setTipoDocumento] = useState<string>('todos');
   const [busqueda, setBusqueda] = useState('');
   const [verOtrosConsultorios, setVerOtrosConsultorios] = useState(false);
+  const [consultasApi, setConsultasApi] = useState<any[]>([]);
+  const [recetasApi, setRecetasApi] = useState<any[]>([]);
+  const [loadingApi, setLoadingApi] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [recetaDetalleOpen, setRecetaDetalleOpen] = useState(false);
+  const [recetaDetalleLoading, setRecetaDetalleLoading] = useState(false);
+  const [recetaDetalle, setRecetaDetalle] = useState<any | null>(null);
+  const [consultaRecetaDetalle, setConsultaRecetaDetalle] = useState<any | null>(null);
 
   const pacienteNombre = getFullName(pacienteActivo);
-
-  const historiales = cargarStorageArray<any>(HISTORIAL_CLINICO_STORAGE_KEY);
   const notas = cargarStorageArray<any>(NOTAS_EVOLUCION_STORAGE_KEY);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const cargarHistoricoApi = async () => {
+      const pacienteId = Number(pacienteActivo?.id);
+
+      if (!Number.isInteger(pacienteId) || pacienteId <= 0) {
+        setConsultasApi([]);
+        setRecetasApi([]);
+        setApiError('El paciente seleccionado no tiene un ID válido para consultar su historial.');
+        return;
+      }
+
+      setLoadingApi(true);
+      setApiError(null);
+
+      try {
+        const primeraPaginaConsultas = await consultasService.findAll({
+          page: 1,
+          limit: 100,
+          pacienteId,
+        });
+
+        let consultas = [...primeraPaginaConsultas.data];
+        const paginasConsultas = Math.max(
+          1,
+          Number(primeraPaginaConsultas.meta.totalPages || 1),
+        );
+
+        if (paginasConsultas > 1) {
+          const restantes = await Promise.all(
+            Array.from({ length: paginasConsultas - 1 }, (_, index) =>
+              consultasService.findAll({
+                page: index + 2,
+                limit: 100,
+                pacienteId,
+              }),
+            ),
+          );
+
+          consultas = consultas.concat(...restantes.flatMap((page) => page.data));
+        }
+
+        const consultaIds = new Set(
+          consultas
+            .map(extractConsultaId)
+            .filter((id): id is number => id !== null),
+        );
+
+        let recetas: any[] = [];
+
+        const primeraPaginaRecetas = await recetasService.findAll({
+          page: 1,
+          limit: 100,
+        });
+
+        recetas = [...primeraPaginaRecetas.data];
+
+        const paginasRecetas = Math.max(
+          1,
+          Number(primeraPaginaRecetas.meta.totalPages || 1),
+        );
+
+        if (paginasRecetas > 1) {
+          const restantes = await Promise.all(
+            Array.from({ length: paginasRecetas - 1 }, (_, index) =>
+              recetasService.findAll({
+                page: index + 2,
+                limit: 100,
+              }),
+            ),
+          );
+
+          recetas = recetas.concat(...restantes.flatMap((page) => page.data));
+        }
+
+        const recetasPaciente = recetas.filter((receta) => {
+          const recetaPacienteId = extractPacienteId(receta);
+          const consultaId = extractRecetaConsultaId(receta);
+
+          return (
+            recetaPacienteId === pacienteId ||
+            (consultaId !== null && consultaIds.has(consultaId))
+          );
+        });
+
+        if (cancelled) return;
+
+        setConsultasApi(consultas);
+        setRecetasApi(recetasPaciente);
+      } catch (error: any) {
+        if (cancelled) return;
+
+        console.error('Error cargando histórico del paciente:', error);
+        setConsultasApi([]);
+        setRecetasApi([]);
+
+        const apiMessage = error?.response?.data?.message;
+        setApiError(
+          Array.isArray(apiMessage)
+            ? apiMessage.join('. ')
+            : typeof apiMessage === 'string'
+              ? apiMessage
+              : 'No fue posible cargar el histórico clínico desde el servidor.',
+        );
+      } finally {
+        if (!cancelled) setLoadingApi(false);
+      }
+    };
+
+    void cargarHistoricoApi();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pacienteActivo?.id]);
+
+  const abrirReceta = async (recetaId?: number) => {
+    if (!recetaId) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Receta no disponible',
+        text: 'No fue posible identificar la receta seleccionada.',
+        confirmButtonColor: '#36c6c7',
+      });
+      return;
+    }
+
+    setRecetaDetalleOpen(true);
+    setRecetaDetalleLoading(true);
+    setRecetaDetalle(null);
+    setConsultaRecetaDetalle(null);
+
+    try {
+      const receta = await recetasService.findOne(recetaId);
+      setRecetaDetalle(receta);
+
+      const consultaId = extractRecetaConsultaId(receta);
+      if (consultaId) {
+        try {
+          const consulta = await consultasService.findOne(consultaId);
+          setConsultaRecetaDetalle(consulta);
+        } catch (consultaError) {
+          console.warn('La receta abrió correctamente, pero no fue posible recuperar su consulta relacionada:', consultaError);
+        }
+      }
+    } catch (error: any) {
+      setRecetaDetalleOpen(false);
+
+      const apiMessage = error?.response?.data?.message;
+      await Swal.fire({
+        icon: 'error',
+        title: 'No se pudo abrir la receta',
+        text: Array.isArray(apiMessage)
+          ? apiMessage.join('. ')
+          : typeof apiMessage === 'string'
+            ? apiMessage
+            : 'La receta existe en el histórico, pero no fue posible consultar su detalle en el servidor.',
+        confirmButtonColor: '#36c6c7',
+      });
+    } finally {
+      setRecetaDetalleLoading(false);
+    }
+  };
+
+  const imprimirRecetaHistorica = () => {
+    const source = document.getElementById('historico-receta-documento');
+    if (!source) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(iframe);
+
+    const printDocument = iframe.contentDocument;
+    const printWindow = iframe.contentWindow;
+    if (!printDocument || !printWindow) {
+      iframe.remove();
+      return;
+    }
+
+    const styleSources = Array.from(document.querySelectorAll('style, link[rel=\"stylesheet\"]'))
+      .map((node) => node.outerHTML)
+      .join('\n');
+
+    const safeTitle = (pacienteNombre || 'Paciente')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9 _-]/g, '')
+      .trim();
+
+    printDocument.open();
+    printDocument.write(`<!doctype html>
+<html>
+<head>
+<meta charset=\"utf-8\" />
+<title>Receta - ${safeTitle}</title>
+${styleSources}
+<style>
+  @page { size: A4 portrait; margin: 5mm; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .clinical-rx-sheet { width: 200mm !important; margin: 0 auto !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; }
+  .clinical-rx-copy { min-height: 137mm !important; max-height: 137mm !important; overflow: hidden !important; }
+</style>
+</head>
+<body>${source.outerHTML}</body>
+</html>`);
+    printDocument.close();
+
+    const run = () => {
+      printWindow.focus();
+      printWindow.print();
+      window.setTimeout(() => iframe.remove(), 1200);
+    };
+
+    if (printDocument.readyState === 'complete') run();
+    else iframe.onload = run;
+  };
 
   const finalizarAtencion = async () => {
     const result = await Swal.fire({
@@ -166,37 +529,46 @@ const HistoricoPaciente: React.FC = () => {
     navigate('/historico-paciente', { replace: true });
   };
 
-  const historialesPaciente = useMemo(() => {
+  const documentosPaciente = useMemo(() => {
     if (!pacienteActivo) return [];
 
-    const filtrarPorPaciente = (item: any) => {
+    const pacienteId = Number(pacienteActivo.id);
+
+    const docsConsultas: DocumentoHistorico[] = consultasApi.map((item: any) => ({
+      id: `consulta-api-${extractConsultaId(item) ?? extractFecha(item)}`,
+      tipo: 'Historial clínico',
+      fecha: extractFecha(item),
+      descripcion: extractDiagnostico(item),
+    }));
+
+    const docsRecetas: DocumentoHistorico[] = recetasApi.map((item: any) => ({
+      id: `receta-api-${item?.id ?? extractFecha(item)}`,
+      tipo: 'Receta médica',
+      fecha: extractFecha(item),
+      descripcion: describeReceta(item),
+      recetaId: extractRecetaId(item) ?? undefined,
+      proximaCita: extractProximaCita(item) || undefined,
+    }));
+
+    const filtrarNotaPorPaciente = (item: any) => {
+      const itemPacienteId = Number(item?.pacienteId ?? item?.paciente?.id ?? 0);
       const sameId =
-        pacienteActivo.id &&
-        String(item.pacienteId || item.paciente?.id) === String(pacienteActivo.id);
+        Number.isInteger(pacienteId) &&
+        pacienteId > 0 &&
+        itemPacienteId === pacienteId;
 
       const sameExpediente =
         pacienteActivo.numero_expediente &&
         item.paciente?.numero_expediente === pacienteActivo.numero_expediente;
 
-      const sameCurp = pacienteActivo.curp && item.paciente?.curp === pacienteActivo.curp;
+      const sameCurp =
+        pacienteActivo.curp && item.paciente?.curp === pacienteActivo.curp;
 
       return sameId || sameExpediente || sameCurp;
     };
 
-    const docsHistorial: DocumentoHistorico[] = historiales
-      .filter(filtrarPorPaciente)
-      .map((item: any) => ({
-        id: `historial-${item.id}`,
-        tipo: 'Historial clínico',
-        fecha: item.fecha_consulta || item.consulta?.fecha_consulta || '',
-        descripcion:
-          item.diagnosticos?.[0]?.diagnostico ||
-          item.consulta?.diagnostico ||
-          'Historial clínico registrado',
-      }));
-
     const docsNotas: DocumentoHistorico[] = notas
-      .filter(filtrarPorPaciente)
+      .filter(filtrarNotaPorPaciente)
       .map((item: any) => ({
         id: `nota-${item.id}`,
         tipo: 'Nota de evolución',
@@ -207,7 +579,7 @@ const HistoricoPaciente: React.FC = () => {
           'Nota de evolución registrada',
       }));
 
-    return [...docsHistorial, ...docsNotas]
+    return [...docsConsultas, ...docsRecetas, ...docsNotas]
       .filter((doc) => {
         if (tipoDocumento !== 'todos' && doc.tipo !== tipoDocumento) return false;
 
@@ -220,63 +592,105 @@ const HistoricoPaciente: React.FC = () => {
           .includes(texto);
       })
       .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
-  }, [historiales, notas, pacienteActivo, tipoDocumento, busqueda]);
+  }, [
+    busqueda,
+    consultasApi,
+    notas,
+    pacienteActivo,
+    recetasApi,
+    tipoDocumento,
+  ]);
 
-  const ultimaVisita = historialesPaciente[0];
+  const ultimaConsulta = useMemo(
+    () =>
+      [...consultasApi].sort(
+        (a, b) =>
+          new Date(extractFecha(b)).getTime() -
+          new Date(extractFecha(a)).getTime(),
+      )[0] ?? null,
+    [consultasApi],
+  );
 
-  const ultimoHistorial = useMemo(() => {
-    if (!pacienteActivo) return null;
-
-    return historiales
-      .filter((item: any) => {
-        const sameId =
-          pacienteActivo.id &&
-          String(item.pacienteId || item.paciente?.id) === String(pacienteActivo.id);
-
-        const sameExpediente =
-          pacienteActivo.numero_expediente &&
-          item.paciente?.numero_expediente === pacienteActivo.numero_expediente;
-
-        return sameId || sameExpediente;
-      })
-      .sort(
-        (a: any, b: any) =>
-          new Date(b.fecha_consulta || b.consulta?.fecha_consulta).getTime() -
-          new Date(a.fecha_consulta || a.consulta?.fecha_consulta).getTime(),
-      )[0];
-  }, [historiales, pacienteActivo]);
+  const signosUltimaConsulta =
+    ultimaConsulta?.signosVitales ??
+    ultimaConsulta?.signos_vitales ??
+    {};
 
   const columns: ColumnsType<DocumentoHistorico> = [
     {
-      title: 'Fecha',
+      title: 'Fecha y hora',
       dataIndex: 'fecha',
-      width: 150,
+      width: 185,
       render: (fecha) => (
-        <span className="historico-date-cell">
-          <CalendarOutlined /> {formatDate(fecha)}
-        </span>
-      ),
-    },
-    {
-      title: 'Hora',
-      dataIndex: 'fecha',
-      width: 110,
-      render: (fecha) => (
-        <span className="historico-date-cell">
-          <ClockCircleOutlined /> {formatTime(fecha)}
-        </span>
+        <div className="historico-document-date">
+          <span className="historico-document-date__day">
+            <CalendarOutlined />
+            <strong>{formatDate(fecha)}</strong>
+          </span>
+          <span className="historico-document-date__time">
+            <ClockCircleOutlined />
+            {formatTime(fecha)}
+          </span>
+        </div>
       ),
     },
     {
       title: 'Documento',
-      dataIndex: 'tipo',
-      width: 180,
-      render: (tipo) => <Tag className="historico-doc-tag">{tipo}</Tag>,
+      key: 'documento',
+      width: 220,
+      render: (_, record) => {
+        const isReceta = record.tipo === 'Receta médica';
+
+        return (
+          <div className="historico-document-type">
+            <span className={`historico-document-type__icon ${isReceta ? 'is-receta' : ''}`}>
+              {isReceta ? <FileDoneOutlined /> : <HistoryOutlined />}
+            </span>
+            <div>
+              <strong>{record.tipo}</strong>
+              {isReceta && record.recetaId ? (
+                <small>Folio #{record.recetaId}</small>
+              ) : (
+                <small>Expediente clínico</small>
+              )}
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: 'Descripción',
       dataIndex: 'descripcion',
-      ellipsis: true,
+      render: (descripcion, record) => (
+        <div className="historico-document-description">
+          <strong title={descripcion}>{descripcion || '-'}</strong>
+          {record.proximaCita ? (
+            <span className="historico-document-followup">
+              <CalendarOutlined /> Próxima cita: {formatDate(record.proximaCita)}
+            </span>
+          ) : record.tipo === 'Receta médica' ? (
+            <span className="historico-document-description__meta">Sin seguimiento programado</span>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      title: 'Acción',
+      key: 'acciones',
+      width: 128,
+      align: 'center',
+      render: (_, record) =>
+        record.tipo === 'Receta médica' ? (
+          <Button
+            className="historico-open-document-btn"
+            icon={<FileTextOutlined />}
+            onClick={() => void abrirReceta(record.recetaId)}
+          >
+            Ver receta
+          </Button>
+        ) : (
+          <span className="historico-no-action">—</span>
+        ),
     },
   ];
 
@@ -325,12 +739,22 @@ const HistoricoPaciente: React.FC = () => {
             <Text className="historico-eyebrow">Expediente clínico</Text>
             <Title level={2}>Histórico por paciente</Title>
             <Text type="secondary">
-              Consulta la última visita, revisión clínica y documentos registrados del paciente.
+              Consultas, recetas y notas registradas para el paciente.
             </Text>
           </div>
 
-          <Tag className="historico-status-tag">{historialesPaciente.length} documento(s)</Tag>
+          <Tag className="historico-status-tag">{documentosPaciente.length} documento(s)</Tag>
         </header>
+
+        {apiError && (
+          <Alert
+            style={{ marginTop: 16 }}
+            type="warning"
+            showIcon
+            message="Histórico parcialmente disponible"
+            description={apiError}
+          />
+        )}
 
         <Row gutter={[16, 16]} className="historico-main-row">
           <Col xs={24} lg={7}>
@@ -382,97 +806,101 @@ const HistoricoPaciente: React.FC = () => {
           </Col>
 
           <Col xs={24} lg={17}>
-            <Card className="historico-last-card">
+            <Card className="historico-last-card" loading={loadingApi}>
               <div className="historico-card-title">Última visita</div>
 
               <div className="historico-last-grid">
                 <div>
                   <span>Fecha</span>
-                  <strong>{formatDate(ultimaVisita?.fecha)}</strong>
+                  <strong>{formatDate(extractFecha(ultimaConsulta))}</strong>
                 </div>
 
                 <div>
                   <span>Hora</span>
-                  <strong>{formatTime(ultimaVisita?.fecha)}</strong>
+                  <strong>{formatTime(extractFecha(ultimaConsulta))}</strong>
                 </div>
 
                 <div>
                   <span>Cuenta con historia clínica</span>
-                  <strong>{ultimoHistorial ? 'Sí' : 'No'}</strong>
+                  <strong>{ultimaConsulta ? 'Sí' : 'No'}</strong>
                 </div>
 
                 <div>
                   <span>Consulta externa específica</span>
-                  <strong>{ultimaVisita ? 'Sí' : 'No'}</strong>
+                  <strong>{ultimaConsulta ? 'Sí' : 'No'}</strong>
                 </div>
 
                 <div>
                   <span>Peso</span>
-                  <strong>{formatValue(ultimoHistorial?.consulta?.peso)} Kg</strong>
+                  <strong>{formatValue(signosUltimaConsulta?.peso)} Kg</strong>
                 </div>
 
                 <div>
-                  <span>Talla</span>
-                  <strong>{formatValue(ultimoHistorial?.consulta?.altura)} m</strong>
+                  <span>Altura</span>
+                  <strong>{formatValue(signosUltimaConsulta?.altura)} m</strong>
                 </div>
 
                 <div>
                   <span>IMC</span>
-                  <strong>{formatValue(ultimoHistorial?.consulta?.imc)} Kg/m²</strong>
+                  <strong>{formatValue(signosUltimaConsulta?.imc)} Kg/m²</strong>
                 </div>
 
                 <div>
                   <span>Diabetes</span>
-                  <strong>{formatValue(ultimoHistorial?.consulta?.diabetes_check)}</strong>
+                  <strong>{formatValue(ultimaConsulta?.diabetes)}</strong>
                 </div>
 
                 <div>
                   <span>Temperatura</span>
-                  <strong>{formatValue(ultimoHistorial?.consulta?.temperatura)} °C</strong>
+                  <strong>{formatValue(signosUltimaConsulta?.temperatura)} °C</strong>
                 </div>
 
                 <div>
                   <span>Frec. cardíaca</span>
                   <strong>
-                    {formatValue(ultimoHistorial?.consulta?.frecuencia_cardiaca)} xmin
+                    {formatValue(
+                      signosUltimaConsulta?.frecuenciaCardiaca ??
+                        signosUltimaConsulta?.frecuencia_cardiaca,
+                    )}{' '}
+                    xmin
                   </strong>
                 </div>
 
                 <div>
                   <span>Presión arterial</span>
                   <strong>
-                    {formatValue(ultimoHistorial?.consulta?.presion_arterial)} mm/Hg
+                    {formatValue(
+                      signosUltimaConsulta?.presionArterial ??
+                        signosUltimaConsulta?.presion_arterial,
+                    )}{' '}
+                    mm/Hg
                   </strong>
                 </div>
 
                 <div>
                   <span>SpO₂</span>
-                  <strong>{formatValue(ultimoHistorial?.consulta?.spo2)} %</strong>
+                  <strong>{formatValue(signosUltimaConsulta?.spo2)} %</strong>
                 </div>
               </div>
             </Card>
           </Col>
         </Row>
 
-        <Card className="historico-review-card">
+        <Card className="historico-review-card" loading={loadingApi}>
           <div className="historico-review-header">Última revisión</div>
 
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
               <div className="historico-review-box">
                 <span>Diagnóstico</span>
-                <strong>
-                  {ultimoHistorial?.diagnosticos?.[0]?.diagnostico ||
-                    ultimoHistorial?.consulta?.diagnostico ||
-                    '-'}
-                </strong>
+                <strong>{ultimaConsulta ? extractDiagnostico(ultimaConsulta) : '-'}</strong>
               </div>
             </Col>
 
             <Col xs={24} md={12}>
               <div className="historico-review-box">
                 <span>Alergias</span>
-                <strong>{formatValue(ultimoHistorial?.consulta?.alergias)}</strong>
+                <strong>{formatValue(ultimaConsulta?.alergias)}</strong>
               </div>
             </Col>
           </Row>
@@ -481,8 +909,8 @@ const HistoricoPaciente: React.FC = () => {
         <Card className="historico-documents-card">
           <div className="historico-documents-header">
             <div>
-              <Text className="historico-eyebrow">Documentos</Text>
-              <h3>Selecciona un documento</h3>
+              <Text className="historico-eyebrow"><FolderOpenOutlined /> Expediente documental</Text>
+              <h3>Documentos del paciente</h3>
             </div>
 
             <Input
@@ -503,6 +931,7 @@ const HistoricoPaciente: React.FC = () => {
               options={[
                 { value: 'todos', label: 'Todos' },
                 { value: 'Historial clínico', label: 'Historial clínico' },
+                { value: 'Receta médica', label: 'Receta médica' },
                 { value: 'Nota de evolución', label: 'Nota de evolución' },
               ]}
             />
@@ -516,21 +945,88 @@ const HistoricoPaciente: React.FC = () => {
           </div>
 
           <Table
-            className="historico-table"
+            className="historico-table historico-documents-table"
+            tableLayout="fixed"
             columns={columns}
-            dataSource={historialesPaciente}
+            dataSource={documentosPaciente}
             rowKey="id"
+            loading={loadingApi}
             pagination={{
               pageSize: 6,
               showSizeChanger: false,
               position: ['bottomCenter'],
             }}
-            scroll={historialesPaciente.length > 0 ? { x: 760 } : undefined}
+            scroll={documentosPaciente.length > 0 ? { x: 760 } : undefined}
             locale={{
               emptyText: <Empty description="No hay documentos registrados para este paciente" />,
             }}
           />
         </Card>
+
+        <Modal
+          open={recetaDetalleOpen}
+          onCancel={() => {
+            setRecetaDetalleOpen(false);
+            setRecetaDetalle(null);
+            setConsultaRecetaDetalle(null);
+          }}
+          footer={null}
+          width={940}
+          centered
+          destroyOnHidden
+          className="historico-receta-document-modal"
+          title={null}
+        >
+          <div className="historico-receta-viewer">
+            <div className="historico-receta-viewer__bar">
+              <div>
+                <span className="historico-receta-viewer__icon"><FileTextOutlined /></span>
+                <div>
+                  <strong>Receta médica</strong>
+                  <small>Expediente / Recetas / {pacienteNombre || 'Paciente'}{recetaDetalle?.id ? ` / #${recetaDetalle.id}` : ''}</small>
+                </div>
+              </div>
+
+              <div className="historico-receta-viewer__actions">
+                {recetaDetalle && (
+                  <Button icon={<PrinterOutlined />} onClick={imprimirRecetaHistorica}>
+                    Imprimir
+                  </Button>
+                )}
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    setRecetaDetalleOpen(false);
+                    setRecetaDetalle(null);
+                    setConsultaRecetaDetalle(null);
+                  }}
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+
+            <div className="historico-receta-viewer__body">
+              {recetaDetalleLoading ? (
+                <div className="historico-receta-viewer__loading">
+                  <FileTextOutlined />
+                  <span>Preparando documento clínico…</span>
+                </div>
+              ) : recetaDetalle ? (
+                <div id="historico-receta-documento">
+                  <RecetaDocumento
+                    receta={recetaDetalle}
+                    consulta={consultaRecetaDetalle}
+                    paciente={pacienteActivo}
+                    doubleCopy
+                  />
+                </div>
+              ) : (
+                <Empty description="No fue posible cargar el documento de la receta" />
+              )}
+            </div>
+          </div>
+        </Modal>
       </div>
     </div>
   );

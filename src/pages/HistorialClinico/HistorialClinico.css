@@ -2665,3 +2665,139 @@
     width: 100%;
   }
 }
+/* Precarga desde Consulta Externa: aviso discreto, no invasivo */
+.historial-prefill-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin: 0 0 12px 2px;
+  padding: 7px 11px;
+  border: 1px solid #ccebea;
+  border-radius: 999px;
+  background: #f4fbfb;
+  color: #5f7185;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.historial-prefill-note > .anticon {
+  flex: 0 0 auto;
+  color: #16aaa8;
+  font-size: 14px;
+}
+
+.historial-prefill-note strong {
+  color: #126f70;
+  font-weight: 800;
+}
+
+.historial-prefill-separator {
+  display: inline-block;
+  margin: 0 6px;
+  color: #9aacb8;
+}
+
+@media (max-width: 700px) {
+  .historial-prefill-note {
+    border-radius: 12px;
+    align-items: flex-start;
+  }
+}
+
+
+/* Calendarios clínicos: FUM y último Papanicolaou */
+.historia-clinica-datepicker.ant-picker {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #d8e4e8;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.historia-clinica-datepicker.ant-picker:hover {
+  border-color: #69dadd;
+  background: #fbffff;
+}
+
+.historia-clinica-datepicker.ant-picker-focused {
+  border-color: #27c7ca;
+  box-shadow: 0 0 0 3px rgba(39, 199, 202, 0.10);
+}
+
+.historia-clinica-datepicker .ant-picker-input > input {
+  color: #17233a;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.historia-clinica-datepicker .ant-picker-input > input::placeholder {
+  color: #a7b0be;
+  font-weight: 400;
+}
+
+.historia-clinica-datepicker .ant-picker-suffix {
+  color: #20bfc3;
+  font-size: 14px;
+}
+
+/* Popup compacto; sólo afecta estos dos calendarios. */
+.historia-clinica-calendar-popup .ant-picker-panel-container {
+  border-radius: 13px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(15, 66, 70, 0.16);
+}
+
+.historia-clinica-calendar-popup .ant-picker-date-panel {
+  width: 258px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-header {
+  height: 38px;
+  padding: 0 8px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-header-view {
+  font-size: 13px;
+  line-height: 38px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-header button {
+  font-size: 12px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-body {
+  padding: 6px 9px 8px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-content {
+  width: 238px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-content th {
+  height: 26px;
+  font-size: 11px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-cell {
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-cell-inner {
+  min-width: 26px;
+  height: 26px;
+  line-height: 26px;
+  border-radius: 7px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-footer {
+  min-height: 32px;
+  font-size: 12px;
+}
+
+.historia-clinica-calendar-popup .ant-picker-today-btn {
+  line-height: 30px;
+}

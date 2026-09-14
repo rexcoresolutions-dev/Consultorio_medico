@@ -28,7 +28,6 @@ import {
   TeamOutlined,
   ProfileOutlined,
   DownOutlined,
-  EyeOutlined,
   HistoryOutlined,
   FormOutlined,
   FolderOpenOutlined,
@@ -39,6 +38,8 @@ import {
   FileDoneOutlined,
   SafetyCertificateOutlined,
   FileProtectOutlined,
+  AuditOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -46,6 +47,8 @@ import MobileMenu from '../../components/MobileMenu/MobileMenu';
 import WelcomeModal from '../../components/Auth/WelcomeModal';
 import UserService from '../../services/user/user.service';
 import { ROUTES } from '../../router/routes';
+import useSystemConfig from '../../hooks/useSystemConfig';
+import { getRoleLabel, getUserRoleId } from '../../utils/role.utils';
 import './PrivateLayout.css';
 
 const { Header, Sider, Content } = Layout;
@@ -162,14 +165,20 @@ const PrivateLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { message, modal } = App.useApp();
+  const systemConfig = useSystemConfig();
 
   useEffect(() => {
     const loadUserFromApi = async () => {
       try {
         const me = await UserService.getMe();
+        const mergedUser = {
+          ...(user || {}),
+          ...me,
+          rol_id: getUserRoleId(me) || getUserRoleId(user) || undefined,
+        };
 
-        setCurrentUser(me);
-        localStorage.setItem('user', JSON.stringify(me));
+        setCurrentUser(mergedUser);
+        localStorage.setItem('user', JSON.stringify(mergedUser));
 
         const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
 
@@ -191,7 +200,7 @@ const PrivateLayout: React.FC = () => {
   }, []);
 
   const activeUser = currentUser || user;
-  const rolId = Number(activeUser?.rol_id || activeUser?.rolId || 0);
+  const rolId = getUserRoleId(activeUser);
 
   const menuItems = useMemo(() => {
     const leaf = (key: string, icon: React.ReactNode, label: string) => ({
@@ -223,19 +232,19 @@ const PrivateLayout: React.FC = () => {
     const dashboardAdmin = leaf(
       ROUTES.DASHBOARD_ADMIN,
       <DashboardOutlined />,
-      'Dashboard'
+      'Inicio'
     );
 
     const dashboardMedico = leaf(
       ROUTES.DASHBOARD_MEDICO,
       <DashboardOutlined />,
-      'Dashboard'
+      'Inicio'
     );
 
-    const dashboardConsultor = leaf(
-      ROUTES.DASHBOARD_CONSULTOR,
-      <EyeOutlined />,
-      'Dashboard'
+    const dashboardAuditor = leaf(
+      ROUTES.DASHBOARD_AUDITOR,
+      <AuditOutlined />,
+      'Inicio'
     );
 
     const pacienteAdmin = section(
@@ -249,7 +258,6 @@ const PrivateLayout: React.FC = () => {
           <FileTextOutlined />,
           'Confirmar atención'
         ),
-        leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos'),
       ]
     );
 
@@ -257,22 +265,7 @@ const PrivateLayout: React.FC = () => {
       'section-paciente',
       <UserOutlined />,
       'Paciente',
-      'Atención y procedimientos',
-      [
-        leaf(
-          ROUTES.CONFIRMAR_ATENCION,
-          <FileTextOutlined />,
-          'Confirmar atención'
-        ),
-        leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos'),
-      ]
-    );
-
-    const pacienteConsultor = section(
-      'section-paciente',
-      <UserOutlined />,
-      'Paciente',
-      'Búsqueda y registro',
+      'Registro y atención',
       [
         leaf(
           ROUTES.CONFIRMAR_ATENCION,
@@ -309,6 +302,7 @@ const PrivateLayout: React.FC = () => {
       'Consulta',
       'Referencias, estudios y control',
       [
+        leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos'),
         leaf(
           ROUTES.HOJA_REFERENCIA,
           <MedicineBoxOutlined />,
@@ -332,6 +326,12 @@ const PrivateLayout: React.FC = () => {
         leaf(ROUTES.APPOINTMENTS, <CalendarOutlined />, 'Citas'),
         leaf(ROUTES.PRESCRIPTIONS, <FileTextOutlined />, 'Recetas'),
       ]
+    );
+
+    const inventario = leaf(
+      ROUTES.INVENTORY,
+      <MedicineBoxOutlined />,
+      'Inventario'
     );
 
     const formatos = section(
@@ -379,21 +379,27 @@ const PrivateLayout: React.FC = () => {
 
     const administracionMedico = section(
       'section-admin',
-      <SettingOutlined />,
+      <BarChartOutlined />,
       'Administración',
-      'Reportes y configuración',
-      [
-        leaf(ROUTES.REPORTS, <BarChartOutlined />, 'Reportes'),
-        leaf(ROUTES.SETTINGS, <SettingOutlined />, 'Configuración'),
-      ]
+      'Reportes',
+      [leaf(ROUTES.REPORTS, <BarChartOutlined />, 'Reportes')]
     );
 
-    const reportesConsultor = section(
-      'section-reportes',
-      <BarChartOutlined />,
-      'Reportes',
-      'Consulta de información',
-      [leaf(ROUTES.REPORTS, <BarChartOutlined />, 'Reportes')]
+    const auditoria = leaf(
+      ROUTES.AUDIT,
+      <AuditOutlined />,
+      'Auditoría'
+    );
+
+    const documentacionAuditor = section(
+      'section-auditor-docs',
+      <FileSearchOutlined />,
+      'Documentación',
+      'Consulta y reportes',
+      [
+        leaf(ROUTES.PRESCRIPTIONS, <FileTextOutlined />, 'Recetas emitidas'),
+        leaf(ROUTES.CONTROL_DIARIO_PACIENTES, <TableOutlined />, 'Control diario'),
+      ]
     );
 
     switch (rolId) {
@@ -403,6 +409,7 @@ const PrivateLayout: React.FC = () => {
           pacienteAdmin,
           expediente,
           consulta,
+          inventario,
           formatos,
           administracionAdmin,
         ];
@@ -418,24 +425,10 @@ const PrivateLayout: React.FC = () => {
         ];
 
       case 3:
-        return [
-          dashboardConsultor,
-          pacienteConsultor,
-          expediente,
-          consulta,
-          formatos,
-          reportesConsultor,
-        ];
+        return [dashboardAuditor, auditoria, documentacionAuditor];
 
       default:
-        return [
-          dashboardConsultor,
-          pacienteConsultor,
-          expediente,
-          consulta,
-          formatos,
-          reportesConsultor,
-        ];
+        return [];
     }
   }, [rolId, collapsed]);
 
@@ -444,7 +437,7 @@ const PrivateLayout: React.FC = () => {
   }, [menuItems, location.pathname]);
 
   const selectedKey = activeMenuItem?.key || normalizeMenuPathname(location.pathname);
-  const pageTitle = activeMenuItem?.title || 'Dashboard';
+  const pageTitle = activeMenuItem?.title || 'Inicio';
 
   useEffect(() => {
     if (collapsed) {
@@ -508,26 +501,12 @@ const PrivateLayout: React.FC = () => {
     setOpenKeys(keys);
   };
 
-  const getRolName = () => {
-    switch (rolId) {
-      case 1:
-        return 'Administrador';
-
-      case 2:
-        return 'Médico';
-
-      case 3:
-        return 'Consultor';
-
-      default:
-        return 'Usuario';
-    }
-  };
+  const getRolName = () => getRoleLabel(activeUser);
 
   const userMenuItems = [
     { key: 'profile', icon: <ProfileOutlined />, label: 'Mi perfil' },
-    ...(rolId !== 3
-      ? [{ key: 'settings', icon: <SettingOutlined />, label: 'Configuración' }]
+    ...(rolId === 1
+      ? [{ key: 'settings', icon: <SettingOutlined />, label: 'Configuración del sistema' }]
       : []),
     { type: 'divider' as const },
     {
@@ -566,8 +545,18 @@ const PrivateLayout: React.FC = () => {
       >
         <div className="logo-container">
           <div className={`logo ${collapsed ? 'collapsed' : ''}`}>
-            <HeartOutlined className="logo-icon" />
-            {!collapsed && <span className="logo-text">MediSys</span>}
+            {systemConfig.logoDataUrl ? (
+              <img
+                src={systemConfig.logoDataUrl}
+                alt={systemConfig.nombreCorto}
+                className="system-sidebar-logo-image"
+              />
+            ) : (
+              <HeartOutlined className="logo-icon" />
+            )}
+            {!collapsed && systemConfig.mostrarNombreSidebar && (
+              <span className="logo-text">{systemConfig.nombreCorto}</span>
+            )}
           </div>
         </div>
 

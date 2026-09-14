@@ -3,7 +3,8 @@ export const ROUTES = {
 
   DASHBOARD_ADMIN: '/dashboard',
   DASHBOARD_MEDICO: '/dashboard-medico',
-  DASHBOARD_CONSULTOR: '/dashboard-consultor',
+  DASHBOARD_AUDITOR: '/dashboard-auditor',
+  AUDIT: '/auditoria',
 
   CLINICS: '/clinicas',
   CLINIC_NEW: '/clinicas/nueva',
@@ -38,6 +39,7 @@ export const ROUTES = {
   APPOINTMENTS: '/citas',
   MEDICAL_RECORDS: '/expedientes',
   PRESCRIPTIONS: '/recetas',
+  INVENTORY: '/inventario',
   REPORTS: '/reportes',
   USERS: '/usuarios',
   SETTINGS: '/configuracion',
@@ -47,20 +49,17 @@ export const ROUTES = {
 export const ROLES = {
   ADMIN: 1,
   MEDICO: 2,
-  CONSULTOR: 3,
+  AUDITOR: 3,
 } as const;
 
 export const getDashboardByRole = (rolId?: number) => {
   switch (Number(rolId)) {
     case ROLES.ADMIN:
       return ROUTES.DASHBOARD_ADMIN;
-
     case ROLES.MEDICO:
       return ROUTES.DASHBOARD_MEDICO;
-
-    case ROLES.CONSULTOR:
-      return ROUTES.DASHBOARD_CONSULTOR;
-
+    case ROLES.AUDITOR:
+      return ROUTES.DASHBOARD_AUDITOR;
     default:
       return ROUTES.LOGIN;
   }
@@ -96,6 +95,7 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.APPOINTMENTS,
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
+    ROUTES.INVENTORY,
     ROUTES.REPORTS,
     ROUTES.SETTINGS,
     ROUTES.PROFILE,
@@ -127,32 +127,16 @@ export const ROLE_ALLOWED_ROUTES: Record<number, string[]> = {
     ROUTES.MEDICAL_RECORDS,
     ROUTES.PRESCRIPTIONS,
     ROUTES.REPORTS,
-    ROUTES.SETTINGS,
     ROUTES.PROFILE,
   ],
 
-  [ROLES.CONSULTOR]: [
-    ROUTES.DASHBOARD_CONSULTOR,
-    ROUTES.PATIENTS,
-    ROUTES.CONFIRMAR_ATENCION,
-    ROUTES.BUSQUEDA_PACIENTE,
-    ROUTES.HISTORIAL_CLINICO,
-    ROUTES.HISTORIALES_DISPONIBLES,
-    ROUTES.NOTA_EVOLUCION,
-    ROUTES.HISTORICO_PACIENTE,
-    ROUTES.HOJA_REFERENCIA,
-    ROUTES.HOJA_REFERENCIA_CREAR,
-    ROUTES.ESTUDIOS_CLINICOS,
-    ROUTES.CERTIFICADO_MEDICO,
-    ROUTES.CONTROL_DIARIO_PACIENTES,
-    ROUTES.DOCUMENTOS,
-    ROUTES.CONSENTIMIENTO_INFORMADO,
-    ROUTES.FARMACO_VIGILANCIA,
-    ROUTES.AVISO_PRIVACIDAD,
-    ROUTES.AVISO_MEDICO_COMODATARIO,
-    ROUTES.APPOINTMENTS,
+  // Auditor: lectura y trazabilidad. No puede registrar pacientes, atender,
+  // modificar inventario, usuarios, consultorios ni configuración.
+  [ROLES.AUDITOR]: [
+    ROUTES.DASHBOARD_AUDITOR,
+    ROUTES.AUDIT,
     ROUTES.PRESCRIPTIONS,
-    ROUTES.REPORTS,
+    ROUTES.CONTROL_DIARIO_PACIENTES,
     ROUTES.PROFILE,
   ],
 };

@@ -10,7 +10,6 @@ import {
   ShopOutlined,
   BarChartOutlined,
   HeartOutlined,
-  EyeOutlined,
   HistoryOutlined,
   FormOutlined,
   FolderOpenOutlined,
@@ -22,10 +21,14 @@ import {
   SafetyCertificateOutlined,
   FileProtectOutlined,
   TeamOutlined,
+  AuditOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../router/routes';
+import useSystemConfig from '../../hooks/useSystemConfig';
+import { getUserRoleId } from '../../utils/role.utils';
 import './MobileMenu.css';
 
 interface MobileMenuProps {
@@ -115,11 +118,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   const location = useLocation();
   const { user } = useAuth();
   const [openKeys, setOpenKeys] = useState<string[]>([]);
+  const systemConfig = useSystemConfig();
 
   const activeUser = user || getUserFromStorage();
-  const rolId = Number(
-    (activeUser as any)?.rol_id || (activeUser as any)?.rolId || 0
-  );
+  const rolId = getUserRoleId(activeUser);
 
   const menuItems = useMemo<MenuItem[]>(() => {
     const leaf = (key: string, icon: React.ReactNode, label: string) => ({
@@ -150,46 +152,21 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 
     const dashboard =
       rolId === 1
-        ? leaf(ROUTES.DASHBOARD_ADMIN, <DashboardOutlined />, 'Dashboard')
+        ? leaf(ROUTES.DASHBOARD_ADMIN, <DashboardOutlined />, 'Inicio')
         : rolId === 2
-          ? leaf(ROUTES.DASHBOARD_MEDICO, <DashboardOutlined />, 'Dashboard')
-          : leaf(ROUTES.DASHBOARD_CONSULTOR, <EyeOutlined />, 'Dashboard');
+          ? leaf(ROUTES.DASHBOARD_MEDICO, <DashboardOutlined />, 'Inicio')
+          : leaf(ROUTES.DASHBOARD_AUDITOR, <AuditOutlined />, 'Inicio');
 
-    const paciente =
-      rolId === 3
-        ? section(
-            'mobile-section-paciente',
-            <UserOutlined />,
-            'Paciente',
-            'Búsqueda y registro',
-            [
-              leaf(ROUTES.PATIENTS, <UserOutlined />, 'Pacientes'),
-              leaf(
-                ROUTES.CONFIRMAR_ATENCION,
-                <FileTextOutlined />,
-                'Registrar atención'
-              ),
-            ]
-          )
-        : section(
-            'mobile-section-paciente',
-            <UserOutlined />,
-            'Paciente',
-            'Registro y atención',
-            [
-              leaf(ROUTES.PATIENTS, <UserOutlined />, 'Pacientes'),
-              leaf(
-                ROUTES.CONFIRMAR_ATENCION,
-                <FileTextOutlined />,
-                'Registrar atención'
-              ),
-              leaf(
-                ROUTES.PROCEDIMIENTOS,
-                <MedicineBoxOutlined />,
-                'Procedimientos'
-              ),
-            ]
-          );
+    const paciente = section(
+      'mobile-section-paciente',
+      <UserOutlined />,
+      'Paciente',
+      'Registro y atención',
+      [
+        leaf(ROUTES.PATIENTS, <UserOutlined />, 'Pacientes'),
+        leaf(ROUTES.CONFIRMAR_ATENCION, <FileTextOutlined />, 'Registrar atención'),
+      ]
+    );
 
     const expediente = section(
       'mobile-section-expediente',
@@ -218,6 +195,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
       'Consulta',
       'Atención médica',
       [
+        ...(rolId === 1 || rolId === 2
+          ? [leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos')]
+          : []),
         leaf(
           ROUTES.HOJA_REFERENCIA,
           <MedicineBoxOutlined />,
@@ -241,6 +221,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
         leaf(ROUTES.APPOINTMENTS, <CalendarOutlined />, 'Citas'),
         leaf(ROUTES.PRESCRIPTIONS, <FileTextOutlined />, 'Recetas'),
       ]
+    );
+
+    const inventario = leaf(
+      ROUTES.INVENTORY,
+      <MedicineBoxOutlined />,
+      'Inventario'
     );
 
     const formatos = section(
@@ -287,26 +273,39 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               leaf(ROUTES.SETTINGS, <SettingOutlined />, 'Configuración'),
             ]
           )
-        : rolId === 2
-          ? section(
-              'mobile-section-admin',
-              <SettingOutlined />,
-              'Administración',
-              'Reportes y ajustes',
-              [
-                leaf(ROUTES.REPORTS, <BarChartOutlined />, 'Reportes'),
-                leaf(ROUTES.SETTINGS, <SettingOutlined />, 'Configuración'),
-              ]
-            )
-          : section(
-              'mobile-section-reportes',
-              <BarChartOutlined />,
-              'Reportes',
-              'Información',
-              [leaf(ROUTES.REPORTS, <BarChartOutlined />, 'Reportes')]
-            );
+        : section(
+            'mobile-section-admin',
+            <BarChartOutlined />,
+            'Administración',
+            'Reportes',
+            [leaf(ROUTES.REPORTS, <BarChartOutlined />, 'Reportes')]
+          );
 
-    return [dashboard, paciente, expediente, consulta, formatos, administracion];
+    const auditoria = leaf(ROUTES.AUDIT, <AuditOutlined />, 'Auditoría');
+    const documentacionAuditor = section(
+      'mobile-section-auditor-docs',
+      <FileSearchOutlined />,
+      'Documentación',
+      'Consulta y reportes',
+      [
+        leaf(ROUTES.PRESCRIPTIONS, <FileTextOutlined />, 'Recetas emitidas'),
+        leaf(ROUTES.CONTROL_DIARIO_PACIENTES, <TableOutlined />, 'Control diario'),
+      ]
+    );
+
+    if (rolId === 3) {
+      return [dashboard, auditoria, documentacionAuditor];
+    }
+
+    return [
+      dashboard,
+      paciente,
+      expediente,
+      consulta,
+      ...(rolId === 1 ? [inventario] : []),
+      formatos,
+      administracion,
+    ];
   }, [rolId]);
 
   const activeMenuItem = useMemo(() => {
@@ -363,11 +362,19 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
       <aside className="mobile-menu-panel">
         <div className="mobile-drawer-header">
           <div className="mobile-drawer-brand">
-            <HeartOutlined className="mobile-drawer-logo" />
+            {systemConfig.logoDataUrl ? (
+              <img
+                src={systemConfig.logoDataUrl}
+                alt={systemConfig.nombreCorto}
+                className="mobile-system-logo-image"
+              />
+            ) : (
+              <HeartOutlined className="mobile-drawer-logo" />
+            )}
 
             <div>
-              <span className="mobile-drawer-title">MediSys</span>
-              <small>Consultorio médico</small>
+              <span className="mobile-drawer-title">{systemConfig.nombreCorto}</span>
+              <small>{systemConfig.subtitulo}</small>
             </div>
           </div>
         </div>

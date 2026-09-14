@@ -19,7 +19,8 @@ import Perfil from '../pages/Perfil/Perfil';
 
 import Dashboard from '../pages/Dashboard/Dashboard';
 import DashboardMedico from '../pages/DashboardMedico/DashboardMedico';
-import DashboardConsultor from '../pages/DashboardConsultor/DashboardConsultor';
+import DashboardAuditor from '../pages/DashboardAuditor/DashboardAuditor';
+import Auditoria from '../pages/Auditoria/Auditoria';
 
 import Clinicas from '../pages/clinicas/Clinicas';
 import Usuarios from '../pages/Usuarios/Usuarios';
@@ -38,6 +39,10 @@ import HojaReferencia from '../pages/HojaReferencia/HojaReferencia';
 import EstudiosClinicos from '../pages/EstudiosClinicos/EstudiosClinicos';
 import CertificadoMedico from '../pages/CertificadoMedico/CertificadoMedico';
 import ControlDiarioPacientes from '../pages/ControlDiarioPacientes/ControlDiarioPacientes';
+import Citas from '../pages/Citas/Citas';
+import Recetas from '../pages/Recetas/Recetas';
+import Inventario from '../pages/Inventario/Inventario';
+import ConfiguracionSistema from '../pages/ConfiguracionSistema/ConfiguracionSistema';
 import Documentos from '../pages/Documentos/Documentos';
 import ConsentimientoInformado from '../pages/ConsentimientoInformado/ConsentimientoInformado';
 import FarmacoVigilancia from '../pages/FarmacoVigilancia/FarmacoVigilancia';
@@ -49,6 +54,7 @@ import {
   getDashboardByRole,
   canAccessRoute,
 } from '../router/routes';
+import { getUserRoleId } from '../utils/role.utils';
 
 const LoadingScreen: React.FC = () => (
   <div
@@ -82,7 +88,7 @@ const RoleRedirect: React.FC = () => {
 
   if (isLoading) return <LoadingScreen />;
 
-  return <Navigate to={getDashboardByRole(user?.rol_id)} replace />;
+  return <Navigate to={getDashboardByRole(getUserRoleId(user))} replace />;
 };
 
 const RoleRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -91,10 +97,11 @@ const RoleRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   if (isLoading) return <LoadingScreen />;
 
-  const allowed = canAccessRoute(user?.rol_id, location.pathname);
+  const roleId = getUserRoleId(user);
+  const allowed = canAccessRoute(roleId, location.pathname);
 
   if (!allowed) {
-    return <Navigate to={getDashboardByRole(user?.rol_id)} replace />;
+    return <Navigate to={getDashboardByRole(getUserRoleId(user))} replace />;
   }
 
   return <>{children}</>;
@@ -139,10 +146,19 @@ const AppRouter: React.FC = () => {
               />
 
               <Route
-                path={ROUTES.DASHBOARD_CONSULTOR}
+                path={ROUTES.DASHBOARD_AUDITOR}
                 element={
                   <RoleRoute>
-                    <DashboardConsultor />
+                    <DashboardAuditor />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.AUDIT}
+                element={
+                  <RoleRoute>
+                    <Auditoria />
                   </RoleRoute>
                 }
               />
@@ -292,6 +308,33 @@ const AppRouter: React.FC = () => {
               />
 
               <Route
+                path={ROUTES.APPOINTMENTS}
+                element={
+                  <RoleRoute>
+                    <Citas />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.PRESCRIPTIONS}
+                element={
+                  <RoleRoute>
+                    <Recetas />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
+                path={ROUTES.INVENTORY}
+                element={
+                  <RoleRoute>
+                    <Inventario />
+                  </RoleRoute>
+                }
+              />
+
+              <Route
                 path={ROUTES.DOCUMENTOS}
                 element={
                   <RoleRoute>
@@ -332,6 +375,16 @@ const AppRouter: React.FC = () => {
                 element={
                   <RoleRoute>
                     <AvisoMedicoComodatario />
+                  </RoleRoute>
+                }
+              />
+
+
+              <Route
+                path={ROUTES.SETTINGS}
+                element={
+                  <RoleRoute>
+                    <ConfiguracionSistema />
                   </RoleRoute>
                 }
               />

@@ -1,0 +1,398 @@
+.clinical-rx-sheet {
+  --doc-primary: #0d847d;
+  --doc-primary-soft: #eafaf8;
+  --doc-border: #bfe8e5;
+  --doc-text: #0d1b2f;
+  --doc-muted: #66758a;
+  width: min(100%, 794px);
+  margin: 0 auto;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #dce8eb;
+  border-radius: 6px;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.09);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.clinical-rx-copy {
+  position: relative;
+  min-height: 345px;
+  padding: 15px 18px 13px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #cce7e5;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--doc-text);
+}
+
+.clinical-rx-watermark {
+  position: absolute;
+  z-index: 0;
+  left: 57%;
+  top: 60%;
+  transform: translate(-50%, -50%) rotate(-27deg);
+  color: rgba(13, 132, 125, 0.045);
+  font-size: 74px;
+  font-weight: 950;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.clinical-rx-copy > *:not(.clinical-rx-watermark) {
+  position: relative;
+  z-index: 1;
+}
+
+.clinical-rx-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.clinical-rx-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.clinical-rx-logo {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(145deg, #14a59c, #0d847d);
+  font-size: 17px;
+}
+
+.clinical-rx-brand strong {
+  display: block;
+  color: var(--doc-primary);
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.clinical-rx-brand small {
+  display: block;
+  margin-top: 4px;
+  color: var(--doc-text);
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: .55px;
+}
+
+.clinical-rx-meta {
+  text-align: right;
+}
+
+.clinical-rx-copy-label {
+  display: inline-flex;
+  margin-bottom: 3px;
+  padding: 2px 6px;
+  border: 1px solid #bde8e4;
+  border-radius: 999px;
+  color: var(--doc-primary);
+  background: var(--doc-primary-soft);
+  font-size: 6px;
+  font-weight: 950;
+  letter-spacing: .45px;
+}
+
+.clinical-rx-meta > span:not(.clinical-rx-copy-label) {
+  display: block;
+  color: var(--doc-muted);
+  font-size: 6px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.clinical-rx-meta strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 8px;
+  line-height: 1.2;
+}
+
+.clinical-rx-meta small {
+  display: block;
+  margin-top: 2px;
+  color: var(--doc-muted);
+  font-size: 6px;
+}
+
+.clinical-rx-rule {
+  height: 2px;
+  margin: 8px 0 7px;
+  background: var(--doc-primary);
+}
+
+.clinical-rx-layout {
+  display: grid;
+  grid-template-columns: 32% minmax(0, 1fr);
+  gap: 9px;
+}
+
+.clinical-rx-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.clinical-rx-doctor-box,
+.clinical-rx-info-box,
+.clinical-rx-mini-grid > div,
+.clinical-rx-followup-grid > div {
+  min-width: 0;
+  padding: 6px 7px;
+  border: 1px solid var(--doc-border);
+  border-radius: 6px;
+  background: rgba(247, 253, 252, .9);
+}
+
+.clinical-rx-doctor-box span,
+.clinical-rx-info-box span,
+.clinical-rx-mini-grid span,
+.clinical-rx-followup-grid span {
+  display: block;
+  color: #718096;
+  font-size: 5.8px;
+  line-height: 1.2;
+  font-weight: 950;
+  letter-spacing: .35px;
+}
+
+.clinical-rx-doctor-box strong,
+.clinical-rx-info-box strong,
+.clinical-rx-mini-grid strong,
+.clinical-rx-followup-grid strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--doc-text);
+  font-size: 7px;
+  line-height: 1.25;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.clinical-rx-doctor-box small {
+  display: block;
+  margin-top: 2px;
+  color: var(--doc-muted);
+  font-size: 6px;
+  line-height: 1.2;
+}
+
+.clinical-rx-section-block h3,
+.clinical-rx-body h3 {
+  margin: 0 0 4px;
+  color: var(--doc-primary);
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.clinical-rx-mini-grid {
+  display: grid;
+  grid-template-columns: 1.2fr .85fr .65fr;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.clinical-rx-history {
+  margin-top: 1px;
+}
+
+.clinical-rx-body {
+  min-width: 0;
+}
+
+.clinical-rx-info-box--diagnosis {
+  min-height: 32px;
+  padding: 6px 8px;
+}
+
+.clinical-rx-info-box--diagnosis strong {
+  color: #0f766e;
+  font-size: 7.4px;
+  line-height: 1.3;
+}
+
+.clinical-rx-rp {
+  margin-top: 6px;
+}
+
+.clinical-rx-rp-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #dce9eb;
+}
+
+.clinical-rx-rp-title h3 {
+  margin: 0;
+  font-size: 9px;
+  text-transform: none;
+}
+
+.clinical-rx-rp-title small {
+  color: var(--doc-muted);
+  font-size: 5.8px;
+  font-weight: 800;
+}
+
+.clinical-rx-medications {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clinical-rx-medications li {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.2fr);
+  gap: 7px;
+  padding: 5px 0;
+  border-bottom: 1px solid #edf2f3;
+}
+
+.clinical-rx-med-main strong,
+.clinical-rx-med-treatment strong {
+  display: block;
+  color: var(--doc-text);
+  font-size: 6.8px;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.clinical-rx-med-main small,
+.clinical-rx-med-treatment small,
+.clinical-rx-med-treatment em {
+  display: block;
+  margin-top: 2px;
+  color: var(--doc-muted);
+  font-size: 5.8px;
+  line-height: 1.3;
+  font-style: normal;
+  overflow-wrap: anywhere;
+}
+
+.clinical-rx-empty {
+  padding: 12px;
+  color: var(--doc-muted);
+  font-size: 7px;
+  text-align: center;
+}
+
+.clinical-rx-instructions {
+  margin-top: 6px;
+}
+
+.clinical-rx-instructions > div {
+  min-height: 24px;
+  padding: 6px 7px;
+  border: 1px solid #eadc9e;
+  border-radius: 6px;
+  background: #fffbed;
+  color: #3c4655;
+  font-size: 6.4px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.clinical-rx-followup-grid {
+  display: grid;
+  grid-template-columns: .65fr .75fr 1.6fr;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.clinical-rx-footer {
+  display: grid;
+  grid-template-columns: 135px 1fr;
+  gap: 16px;
+  align-items: end;
+  margin-top: 9px;
+}
+
+.clinical-rx-signature {
+  text-align: center;
+}
+
+.clinical-rx-signature span {
+  display: block;
+  height: 12px;
+  border-bottom: 1px solid #1f2937;
+}
+
+.clinical-rx-signature strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 5.8px;
+}
+
+.clinical-rx-footer p {
+  margin: 0;
+  color: #7a8798;
+  font-size: 5.2px;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.clinical-rx-cut {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px;
+  margin: 7px 1px;
+  color: #94a3b8;
+  font-size: 8px;
+}
+
+.clinical-rx-cut div {
+  border-top: 1px dashed #a8b4c1;
+}
+
+.clinical-rx-sheet--single .clinical-rx-cut {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .clinical-rx-sheet { padding: 7px; }
+  .clinical-rx-copy { min-height: 0; padding: 12px; }
+  .clinical-rx-layout { grid-template-columns: 1fr; }
+  .clinical-rx-sidebar { display: grid; grid-template-columns: 1fr 1fr; }
+  .clinical-rx-section-block { grid-column: 1 / -1; }
+  .clinical-rx-medications li { grid-template-columns: 1fr; }
+  .clinical-rx-footer { grid-template-columns: 1fr; }
+}
+
+@media print {
+  @page { size: A4 portrait; margin: 5mm; }
+  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  .clinical-rx-sheet {
+    width: 200mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+  .clinical-rx-copy {
+    min-height: 137mm !important;
+    max-height: 137mm !important;
+    padding: 5mm 6mm 4mm !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .clinical-rx-cut { margin: 2.2mm 0 !important; }
+}
