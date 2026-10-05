@@ -1,9 +1,8 @@
 import React from 'react';
-import { Button, Typography } from 'antd';
+import { Typography } from 'antd';
 import {
   FileSearchOutlined,
   FileAddOutlined,
-  ArrowLeftOutlined,
   ArrowRightOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';

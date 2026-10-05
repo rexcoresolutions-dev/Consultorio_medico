@@ -1,0 +1,33 @@
+.platform-page { padding: 28px; max-width: 1500px; margin: 0 auto; }
+.platform-heading { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-bottom: 22px; }
+.platform-heading h2 { margin: 0 0 2px !important; }
+.platform-shell { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+.company-list, .company-detail { background: #fff; border: 1px solid #eee8f7; border-radius: 20px; padding: 18px; }
+.company-list { position: sticky; top: 18px; }
+.company-list-items { display: grid; gap: 10px; margin-top: 16px; }
+.company-option, .branch-option { border: 1px solid #e6def2; background: #fff; border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; color: #29124f; transition: .2s ease; }
+.company-option:hover, .branch-option:hover, .company-option.selected, .branch-option.selected { border-color: var(--system-brand-color, #7c3aed); background: var(--system-brand-color-soft, #f7f2ff); box-shadow: 0 5px 18px var(--system-brand-color-shadow, rgba(80, 35, 135, .08)); }
+.company-option > span:nth-child(2), .branch-option > span { display: grid; gap: 3px; flex: 1; }
+.company-option small, .branch-option small, .service-grid small, .payment-row small { color: #7b7288; }
+.company-option-icon, .company-logo { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--system-brand-color-soft, #efe5ff); color: var(--system-brand-color, #6d28d9); font-size: 20px; }
+.company-hero .ant-card-body { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.company-hero-main { display: flex; align-items: center; gap: 15px; }
+.company-hero h3 { margin: 2px 0 !important; }
+.eyebrow { color: var(--system-brand-color, #7c3aed) !important; font-weight: 700; letter-spacing: .08em; font-size: 11px; }
+.service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.service-grid .ant-card-body { display: grid; gap: 5px; min-height: 126px; }
+.service-grid .anticon { color: var(--system-brand-color, #7c3aed); font-size: 20px; }
+.service-grid strong { font-size: 18px; color: #201231; }
+.service-actions, .branches-card, .payments-card { margin-top: 16px; }
+.suspension-reason { margin: 14px 0 0 !important; }
+.branch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.branch-option > .anticon:first-child { color: var(--system-brand-color, #7c3aed); font-size: 22px; }
+.branch-option > .anticon:last-child, .company-option > .anticon:last-child { color: #22a06b; }
+.enter-row { display: flex; justify-content: flex-end; margin-top: 18px; }
+.payment-row { padding: 12px 0; display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid #f0ecf5; }
+.payment-row > span:first-child { display: grid; }
+.calculated-period { border-radius: 12px; background: #f7f2ff; border: 1px solid #e3d5fa; padding: 13px 15px; display: grid; gap: 4px; }
+.calculated-period span { color: #776b85; font-size: 12px; }
+.calculated-period strong { color: #4c1d95; }
+@media (max-width: 1050px) { .platform-shell { grid-template-columns: 1fr; } .company-list { position: static; } .company-list-items { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } .service-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .platform-page { padding: 16px; } .platform-heading { align-items: flex-start; } .company-list, .company-detail { padding: 13px; border-radius: 15px; } .service-grid { grid-template-columns: 1fr; } .company-hero .ant-card-body, .payment-row { align-items: flex-start; flex-direction: column; } .enter-row .ant-btn { width: 100%; } }

@@ -1,3 +1,4 @@
+import { farmacoService } from '../../services/operacion/operacion.service';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   App,
@@ -23,7 +24,6 @@ import './FarmacoVigilancia.css';
 
 const { Title, Text } = Typography;
 
-const FARMACO_VIGILANCIA_STORAGE_KEY = 'farmaco_vigilancia_archivo';
 const MAX_FILE_SIZE_MB = 6;
 
 type StoredFarmacoFile = {
@@ -144,17 +144,11 @@ const FarmacoVigilancia: React.FC = () => {
   const medicoNombre = useMemo(() => getCurrentUserName(), []);
 
   useEffect(() => {
-    try {
-      const storedFile = localStorage.getItem(FARMACO_VIGILANCIA_STORAGE_KEY);
-
-      if (storedFile) {
-        setArchivo(JSON.parse(storedFile));
-      }
-    } catch {
-      localStorage.removeItem(FARMACO_VIGILANCIA_STORAGE_KEY);
-    } finally {
-      setLoading(false);
-    }
+    let active = true;
+    farmacoService.get().then(file => { if (active) setArchivo(file); })
+      .catch(() => { if (active) message.error('No se pudo cargar el archivo del servidor.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const handleFileUpload = async (file: RcFile) => {
@@ -185,12 +179,8 @@ const FarmacoVigilancia: React.FC = () => {
         uploadedBy: medicoNombre,
       };
 
-      localStorage.setItem(
-        FARMACO_VIGILANCIA_STORAGE_KEY,
-        JSON.stringify(newFile)
-      );
-
-      setArchivo(newFile);
+      const saved = await farmacoService.save({ name: newFile.name, type: newFile.type, size: newFile.size, dataUrl: newFile.dataUrl });
+      setArchivo(saved);
 
       message.success(
         archivo
@@ -200,7 +190,7 @@ const FarmacoVigilancia: React.FC = () => {
     } catch (error) {
       console.error('Error al guardar archivo:', error);
       message.error(
-        'No se pudo guardar el archivo. Puede que sea demasiado pesado para localStorage.'
+        'No se pudo guardar el archivo en el servidor.'
       );
     } finally {
       setSaving(false);
@@ -221,8 +211,8 @@ const FarmacoVigilancia: React.FC = () => {
       okText: 'Sí, eliminar',
       cancelText: 'Cancelar',
       okButtonProps: { danger: true },
-      onOk: () => {
-        localStorage.removeItem(FARMACO_VIGILANCIA_STORAGE_KEY);
+      onOk: async () => {
+        await farmacoService.remove();
         setArchivo(null);
         message.success('Archivo eliminado correctamente.');
       },

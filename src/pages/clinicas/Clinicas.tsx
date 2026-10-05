@@ -10,7 +10,6 @@ import {
   Form,
   Input,
   Tag,
-  Popconfirm,
   Tooltip,
   Grid,
   Drawer,
@@ -131,7 +130,9 @@ const Consultorios: React.FC = () => {
         activo: item.activo,
       }));
 
-      const empresaId = user?.empresa_id;
+      const empresaId = Number(user?.rol_id) === 4
+        ? Number(sessionStorage.getItem('empresa_contexto_id')) || undefined
+        : user?.empresa_id;
 
       setConsultorios(
         empresaId ? normalized.filter((item) => item.empresa_id === empresaId) : normalized
@@ -351,7 +352,14 @@ const handleDelete = async (consultorio: Consultorio) => {
       width: 115,
       render: (_, record) => (
         <Space size="small">
-        
+            <Tooltip title="Editar datos">
+              <Button
+                className="action-btn edit-btn"
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+              />
+            </Tooltip>
             <Tooltip title="Desactivar">
               <Button
                 className="action-btn delete-btn"

@@ -10,7 +10,6 @@ import {
   CheckCircleOutlined,
   EyeOutlined,
   AlertOutlined,
-  ShopOutlined,
   RiseOutlined,
 } from '@ant-design/icons';
 

@@ -27,7 +27,7 @@ const maleEndings = ['o', 'io', 'eo', 'ano', 'eno', 'ino', 'ón', 'os', 'ez'];
 
 export type Gender = 'MALE' | 'FEMALE' | 'UNKNOWN';
 
-export function detectGender(nombre: string, primerApellido?: string, segundoApellido?: string): Gender {
+export function detectGender(nombre: string, _primerApellido?: string, _segundoApellido?: string): Gender {
   if (!nombre) return 'UNKNOWN';
   
   const nombreLower = nombre.toLowerCase().trim();

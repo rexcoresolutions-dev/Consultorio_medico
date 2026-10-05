@@ -1,3 +1,5 @@
+import api from '../../api/axios.config';
+import { apiData } from '../operacion/operacion.service';
 export type EstadoProcedimiento = 'activo' | 'inactivo';
 export type TipoMovimientoProcedimiento = 'registro' | 'correccion' | 'saldo_inicial';
 
@@ -54,29 +56,6 @@ export type ResumenDiarioProcedimientos = {
 
 export const PROCEDIMIENTOS_UPDATED_EVENT = 'consultorio-procedimientos-updated';
 
-const CATALOGO_KEY = 'consultorio_procedimientos_catalogo_v2';
-const MOVIMIENTOS_KEY = 'consultorio_procedimientos_movimientos_v2';
-const MIGRACION_KEY = 'consultorio_procedimientos_migracion_v2';
-const LEGACY_KEY = 'procedimientos_globales_v1';
-
-const PROCEDIMIENTOS_BASE: ProcedimientoCatalogo[] = [
-  { id: 1, nombre: 'APLICACIÓN DE INYECCIÓN', descripcion: 'Aplicación de medicamento por vía inyectable.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 2, nombre: 'COLOCACIÓN Y RETIRO DE IMPLANTES', descripcion: 'Colocación o retiro de implantes en consultorio.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 3, nombre: 'CONTROL DE EMBARAZO', descripcion: 'Atención y seguimiento general de embarazo.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 4, nombre: 'CONTROL DE NIÑO SANO', descripcion: 'Control preventivo y seguimiento del niño sano.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 5, nombre: 'CURACIÓN', descripcion: 'Curación y manejo básico de heridas.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 6, nombre: 'EXTRACCIÓN DE CUERPO EXTRAÑO', descripcion: 'Extracción de cuerpo extraño de baja complejidad.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 7, nombre: 'GLUCOMETRÍA', descripcion: 'Medición capilar de glucosa.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 8, nombre: 'LAVADO NASAL', descripcion: 'Lavado y aseo de cavidad nasal.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 9, nombre: 'LAVADO ÓTICO', descripcion: 'Lavado y limpieza del conducto auditivo.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 10, nombre: 'MEDICINA PREVENTIVA', descripcion: 'Intervención o actividad preventiva realizada en consultorio.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 11, nombre: 'NEBULIZACIÓN', descripcion: 'Administración de tratamiento mediante nebulización.', estado: 'activo', creado_en: '', actualizado_en: '' },
-  { id: 12, nombre: 'ONICOCRIPTOSIS', descripcion: 'Atención de uña encarnada u onicocriptosis.', estado: 'activo', creado_en: '', actualizado_en: '' },
-];
-
-const nowIso = () => new Date().toISOString();
-const normalizeText = (value: unknown) => String(value ?? '').trim();
-
 export const getLocalDayKey = (value: Date | string = new Date()) => {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '';
@@ -84,107 +63,6 @@ export const getLocalDayKey = (value: Date | string = new Date()) => {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
-};
-
-const parseJson = <T>(key: string, fallback: T): T => {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-const writeJson = (key: string, value: unknown) => {
-  localStorage.setItem(key, JSON.stringify(value));
-};
-
-const notifyUpdated = () => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(PROCEDIMIENTOS_UPDATED_EVENT));
-  }
-};
-
-const getUserContext = () => {
-  const user = parseJson<any>('user', null);
-  const authUser = parseJson<any>('auth_user', null);
-  const sessionUser = parseJson<any>('currentUser', null);
-  const resolved = user ?? authUser ?? sessionUser ?? {};
-
-  const fullName = [
-    resolved?.nombre,
-    resolved?.primerApellido ?? resolved?.primer_apellido,
-    resolved?.segundoApellido ?? resolved?.segundo_apellido,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .trim();
-
-  const usuarioNombre =
-    fullName ||
-    normalizeText(resolved?.name) ||
-    normalizeText(resolved?.nombreCompleto) ||
-    normalizeText(resolved?.email) ||
-    'Usuario del sistema';
-
-  const sucursalActiva =
-    parseJson<any>('sucursal_activa', null) ??
-    parseJson<any>('sucursalActiva', null) ??
-    parseJson<any>('selectedSucursal', null);
-
-  const sucursalNombre =
-    normalizeText(sucursalActiva?.nombre) ||
-    normalizeText(resolved?.sucursal?.nombre) ||
-    normalizeText(resolved?.consultorio?.nombre) ||
-    'Consultorio actual';
-
-  return { usuarioNombre, sucursalNombre };
-};
-
-const buildBaseCatalog = (): ProcedimientoCatalogo[] => {
-  const fecha = nowIso();
-  return PROCEDIMIENTOS_BASE.map((item) => ({ ...item, creado_en: fecha, actualizado_en: fecha }));
-};
-
-const initializeCatalog = () => {
-  const saved = parseJson<any[]>(CATALOGO_KEY, []);
-  if (Array.isArray(saved) && saved.length > 0) return;
-  writeJson(CATALOGO_KEY, buildBaseCatalog());
-};
-
-const migrateLegacyCountsOnce = () => {
-  if (localStorage.getItem(MIGRACION_KEY) === '1') return;
-
-  const legacy = parseJson<any[]>(LEGACY_KEY, []);
-  const existingMovements = parseJson<MovimientoProcedimiento[]>(MOVIMIENTOS_KEY, []);
-
-  if (existingMovements.length === 0 && Array.isArray(legacy) && legacy.length > 0) {
-    const { sucursalNombre } = getUserContext();
-    const migrated: MovimientoProcedimiento[] = legacy
-      .map((item) => ({
-        id: `mig-${Number(item?.id) || 0}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        procedimiento_id: Number(item?.id) || 0,
-        procedimiento_nombre: normalizeText(item?.nombre) || 'Procedimiento',
-        tipo: 'saldo_inicial' as const,
-        cantidad: Math.max(0, Number(item?.cantidad) || 0),
-        total_anterior: 0,
-        total_nuevo: Math.max(0, Number(item?.cantidad) || 0),
-        motivo: 'Conteo previo migrado al historial simulado',
-        fecha: nowIso(),
-        usuario_nombre: 'Sistema',
-        sucursal_nombre: sucursalNombre,
-      }))
-      .filter((item) => item.procedimiento_id > 0 && item.cantidad > 0);
-
-    if (migrated.length > 0) writeJson(MOVIMIENTOS_KEY, migrated);
-  }
-
-  localStorage.setItem(MIGRACION_KEY, '1');
-};
-
-const ensureInitialized = () => {
-  initializeCatalog();
-  migrateLegacyCountsOnce();
 };
 
 const movementsForDay = (movements: MovimientoProcedimiento[], dayKey: string) =>
@@ -249,22 +127,18 @@ const buildDailySummary = (
 };
 
 class ProcedimientosService {
-  constructor() {
-    if (typeof window !== 'undefined') ensureInitialized();
+  private catalogo: ProcedimientoCatalogo[] = [];
+  private movimientos: MovimientoProcedimiento[] = [];
+  async load() {
+    this.catalogo = []; this.movimientos = [];
+    const [catalogo, movimientos] = await Promise.all([
+      apiData<ProcedimientoCatalogo[]>(api.get('/procedimientos')),
+      apiData<MovimientoProcedimiento[]>(api.get('/procedimientos/movimientos')),
+    ]);
+    this.catalogo = catalogo; this.movimientos = movimientos;
   }
-
-  getCatalogo(): ProcedimientoCatalogo[] {
-    ensureInitialized();
-    const saved = parseJson<ProcedimientoCatalogo[]>(CATALOGO_KEY, []);
-    return [...saved].sort((a, b) => a.id - b.id);
-  }
-
-  getMovimientos(): MovimientoProcedimiento[] {
-    ensureInitialized();
-    const saved = parseJson<MovimientoProcedimiento[]>(MOVIMIENTOS_KEY, []);
-    return [...saved].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
-  }
-
+  getCatalogo() { return this.catalogo; }
+  getMovimientos() { return this.movimientos; }
   getMovimientosPorDia(dayKey: string): MovimientoProcedimiento[] {
     return movementsForDay(this.getMovimientos(), dayKey);
   }
@@ -302,114 +176,14 @@ class ProcedimientosService {
       .sort((a, b) => b.fecha.localeCompare(a.fecha));
   }
 
-  createProcedimiento(input: ProcedimientoInput): ProcedimientoCatalogo {
-    const catalogo = this.getCatalogo();
-    const fecha = nowIso();
-    const nombre = normalizeText(input.nombre).toUpperCase();
-
-    if (!nombre) throw new Error('Captura el nombre del procedimiento.');
-    if (catalogo.some((item) => item.nombre.toUpperCase() === nombre)) {
-      throw new Error('Ya existe un procedimiento con ese nombre.');
-    }
-
-    const procedimiento: ProcedimientoCatalogo = {
-      id: Math.max(0, ...catalogo.map((item) => Number(item.id) || 0)) + 1,
-      nombre,
-      descripcion: normalizeText(input.descripcion),
-      estado: input.estado ?? 'activo',
-      creado_en: fecha,
-      actualizado_en: fecha,
-    };
-
-    writeJson(CATALOGO_KEY, [...catalogo, procedimiento]);
-    notifyUpdated();
-    return procedimiento;
+  createProcedimiento(input: ProcedimientoInput): Promise<ProcedimientoCatalogo> {
+    return apiData(api.post('/procedimientos', input));
   }
-
-  updateProcedimiento(id: number, input: Partial<ProcedimientoInput>): ProcedimientoCatalogo {
-    const catalogo = this.getCatalogo();
-    const current = catalogo.find((item) => item.id === id);
-    if (!current) throw new Error('No se encontró el procedimiento.');
-
-    const nombre = input.nombre !== undefined ? normalizeText(input.nombre).toUpperCase() : current.nombre;
-    if (!nombre) throw new Error('Captura el nombre del procedimiento.');
-
-    if (catalogo.some((item) => item.id !== id && item.nombre.toUpperCase() === nombre)) {
-      throw new Error('Ya existe otro procedimiento con ese nombre.');
-    }
-
-    const updated: ProcedimientoCatalogo = {
-      ...current,
-      nombre,
-      descripcion: input.descripcion !== undefined ? normalizeText(input.descripcion) : current.descripcion,
-      estado: input.estado ?? current.estado,
-      actualizado_en: nowIso(),
-    };
-
-    writeJson(CATALOGO_KEY, catalogo.map((item) => (item.id === id ? updated : item)));
-    notifyUpdated();
-    return updated;
+  updateProcedimiento(id: number, input: ProcedimientoInput): Promise<ProcedimientoCatalogo> {
+    return apiData(api.patch('/procedimientos/' + id, input));
   }
-
-  registrarMovimiento(args: {
-    procedimientoId: number;
-    cantidad: number;
-    tipo: TipoMovimientoProcedimiento;
-    motivo?: string;
-  }): MovimientoProcedimiento {
-    const catalogo = this.getCatalogo();
-    const procedimiento = catalogo.find((item) => item.id === args.procedimientoId);
-    if (!procedimiento) throw new Error('No se encontró el procedimiento.');
-
-    const delta = Math.trunc(Number(args.cantidad));
-    if (!Number.isFinite(delta) || delta === 0) {
-      throw new Error('La cantidad del movimiento no es válida.');
-    }
-
-    const movimientos = this.getMovimientos();
-    const dayKey = getLocalDayKey();
-    const totalAnterior = Math.max(
-      0,
-      totalForProcedureInDay(procedimiento.id, movimientos, dayKey),
-    );
-    const totalNuevo = totalAnterior + delta;
-
-    if (totalNuevo < 0) {
-      throw new Error('No puedes corregir más procedimientos de los registrados hoy.');
-    }
-
-    if (args.tipo === 'correccion' && !normalizeText(args.motivo)) {
-      throw new Error('Captura el motivo de la corrección.');
-    }
-
-    const { usuarioNombre, sucursalNombre } = getUserContext();
-    const movimiento: MovimientoProcedimiento = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      procedimiento_id: procedimiento.id,
-      procedimiento_nombre: procedimiento.nombre,
-      tipo: args.tipo,
-      cantidad: delta,
-      total_anterior: totalAnterior,
-      total_nuevo: totalNuevo,
-      motivo:
-        normalizeText(args.motivo) ||
-        (args.tipo === 'registro' ? 'Procedimiento realizado' : 'Movimiento de procedimiento'),
-      fecha: nowIso(),
-      usuario_nombre: usuarioNombre,
-      sucursal_nombre: sucursalNombre,
-    };
-
-    writeJson(MOVIMIENTOS_KEY, [movimiento, ...movimientos]);
-    notifyUpdated();
-    return movimiento;
-  }
-
-  clearSimulation(): void {
-    localStorage.removeItem(CATALOGO_KEY);
-    localStorage.removeItem(MOVIMIENTOS_KEY);
-    localStorage.removeItem(MIGRACION_KEY);
-    ensureInitialized();
-    notifyUpdated();
+  registrarMovimiento(input: { procedimientoId: number; cantidad: number; tipo: TipoMovimientoProcedimiento; motivo?: string }): Promise<MovimientoProcedimiento> {
+    return apiData(api.post('/procedimientos/movimientos', input));
   }
 }
 

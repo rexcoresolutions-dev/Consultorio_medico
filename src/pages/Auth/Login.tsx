@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import useSystemConfig from '../../hooks/useSystemConfig';
+import { refreshSystemConfigForCurrentUser } from '../../services/system-config/system-config.service';
 import { getDashboardByRole } from '../../router/routes';
 import { getUserRoleId } from '../../utils/role.utils';
 import './Login.css';
@@ -17,7 +18,7 @@ import './Login.css';
 const { Title, Text } = Typography;
 
 interface LoginFormValues {
-  email: string;
+  identificador: string;
   password: string;
   remember?: boolean;
 }
@@ -36,7 +37,7 @@ const Login: React.FC = () => {
 
     if (remembered && savedEmail) {
       form.setFieldsValue({
-        email: savedEmail,
+        identificador: savedEmail,
         remember: true,
       });
     }
@@ -73,11 +74,11 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const loginResponse = await login(values.email, values.password);
+      await login(values.identificador, values.password);
 
       if (values.remember) {
         localStorage.setItem('remember_me', 'true');
-        localStorage.setItem('remembered_email', values.email);
+        localStorage.setItem('remembered_email', values.identificador);
       } else {
         localStorage.removeItem('remember_me');
         localStorage.removeItem('remembered_email');
@@ -86,6 +87,17 @@ const Login: React.FC = () => {
       const user = JSON.parse(
         localStorage.getItem('user') || '{}'
       );
+
+      // /identidad obtiene la empresa desde la sesión/JWT. Al cambiar de usuario
+      // forzamos la carga para que Médico, Auditor y Administrador compartan la
+      // identidad de su empresa y no se queden con el tema anterior/default.
+      try {
+        await refreshSystemConfigForCurrentUser();
+      } catch (identityError) {
+        // Si el endpoint no está disponible, se conserva la última identidad
+        // cacheada sin impedir el inicio de sesión.
+        console.warn('No fue posible actualizar la identidad de la empresa:', identityError);
+      }
 
       const redirectPath = getRedirectByRole(user);
 
@@ -162,17 +174,16 @@ const Login: React.FC = () => {
             initialValues={{ remember: false }}
           >
             <Form.Item
-              name="email"
-              label="Correo electrónico"
+              name="identificador"
+              label="Correo electrónico o usuario"
               rules={[
-                { required: true, message: 'Por favor ingrese su correo' },
-                { type: 'email', message: 'Ingrese un correo válido' },
+                { required: true, message: 'Ingresa tu correo electrónico o usuario' },
               ]}
             >
               <Input
                 prefix={<UserOutlined />}
-                placeholder="ejemplo@correo.com"
-                autoComplete="email"
+                placeholder="correo o usuario"
+                autoComplete="username"
                 className="login-input"
                 size="large"
               />

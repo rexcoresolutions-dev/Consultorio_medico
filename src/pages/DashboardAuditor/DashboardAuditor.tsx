@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 
 import pacientesService from '../../services/pacientes/pacientes.service';
-import consultasService from '../../services/consultas/consultas.service';
+import { notasService } from '../../services/notas-evolucion/notas-evolucion.service';
 import recetasService from '../../services/recetas/recetas.service';
 import inventarioService from '../../services/inventario/inventario.service';
 import { ROUTES } from '../../router/routes';
@@ -21,7 +21,7 @@ import './DashboardAuditor.css';
 
 const entityDate = (item: any) =>
   String(
-    item?.fecha ??
+    item?.fechaElaboracion ?? item?.fechaHora ?? item?.fecha ??
       item?.fechaConsulta ??
       item?.fecha_consulta ??
       item?.createdAt ??
@@ -82,7 +82,7 @@ const DashboardAuditor: React.FC = () => {
 
     const results = await Promise.allSettled([
       pacientesService.getPacientes(),
-      loadAllPages((params) => consultasService.findAll(params)),
+      notasService.list(),
       loadAllPages((params) => recetasService.findAll(params)),
       inventarioService.getMovimientos(),
     ]);
@@ -122,7 +122,7 @@ const DashboardAuditor: React.FC = () => {
   const consultasById = useMemo(() => {
     const map = new Map<number, any>();
     consultas.forEach((consulta) => {
-      const id = consultaId(consulta);
+      const id = Number(consulta.consultaId);
       if (id > 0) map.set(id, consulta);
     });
     return map;
@@ -151,24 +151,24 @@ const DashboardAuditor: React.FC = () => {
       const paciente = pacientesById.get(consultaPacienteId(consulta)) ?? consulta?.paciente;
       const diagnostico = Array.isArray(consulta?.diagnosticos) && consulta.diagnosticos.length
         ? String(
-            consulta.diagnosticos[0]?.diagnostico?.descripcion ??
+            consulta.diagnosticos[0]?.nombre ?? consulta.diagnosticos[0]?.diagnostico?.descripcion ??
               consulta.diagnosticos[0]?.diagnostico?.nombre ??
               consulta.diagnosticos[0]?.descripcion ??
-              'Consulta médica',
+              'Nota de evolución',
           )
-        : String(consulta?.motivoConsulta ?? consulta?.tipoConsulta ?? 'Consulta médica');
+        : String(consulta?.motivoConsulta ?? consulta?.tipoConsulta ?? 'Nota de evolución');
 
       return {
         key: `consulta-${consultaId(consulta)}`,
         fecha: entityDate(consulta),
-        tipo: 'Consulta',
+        tipo: 'Nota de evolución',
         titulo: fullName(paciente) || 'Paciente',
         detalle: diagnostico,
       };
     });
 
     const prescription = recetas.map((receta) => {
-      const consulta = consultasById.get(recetaConsultaId(receta));
+      const consulta = receta.consulta ?? consultasById.get(recetaConsultaId(receta));
       const paciente = consulta ? pacientesById.get(consultaPacienteId(consulta)) : null;
       const meds = Array.isArray(receta?.medicamentos)
         ? receta.medicamentos
@@ -226,7 +226,7 @@ const DashboardAuditor: React.FC = () => {
             </article>
             <article>
               <HistoryOutlined />
-              <span>Consultas hoy</span>
+              <span>Notas de hoy</span>
               <strong>{metrics.consultasHoy}</strong>
             </article>
             <article>
@@ -260,7 +260,7 @@ const DashboardAuditor: React.FC = () => {
                   {actividad.map((item) => (
                     <div className="auditor-activity-row" key={item.key}>
                       <div className={`auditor-activity-icon auditor-activity-icon--${item.tipo.toLowerCase()}`}>
-                        {item.tipo === 'Consulta' ? <HistoryOutlined /> : item.tipo === 'Receta' ? <FileTextOutlined /> : <MedicineBoxOutlined />}
+                        {item.tipo === 'Nota de evolución' ? <HistoryOutlined /> : item.tipo === 'Receta' ? <FileTextOutlined /> : <MedicineBoxOutlined />}
                       </div>
                       <div className="auditor-activity-copy">
                         <div>
@@ -283,7 +283,7 @@ const DashboardAuditor: React.FC = () => {
 
               <button type="button" onClick={() => navigate(ROUTES.AUDIT)}>
                 <AuditOutlined />
-                <div><strong>Auditoría</strong><small>Consultas, recetas e inventario</small></div>
+                <div><strong>Auditoría</strong><small>Notas de evolución, recetas e inventario</small></div>
               </button>
               <button type="button" onClick={() => navigate(ROUTES.PRESCRIPTIONS)}>
                 <FileTextOutlined />
@@ -295,8 +295,8 @@ const DashboardAuditor: React.FC = () => {
               </button>
 
               <div className="auditor-open-summary">
-                <span>Consultas abiertas</span>
-                <strong>{metrics.consultasAbiertas}</strong>
+                <span>Notas registradas</span>
+                <strong>{consultas.length}</strong>
                 <small>Registros actualmente marcados como ABIERTA</small>
               </div>
             </section>

@@ -40,6 +40,8 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
 
 const BASE_PATH = '/identidad';
 
+export const SYSTEM_CONFIG_CACHE_KEY = 'consultorio:identity-cache:v3';
+
 let cachedConfig: SystemConfig = DEFAULT_SYSTEM_CONFIG;
 let identityExists: boolean | null = null;
 let loadedOnce = false;
@@ -87,12 +89,28 @@ const normalizeLogo = (raw: any) => {
     raw?.logo_path,
   );
 
-  if (typeof logo === 'string') return logo.trim();
+  const resolveLogoUrl = (value: unknown) => {
+    const source = String(value ?? '').trim();
+    if (!source || /^(data:|blob:)/i.test(source)) return source;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      if (parsed.pathname.startsWith('/resources/')) {
+        const apiUrl = String(import.meta.env.VITE_API_URL ?? '').trim();
+        if (apiUrl.startsWith('http')) {
+          return `${new URL(apiUrl).origin}${parsed.pathname}${parsed.search}`;
+        }
+        return `${parsed.pathname}${parsed.search}`;
+      }
+      return parsed.href;
+    } catch { return source; }
+  };
+
+  if (typeof logo === 'string') return resolveLogoUrl(logo);
 
   if (logo && typeof logo === 'object') {
-    return String(
+    return resolveLogoUrl(
       firstDefined(logo.url, logo.href, logo.path, logo.ruta, logo.publicUrl, logo.public_url, '') ?? '',
-    ).trim();
+    );
   }
 
   return '';
@@ -117,12 +135,121 @@ const sanitize = (value: Partial<SystemConfig>): SystemConfig => {
     nombreCorto: nombreSistema,
     subtitulo,
     descripcion,
-    logoDataUrl: String(value.logoDataUrl ?? '').trim(),
+    logoDataUrl: normalizeLogo({ logo: value.logoDataUrl }),
     colorMarca,
     tituloNavegador: `${nombreSistema} · ${subtitulo}`,
     version: DEFAULT_SYSTEM_CONFIG.version,
     mostrarNombreSidebar: Boolean(value.mostrarNombreSidebar ?? true),
   };
+};
+
+type IdentityCacheEntry = {
+  config: SystemConfig;
+  empresaId?: string;
+  updatedAt: string;
+};
+
+type IdentityCacheStore = {
+  last?: IdentityCacheEntry;
+  byCompany: Record<string, IdentityCacheEntry>;
+};
+
+let cacheHydrated = false;
+
+const getStoredUser = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const resolveCompanyId = (user?: any): string => {
+  const source = user ?? getStoredUser();
+  const candidate = firstDefined(
+    source?.empresaId,
+    source?.empresa_id,
+    source?.companyId,
+    source?.company_id,
+    source?.empresa?.id,
+    source?.company?.id,
+    source?.sucursal?.empresaId,
+    source?.sucursal?.empresa_id,
+    source?.data?.empresaId,
+    source?.data?.empresa_id,
+    source?.usuario?.empresaId,
+    source?.usuario?.empresa_id,
+  );
+
+  return candidate === undefined || candidate === null || candidate === ''
+    ? ''
+    : String(candidate);
+};
+
+const readIdentityCache = (): IdentityCacheStore => {
+  if (typeof window === 'undefined') return { byCompany: {} };
+
+  try {
+    const raw = localStorage.getItem(SYSTEM_CONFIG_CACHE_KEY);
+    if (!raw) return { byCompany: {} };
+
+    const parsed = JSON.parse(raw);
+    return {
+      last: parsed?.last,
+      byCompany:
+        parsed?.byCompany && typeof parsed.byCompany === 'object'
+          ? parsed.byCompany
+          : {},
+    };
+  } catch {
+    return { byCompany: {} };
+  }
+};
+
+const writeIdentityCache = (store: IdentityCacheStore) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(SYSTEM_CONFIG_CACHE_KEY, JSON.stringify(store));
+  } catch {
+    // La identidad visual nunca debe bloquear el uso del sistema.
+  }
+};
+
+const persistIdentityCache = (config: SystemConfig, companyId = resolveCompanyId()) => {
+  const normalized = sanitize(config);
+  const store = readIdentityCache();
+  const entry: IdentityCacheEntry = {
+    config: normalized,
+    empresaId: companyId || undefined,
+    updatedAt: new Date().toISOString(),
+  };
+
+  store.last = entry;
+
+  if (companyId) {
+    store.byCompany[companyId] = entry;
+  }
+
+  writeIdentityCache(store);
+};
+
+const hydrateSystemConfigFromCache = () => {
+  if (cacheHydrated) return cachedConfig;
+  cacheHydrated = true;
+
+  const store = readIdentityCache();
+  const companyId = resolveCompanyId();
+  const entry = (companyId && store.byCompany[companyId]) || store.last;
+
+  if (entry?.config) {
+    cachedConfig = sanitize(entry.config);
+  }
+
+  return cachedConfig;
 };
 
 const normalizeApiConfig = (rawResponse: any): SystemConfig => {
@@ -216,7 +343,14 @@ type ThemeSnapshot = {
 const originalThemeSnapshots = new WeakMap<Element, ThemeSnapshot>();
 let runtimeThemeColor = DEFAULT_SYSTEM_CONFIG.colorMarca;
 let themeObserver: MutationObserver | null = null;
+let themeHeadObserver: MutationObserver | null = null;
 let themeScanFrame: number | null = null;
+
+// También conservamos los valores originales de las hojas de estilo.
+// Esto permite recolorear pseudo-elementos (::before/::after), gradientes,
+// bordes superiores y estilos de módulos que no aparecen como elementos
+// independientes en el DOM.
+const stylesheetOriginalValues = new WeakMap<CSSStyleDeclaration, Map<string, string>>();
 
 const THEME_SCAN_SKIP = [
   '.system-settings-theme-presets',
@@ -427,9 +561,76 @@ const applyThemeToElement = (element: Element) => {
   });
 };
 
+const getStylesheetSnapshot = (style: CSSStyleDeclaration) => {
+  let snapshot = stylesheetOriginalValues.get(style);
+  if (!snapshot) {
+    snapshot = new Map<string, string>();
+    stylesheetOriginalValues.set(style, snapshot);
+  }
+  return snapshot;
+};
+
+const themeStyleDeclaration = (style: CSSStyleDeclaration) => {
+  const snapshot = getStylesheetSnapshot(style);
+
+  Array.from(style).forEach((property) => {
+    const current = style.getPropertyValue(property);
+    const original = snapshot.get(property) ?? current;
+    const priority = style.getPropertyPriority(property);
+
+    // Guardamos sólo reglas que contengan colores de la identidad histórica.
+    // Así no interferimos con errores, warnings o colores semánticos.
+    const replacement = replaceBrandColorsInComplexValue(original);
+
+    if (replacement) {
+      if (!snapshot.has(property)) snapshot.set(property, original);
+      if (current !== replacement) style.setProperty(property, replacement, priority);
+      return;
+    }
+
+    // Si la propiedad fue tematizada antes y ahora el color cambió, restauramos
+    // el original para volver a calcular desde una base estable.
+    if (snapshot.has(property) && current !== original) {
+      const recalculated = replaceBrandColorsInComplexValue(original);
+      style.setProperty(property, recalculated ?? original, priority);
+    }
+  });
+};
+
+const walkCssRules = (rules: CSSRuleList | undefined) => {
+  if (!rules) return;
+
+  Array.from(rules).forEach((rule) => {
+    try {
+      if (rule instanceof CSSStyleRule) {
+        themeStyleDeclaration(rule.style);
+      }
+
+      // CSSMediaRule, CSSSupportsRule y reglas anidadas exponen cssRules.
+      const nested = (rule as CSSGroupingRule & { cssRules?: CSSRuleList }).cssRules;
+      if (nested) walkCssRules(nested);
+    } catch {
+      // Algunas hojas externas no permiten lectura por CORS. Simplemente se omiten.
+    }
+  });
+};
+
+const runStylesheetThemeScan = () => {
+  if (typeof document === 'undefined') return;
+
+  Array.from(document.styleSheets).forEach((sheet) => {
+    try {
+      walkCssRules(sheet.cssRules);
+    } catch {
+      // Hoja de estilo externa o protegida por CORS.
+    }
+  });
+};
+
 const runGlobalThemeScan = () => {
-  if (typeof document === 'undefined' || !document.body) return;
-  document.body.querySelectorAll('*').forEach(applyThemeToElement);
+  if (typeof document === 'undefined') return;
+  runStylesheetThemeScan();
+  if (document.body) document.body.querySelectorAll('*').forEach(applyThemeToElement);
 };
 
 const scheduleGlobalThemeScan = () => {
@@ -442,22 +643,43 @@ const scheduleGlobalThemeScan = () => {
 };
 
 const installGlobalThemeObserver = () => {
-  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined' || themeObserver) return;
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return;
 
-  themeObserver = new MutationObserver(() => scheduleGlobalThemeScan());
+  if (!themeObserver) {
+    themeObserver = new MutationObserver(() => scheduleGlobalThemeScan());
+  }
+
+  if (!themeHeadObserver) {
+    themeHeadObserver = new MutationObserver(() => {
+      // Vite/lazy routes pueden insertar nuevas hojas de estilo al navegar.
+      // Recorremos CSSOM otra vez para tematizar también sus pseudo-elementos.
+      scheduleGlobalThemeScan();
+    });
+  }
 
   const start = () => {
-    if (!document.body || !themeObserver) return;
-    themeObserver.observe(document.body, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ['class', 'style', 'fill', 'stroke', 'stop-color'],
-    });
+    if (document.body && themeObserver) {
+      themeObserver.disconnect();
+      themeObserver.observe(document.body, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['class', 'style', 'fill', 'stroke', 'stop-color'],
+      });
+    }
+
+    if (document.head && themeHeadObserver) {
+      themeHeadObserver.disconnect();
+      themeHeadObserver.observe(document.head, {
+        subtree: true,
+        childList: true,
+      });
+    }
+
     scheduleGlobalThemeScan();
   };
 
-  if (document.body) start();
+  if (document.body && document.head) start();
   else document.addEventListener('DOMContentLoaded', start, { once: true });
 };
 
@@ -765,6 +987,91 @@ const ensureRuntimeThemeStyle = () => {
       border-color: var(--system-brand-border);
     }
 
+    /* ------------------------------------------------------------------
+       Superficies de marca que antes tenían gradientes/acentos fijos
+       ------------------------------------------------------------------ */
+    .inv-hero {
+      background:
+        radial-gradient(circle at 90% 10%, rgba(255,255,255,.18), transparent 27%),
+        linear-gradient(135deg, var(--system-brand-darker) 0%, var(--system-brand-dark) 52%, var(--system-brand-color) 100%) !important;
+      box-shadow: 0 18px 40px var(--system-brand-color-shadow) !important;
+    }
+    .inv-hero-actions {
+      background: rgba(0,0,0,.14) !important;
+      border-color: rgba(255,255,255,.20) !important;
+    }
+    .inv-hero .inv-hero-btn--new,
+    .inv-hero .inv-hero-btn--new:hover,
+    .inv-hero .inv-hero-btn--new:focus {
+      background: #fff !important;
+      border-color: #fff !important;
+      color: var(--system-brand-dark) !important;
+      box-shadow: 0 8px 18px rgba(0,0,0,.14) !important;
+    }
+    .inv-hero .inv-hero-btn--history,
+    .inv-hero .inv-hero-btn--history:hover,
+    .inv-hero .inv-hero-btn--history:focus {
+      background: rgba(255,255,255,.12) !important;
+      border-color: rgba(255,255,255,.20) !important;
+      color: #fff !important;
+    }
+    .inv-med-icon, .inv-summary-card:not(.inv-summary-card--warning):not(.inv-summary-card--danger) strong {
+      color: var(--system-brand-dark) !important;
+    }
+
+    /* Botón de bienvenida: compacto, sin degradado turquesa ni borde negro. */
+    .welcome-real-start {
+      width: min(100%, 286px) !important;
+      height: 44px !important;
+      border: 1px solid transparent !important;
+      border-radius: 13px !important;
+      background: var(--system-brand-color) !important;
+      color: var(--system-brand-contrast) !important;
+      box-shadow: 0 9px 22px var(--system-brand-color-shadow) !important;
+    }
+    .welcome-real-start:hover {
+      background: var(--system-brand-color-hover) !important;
+      box-shadow: 0 12px 26px var(--system-brand-color-shadow) !important;
+    }
+
+    /* Sidebar: toda la base también deriva de la identidad, no sólo el item activo. */
+    .custom-sider,
+    .ant-layout-sider.custom-sider,
+    .custom-sider .ant-layout-sider-children {
+      background-color: var(--system-sidebar-mid) !important;
+      background-image:
+        radial-gradient(circle at top left, var(--system-brand-color-soft-2), transparent 34%),
+        linear-gradient(180deg, var(--system-sidebar-start) 0%, var(--system-sidebar-mid) 52%, var(--system-sidebar-end) 100%) !important;
+    }
+    .logo {
+      border-color: rgba(255,255,255,.12) !important;
+      background: rgba(255,255,255,.07) !important;
+    }
+
+    /* Encabezados, barras y acentos comunes en módulos clínicos/documentales.
+       El escaneo CSSOM se encarga además de ::before / ::after específicos. */
+    [class*="hero"] [class*="eyebrow"],
+    [class*="section"] [class*="eyebrow"],
+    [class*="module"] [class*="eyebrow"],
+    [class*="header"] [class*="eyebrow"] {
+      color: var(--system-brand-color) !important;
+    }
+    [class*="wizard"] [class*="active"],
+    [class*="step"] [class*="active"],
+    [class*="tabs"] [class*="active"] {
+      border-color: var(--system-brand-color) !important;
+    }
+
+    /* Color de fondo muy suave de las páginas que antes tenían tinte cyan. */
+    .inventory-page,
+    [class*="consulta-page"],
+    [class*="historial-page"],
+    [class*="referencia-page"],
+    [class*="formatos-page"],
+    [class*="procedimientos-page"] {
+      background-color: var(--system-brand-page-bg) !important;
+    }
+
     /* Recharts: rellenos que no sean colores semánticos se corrigen además por el motor DOM. */
     .recharts-default-tooltip {
       border-color: var(--system-brand-border) !important;
@@ -791,9 +1098,11 @@ export const applySystemConfig = (config: SystemConfig) => {
   document.documentElement.style.setProperty('--system-brand-light', mixHex(color, '#FFFFFF', 0.52));
   document.documentElement.style.setProperty('--system-brand-lighter', mixHex(color, '#FFFFFF', 0.88));
   document.documentElement.style.setProperty('--system-brand-dark', mixHex(color, '#000000', 0.54));
-  document.documentElement.style.setProperty('--system-sidebar-start', mixHex(color, '#000000', 0.67));
-  document.documentElement.style.setProperty('--system-sidebar-mid', mixHex(color, '#000000', 0.59));
-  document.documentElement.style.setProperty('--system-sidebar-end', mixHex(color, '#000000', 0.52));
+  document.documentElement.style.setProperty('--system-brand-darker', mixHex(color, '#000000', 0.68));
+  document.documentElement.style.setProperty('--system-brand-page-bg', mixHex(color, '#FFFFFF', 0.965));
+  document.documentElement.style.setProperty('--system-sidebar-start', mixHex(color, '#000000', 0.68));
+  document.documentElement.style.setProperty('--system-sidebar-mid', mixHex(color, '#000000', 0.61));
+  document.documentElement.style.setProperty('--system-sidebar-end', mixHex(color, '#000000', 0.55));
 
   runtimeThemeColor = color;
   ensureRuntimeThemeStyle();
@@ -801,7 +1110,10 @@ export const applySystemConfig = (config: SystemConfig) => {
   scheduleGlobalThemeScan();
   document.title = config.tituloNavegador || `${config.nombreSistema} · ${config.subtitulo}`;
 
-  let favicon = document.querySelector<HTMLLinkElement>('link[data-system-favicon="true"]');
+  const faviconLinks = Array.from(
+    document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]'),
+  );
+  let favicon = faviconLinks[0] ?? null;
 
   if (config.logoDataUrl) {
     if (!favicon) {
@@ -810,14 +1122,20 @@ export const applySystemConfig = (config: SystemConfig) => {
       favicon.dataset.systemFavicon = 'true';
       document.head.appendChild(favicon);
     }
+    favicon.dataset.systemFavicon = 'true';
+    favicon.type = config.logoDataUrl.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png';
     favicon.href = config.logoDataUrl;
+    faviconLinks.slice(1).forEach((link) => link.remove());
   } else if (favicon) {
-    favicon.remove();
+    favicon.href = '/favicon.svg';
+    favicon.type = 'image/svg+xml';
   }
 };
 
 const publishConfig = (config: SystemConfig) => {
   cachedConfig = sanitize(config);
+  cacheHydrated = true;
+  persistIdentityCache(cachedConfig);
   applySystemConfig(cachedConfig);
 
   if (typeof window !== 'undefined') {
@@ -829,11 +1147,21 @@ const publishConfig = (config: SystemConfig) => {
   return cachedConfig;
 };
 
-/** Retorna inmediatamente el último valor cargado. No hace peticiones. */
-export const getSystemConfig = (): SystemConfig => cachedConfig;
+/**
+ * Retorna inmediatamente la última identidad conocida.
+ * Antes de iniciar sesión utiliza la última identidad persistida para evitar
+ * que el login vuelva visualmente a MediSys al cerrar la sesión.
+ */
+export const getSystemConfig = (): SystemConfig => {
+  const config = hydrateSystemConfigFromCache();
+  applySystemConfig(config);
+  return config;
+};
 
 /** GET /api/v1/identidad */
 export const loadSystemConfig = async (force = false): Promise<SystemConfig> => {
+  hydrateSystemConfigFromCache();
+
   if (!force && loadedOnce) return cachedConfig;
   if (!force && pendingLoad) return pendingLoad;
 
@@ -858,6 +1186,36 @@ export const loadSystemConfig = async (force = false): Promise<SystemConfig> => 
   })();
 
   return pendingLoad;
+};
+
+/**
+ * Fuerza la identidad de la empresa del usuario que acaba de autenticarse.
+ * Esto es importante porque /identidad normalmente obtiene empresaId desde el JWT.
+ */
+export const refreshSystemConfigForCurrentUser = async (): Promise<SystemConfig> => {
+  loadedOnce = false;
+  identityExists = null;
+  pendingLoad = null;
+  cacheHydrated = false;
+
+  // Si ya existe una copia de esta empresa, se aplica de inmediato mientras
+  // responde la API. La respuesta del servidor siempre tiene prioridad.
+  const cached = hydrateSystemConfigFromCache();
+  applySystemConfig(cached);
+
+  return loadSystemConfig(true);
+};
+
+/**
+ * Conserva la identidad después de logout incluso si useAuth limpia localStorage.
+ * Se puede pasar el usuario previo para mantener también la copia por empresa.
+ */
+export const persistSystemConfigSnapshot = (
+  config: SystemConfig = cachedConfig,
+  previousUser?: any,
+) => {
+  const companyId = resolveCompanyId(previousUser) || resolveCompanyId();
+  persistIdentityCache(config, companyId);
 };
 
 const appendFormField = (formData: FormData, key: string, value: unknown) => {
@@ -933,6 +1291,8 @@ const systemConfigService = {
   save: saveSystemConfig,
   reset: resetSystemConfig,
   apply: applySystemConfig,
+  refreshForCurrentUser: refreshSystemConfigForCurrentUser,
+  persistSnapshot: persistSystemConfigSnapshot,
 };
 
 export default systemConfigService;

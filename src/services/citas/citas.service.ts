@@ -1,7 +1,10 @@
+import api from '../../api/axios.config';
+import { apiData, allPages } from '../operacion/operacion.service';
 import dayjs from 'dayjs';
 import pacientesService, { type PacienteData } from '../pacientes/pacientes.service';
 import recetasService from '../recetas/recetas.service';
 import consultasService from '../consultas/consultas.service';
+import { queueOfflineRequest } from '../offline/offline-sync.service';
 
 export type CitaOrigen = 'MANUAL' | 'SEGUIMIENTO_RECETA';
 export type CitaEstado =
@@ -14,7 +17,7 @@ export type CitaTipo = 'CONSULTA' | 'SEGUIMIENTO' | 'REVISION' | 'PROCEDIMIENTO'
 
 export interface CitaManual {
   id: string;
-  pacienteId: number;
+  pacienteId: number | string;
   fecha: string;
   hora: string;
   duracion: number;
@@ -62,7 +65,7 @@ export interface AgendaCitasData {
 }
 
 export interface CrearCitaManualInput {
-  pacienteId: number;
+  pacienteId: number | string;
   fecha: string;
   hora: string;
   duracion: number;
@@ -71,18 +74,6 @@ export interface CrearCitaManualInput {
   estado?: CitaEstado;
   notas?: string;
 }
-
-const MANUAL_KEY = 'consultorio_citas_manuales_v1';
-const FOLLOWUP_OVERRIDE_KEY = 'consultorio_citas_seguimientos_v1';
-
-const safeParse = <T,>(value: string | null, fallback: T): T => {
-  if (!value) return fallback;
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-};
 
 const toDateKey = (value: any): string => {
   if (!value) return '';
@@ -111,7 +102,7 @@ const fullName = (paciente?: PacienteData | null) => {
 
 const getConsultaDate = (consulta: any): string =>
   toDateKey(
-    consulta?.fechaConsulta ??
+    consulta?.fechaHora ?? consulta?.fechaConsulta ??
       consulta?.fecha_consulta ??
       consulta?.fecha ??
       consulta?.createdAt ??
@@ -119,29 +110,14 @@ const getConsultaDate = (consulta: any): string =>
   );
 
 class CitasService {
-  private getManuales(): CitaManual[] {
-    return safeParse<CitaManual[]>(localStorage.getItem(MANUAL_KEY), []);
-  }
-
-  private saveManuales(items: CitaManual[]) {
-    localStorage.setItem(MANUAL_KEY, JSON.stringify(items));
-  }
-
-  private getOverrides(): SeguimientoOverride[] {
-    return safeParse<SeguimientoOverride[]>(localStorage.getItem(FOLLOWUP_OVERRIDE_KEY), []);
-  }
-
-  private saveOverrides(items: SeguimientoOverride[]) {
-    localStorage.setItem(FOLLOWUP_OVERRIDE_KEY, JSON.stringify(items));
-  }
-
   async getAgenda(): Promise<AgendaCitasData> {
     const warnings: string[] = [];
+    const stored = await apiData<(CitaManual & { recetaId?: number })[]>(api.get('/citas'));
 
     const [pacientesResult, recetasResult, consultasResult] = await Promise.allSettled([
       pacientesService.getPacientes(),
-      recetasService.findAll({ page: 1, limit: 500 }),
-      consultasService.findAll({ page: 1, limit: 500 }),
+      allPages(page => recetasService.findAll({ page, limit: 100 })),
+      allPages(page => consultasService.findAll({ page, limit: 100 })),
     ]);
 
     const pacientes =
@@ -151,13 +127,13 @@ class CitasService {
     }
 
     const recetas =
-      recetasResult.status === 'fulfilled' ? recetasResult.value.data : [];
+      recetasResult.status === 'fulfilled' ? recetasResult.value : [];
     if (recetasResult.status === 'rejected') {
       warnings.push('No fue posible cargar los seguimientos registrados en recetas.');
     }
 
     const consultas =
-      consultasResult.status === 'fulfilled' ? consultasResult.value.data : [];
+      consultasResult.status === 'fulfilled' ? consultasResult.value : [];
     if (consultasResult.status === 'rejected') {
       warnings.push('No fue posible validar atenciones realizadas.');
     }
@@ -181,7 +157,7 @@ class CitasService {
       if (pacienteId && fecha) consultasAtendidas.add(`${pacienteId}|${fecha}`);
     });
 
-    const manuales: CitaAgenda[] = this.getManuales().map((item) => {
+    const manuales: CitaAgenda[] = stored.filter(item => !item.recetaId).map((item) => {
       const paciente = pacientesMap.get(Number(item.pacienteId)) ?? null;
       const attended = consultasAtendidas.has(`${item.pacienteId}|${item.fecha}`);
       const estado =
@@ -190,7 +166,7 @@ class CitasService {
       return {
         id: item.id,
         origen: 'MANUAL',
-        pacienteId: item.pacienteId,
+        pacienteId: Number(item.pacienteId),
         paciente,
         pacienteNombre: fullName(paciente),
         expediente: paciente?.numero_expediente,
@@ -206,7 +182,7 @@ class CitasService {
       };
     });
 
-    const overrides = this.getOverrides();
+    const overrides = stored.filter(item => item.recetaId) as (CitaManual & SeguimientoOverride)[];
     const overrideMap = new Map<number, SeguimientoOverride>();
     overrides.forEach((item) => overrideMap.set(Number(item.recetaId), item));
 
@@ -279,87 +255,26 @@ class CitasService {
     return { citas, pacientes, warnings };
   }
 
-  createManual(input: CrearCitaManualInput): CitaManual {
-    const now = new Date().toISOString();
-    const item: CitaManual = {
-      id: `cita-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      pacienteId: Number(input.pacienteId),
-      fecha: input.fecha,
-      hora: input.hora,
-      duracion: Number(input.duracion || 30),
-      tipo: input.tipo,
-      motivo: input.motivo.trim(),
-      estado: input.estado ?? 'PROGRAMADA',
-      notas: input.notas?.trim() || undefined,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const items = this.getManuales();
-    items.push(item);
-    this.saveManuales(items);
-    return item;
-  }
-
-  updateManual(id: string, input: Partial<CrearCitaManualInput>): CitaManual | null {
-    const items = this.getManuales();
-    const index = items.findIndex((item) => item.id === id);
-    if (index < 0) return null;
-
-    items[index] = {
-      ...items[index],
-      ...input,
-      pacienteId: Number(input.pacienteId ?? items[index].pacienteId),
-      duracion: Number(input.duracion ?? items[index].duracion),
-      motivo: input.motivo?.trim() ?? items[index].motivo,
-      notas: input.notas?.trim() || undefined,
-      updatedAt: new Date().toISOString(),
-    };
-    this.saveManuales(items);
-    return items[index];
-  }
-
-  updateSeguimiento(
-    recetaId: number,
-    input: Pick<CrearCitaManualInput, 'hora' | 'duracion' | 'estado' | 'notas'>,
-  ) {
-    const items = this.getOverrides();
-    const index = items.findIndex((item) => Number(item.recetaId) === Number(recetaId));
-    const next: SeguimientoOverride = {
-      recetaId: Number(recetaId),
-      hora: input.hora || undefined,
-      duracion: Number(input.duracion || 30),
-      estado: input.estado,
-      notas: input.notas?.trim() || undefined,
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (index >= 0) items[index] = next;
-    else items.push(next);
-    this.saveOverrides(items);
-  }
-
-  clearSeguimiento(recetaId: number) {
-    const items = this.getOverrides().filter(
-      (item) => Number(item.recetaId) !== Number(recetaId),
-    );
-    this.saveOverrides(items);
-  }
-
-  setStatus(cita: CitaAgenda, estado: CitaEstado) {
-    if (cita.origen === 'MANUAL') {
-      this.updateManual(cita.id, { estado });
-      return;
-    }
-    if (cita.recetaId) {
-      this.updateSeguimiento(cita.recetaId, {
-        hora: cita.hora ?? '',
-        duracion: cita.duracion,
-        estado,
-        notas: cita.notas,
-      });
+  async createManual(input: CrearCitaManualInput): Promise<CitaManual> {
+    try { return await apiData(api.post('/citas', input)); }
+    catch (error: any) {
+      if (error?.response) throw error;
+      const dependencies = typeof input.pacienteId === 'string' && input.pacienteId.startsWith('local:') ? [input.pacienteId] : [];
+      const queued = await queueOfflineRequest('CITA_CREAR', { method: 'POST', url: '/citas', data: input }, dependencies);
+      return { ...input, id: queued.localId, estado: input.estado ?? 'PROGRAMADA', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as CitaManual;
     }
   }
-
+  updateManual(id: string, input: Partial<CrearCitaManualInput>): Promise<CitaManual> {
+    return apiData(api.patch('/citas/' + id, input));
+  }
+  updateSeguimiento(recetaId: number, input: Pick<CrearCitaManualInput, 'hora' | 'duracion' | 'estado' | 'notas'>) {
+    return apiData(api.put('/citas/seguimientos/' + recetaId, input));
+  }
+  clearSeguimiento(recetaId: number) { return api.delete('/citas/seguimientos/' + recetaId); }
+  async setStatus(cita: CitaAgenda, estado: CitaEstado) {
+    if (cita.origen === 'MANUAL') return this.updateManual(cita.id, { estado });
+    if (cita.recetaId) return this.updateSeguimiento(cita.recetaId, { hora: cita.hora ?? '', duracion: cita.duracion, estado, notas: cita.notas });
+  }
   hasConflict(
     citas: CitaAgenda[],
     fecha: string,

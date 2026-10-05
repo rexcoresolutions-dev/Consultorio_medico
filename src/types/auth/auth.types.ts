@@ -15,6 +15,8 @@ export interface User {
   created_at?: string;
   updated_at?: string;
   genero?: 'MALE' | 'FEMALE' | 'UNKNOWN';
+  debe_cambiar_password?: boolean;
+  password_temporal_expira?: string | null;
   // Relaciones
   rol?: Rol;
   empresa?: Empresa;
@@ -59,7 +61,7 @@ export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (identificador: string, password: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
 }

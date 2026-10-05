@@ -1,20 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import { useCie10Catalog } from '../../hooks/useCie10Catalog';
+import { documentosService } from '../../services/operacion/operacion.service';
+import { catalogoEstudiosService } from '../../services/estudios-clinicos/catalogo-estudios.service';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
-  Col,
   Empty,
   Form,
   Input,
   Modal,
-  Row,
   Select,
   Space,
   Typography,
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
   CheckCircleOutlined,
   ClearOutlined,
   CloseCircleOutlined,
@@ -34,7 +34,6 @@ const { TextArea } = Input;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
-const ESTUDIOS_CLINICOS_STORAGE_KEY = 'estudios_clinicos_pacientes';
 
 type PacienteData = {
   id?: number;
@@ -66,7 +65,9 @@ type EstudiosForm = {
   diagnostico_select?: string;
 };
 
-const catalogoEstudios: CatalogoItem[] = [
+type NuevoEstudioForm = { clave: string; nombre: string };
+
+const catalogoEstudiosInicial: CatalogoItem[] = [
   { clave: '4', nombre: 'ALBÚMINA' },
   { clave: '26', nombre: 'AC. ANTI RUBEOLA IgG' },
   { clave: '27', nombre: 'AC. ANTI RUBEOLA IgM' },
@@ -89,13 +90,6 @@ const catalogoEstudios: CatalogoItem[] = [
   { clave: '150', nombre: 'ELECTROCARDIOGRAMA' },
 ];
 
-const catalogoDiagnosticos: CatalogoItem[] = [
-  { clave: 'J00X', nombre: 'RINOFARINGITIS AGUDA [RESFRIADO COMÚN]' },
-  { clave: 'I10X', nombre: 'HIPERTENSIÓN ESENCIAL' },
-  { clave: 'E119', nombre: 'DIABETES MELLITUS TIPO 2 SIN COMPLICACIONES' },
-  { clave: 'A09X', nombre: 'DIARREA Y GASTROENTERITIS DE PRESUNTO ORIGEN INFECCIOSO' },
-  { clave: 'K297', nombre: 'GASTRITIS NO ESPECIFICADA' },
-];
 
 const cargarPacienteActivo = (): PacienteData | null => {
   try {
@@ -121,8 +115,10 @@ const calcularEdad = (paciente?: PacienteData | null) => {
 };
 
 const EstudiosClinicos: React.FC = () => {
+  const { catalogo: catalogoDiagnosticos, buscar: buscarDiagnosticos } = useCie10Catalog();
   const navigate = useNavigate();
   const [form] = Form.useForm<EstudiosForm>();
+  const [nuevoEstudioForm] = Form.useForm<NuevoEstudioForm>();
 
   const [pacienteActivo, setPacienteActivo] = useState<PacienteData | null>(() =>
     cargarPacienteActivo(),
@@ -131,13 +127,41 @@ const EstudiosClinicos: React.FC = () => {
   const [diagnosticos, setDiagnosticos] = useState<ItemSeleccionado[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [catalogoEstudios, setCatalogoEstudios] = useState<CatalogoItem[]>(catalogoEstudiosInicial);
+  const [catalogoLoading, setCatalogoLoading] = useState(false);
+  const [nuevoEstudioOpen, setNuevoEstudioOpen] = useState(false);
+  const [guardandoNuevoEstudio, setGuardandoNuevoEstudio] = useState(false);
+
+  useEffect(() => {
+    setCatalogoLoading(true);
+    catalogoEstudiosService.list()
+      .then((items) => setCatalogoEstudios(items.map((item) => ({ clave: item.clave, nombre: item.nombre }))))
+      .catch(() => message.warning('Se muestra el catálogo básico mientras se conecta con el servidor.'))
+      .finally(() => setCatalogoLoading(false));
+  }, []);
+
+  const guardarNuevoEstudio = async () => {
+    const values = await nuevoEstudioForm.validateFields();
+    setGuardandoNuevoEstudio(true);
+    try {
+      const created = await catalogoEstudiosService.create(values);
+      const item = { clave: created.clave, nombre: created.nombre };
+      setCatalogoEstudios((current) => [...current, item].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')));
+      form.setFieldValue('estudio_select', item.clave);
+      nuevoEstudioForm.resetFields();
+      setNuevoEstudioOpen(false);
+      message.success('Estudio agregado al catálogo de la empresa');
+    } catch (error: any) {
+      if (error?.errorFields) return;
+      message.error(error.response?.data?.message ?? 'No fue posible agregar el estudio');
+    } finally { setGuardandoNuevoEstudio(false); }
+  };
 
   const nombreCompleto = useMemo(() => getFullName(pacienteActivo), [pacienteActivo]);
   const edadPaciente = useMemo(() => calcularEdad(pacienteActivo), [pacienteActivo]);
   const numeroExpediente =
     pacienteActivo?.numero_expediente || pacienteActivo?.expediente || '—';
 
-  const handleBack = () => navigate('/historico-paciente');
 
   const handleCancel = async () => {
     const result = await Swal.fire({
@@ -240,7 +264,7 @@ const EstudiosClinicos: React.FC = () => {
       await validateAll();
       setPreviewOpen(true);
     } catch {
-      message.warning('Completa los campos obligatorios.');
+      message.error('No se pudo completar la operación. Revisa los campos y la conexión con el servidor.');
     }
   };
 
@@ -296,14 +320,7 @@ const EstudiosClinicos: React.FC = () => {
         ...values,
       };
 
-      const guardados = JSON.parse(
-        localStorage.getItem(ESTUDIOS_CLINICOS_STORAGE_KEY) || '[]',
-      );
-
-      localStorage.setItem(
-        ESTUDIOS_CLINICOS_STORAGE_KEY,
-        JSON.stringify([payload, ...guardados]),
-      );
+      await documentosService.create('ESTUDIOS_CLINICOS', Number(pacienteActivo.id), payload);
 
       await Swal.fire({
         title: 'Estudios clínicos guardados',
@@ -315,7 +332,7 @@ const EstudiosClinicos: React.FC = () => {
 
       setPreviewOpen(false);
     } catch {
-      message.warning('Completa los campos obligatorios.');
+      message.error('No se pudo completar la operación. Revisa los campos y la conexión con el servidor.');
     } finally {
       setSaving(false);
     }
@@ -459,6 +476,7 @@ const EstudiosClinicos: React.FC = () => {
                 <Form.Item name="estudio_select" label="*Estudios">
                   <Select
                     showSearch
+                    loading={catalogoLoading}
                     placeholder="Busca por clave o nombre del estudio..."
                     optionFilterProp="label"
                     options={catalogoEstudios.map((item) => ({
@@ -474,6 +492,9 @@ const EstudiosClinicos: React.FC = () => {
                   onClick={handleAgregarEstudio}
                 >
                   Agregar
+                </Button>
+                <Button type="link" className="estudios-new-catalog-btn" onClick={() => setNuevoEstudioOpen(true)}>
+                  ¿No aparece? Crear estudio
                 </Button>
               </div>
 
@@ -551,7 +572,9 @@ const EstudiosClinicos: React.FC = () => {
                     showSearch
                     placeholder="Seleccione..."
                     optionFilterProp="label"
-                    options={catalogoDiagnosticos.map((item) => ({
+                    onSearch={buscarDiagnosticos}
+                          filterOption={false}
+                          options={catalogoDiagnosticos.map((item) => ({
                       label: `${item.clave} - ${item.nombre}`,
                       value: item.clave,
                     }))}
@@ -653,6 +676,26 @@ const EstudiosClinicos: React.FC = () => {
           </Form>
         </Card>
       </div>
+
+      <Modal
+        title="Agregar estudio al catálogo"
+        open={nuevoEstudioOpen}
+        onCancel={() => { setNuevoEstudioOpen(false); nuevoEstudioForm.resetFields(); }}
+        onOk={() => void guardarNuevoEstudio()}
+        okText="Guardar estudio"
+        confirmLoading={guardandoNuevoEstudio}
+        destroyOnHidden
+      >
+        <Typography.Paragraph type="secondary">El estudio quedará disponible para futuras solicitudes de esta empresa.</Typography.Paragraph>
+        <Form form={nuevoEstudioForm} layout="vertical">
+          <Form.Item name="clave" label="Clave" rules={[{ required: true, message: 'Ingresa una clave' }, { max: 40 }]}>
+            <Input placeholder="Ej. LAB-201" onInput={(event) => { event.currentTarget.value = event.currentTarget.value.toUpperCase(); }} />
+          </Form.Item>
+          <Form.Item name="nombre" label="Nombre del estudio" rules={[{ required: true, message: 'Ingresa el nombre del estudio' }, { max: 191 }]}>
+            <Input placeholder="Ej. PERFIL DE HIERRO" onInput={(event) => { event.currentTarget.value = event.currentTarget.value.toUpperCase(); }} />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         open={previewOpen}

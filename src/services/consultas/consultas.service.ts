@@ -1,4 +1,5 @@
 import axiosInstance from '../../api/axios.config';
+import { queueOfflineRequest } from '../offline/offline-sync.service';
 
 export interface ConsultaSignosVitalesPayload {
   peso?: number;
@@ -32,7 +33,7 @@ export interface ConsultaDiagnosticoPayload {
 }
 
 export interface ConsultaPayload {
-  pacienteId: number;
+  pacienteId: number | string;
   tipoConsulta: string;
   primeraConsultaAnio: boolean;
   diabetes: boolean;
@@ -87,8 +88,15 @@ class ConsultasService {
   }
 
   async create(payload: ConsultaPayload): Promise<any> {
-    const response = await axiosInstance.post(this.basePath, payload);
-    return this.unwrapEntity(response.data);
+    try {
+      const response = await axiosInstance.post(this.basePath, payload);
+      return this.unwrapEntity(response.data);
+    } catch (error: any) {
+      if (error?.response) throw error;
+      const dependencies = typeof payload.pacienteId === 'string' && payload.pacienteId.startsWith('local:') ? [payload.pacienteId] : [];
+      const queued = await queueOfflineRequest('CONSULTA_CREAR', { method: 'POST', url: this.basePath, data: payload }, dependencies);
+      return { ...payload, id: queued.localId, offlinePending: true };
+    }
   }
 
   async findAll(params: ConsultasQueryParams = {}): Promise<ConsultasPage> {

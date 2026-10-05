@@ -880,7 +880,8 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({
     return Number.isFinite(id) && id > 0 ? id : null;
   };
 
-  const recuperarConsultaApiId = async (pacienteId: number): Promise<number | null> => {
+  const recuperarConsultaApiId = async (pacienteId: number | string): Promise<number | null> => {
+    if (typeof pacienteId !== 'number' || !Number.isInteger(pacienteId) || pacienteId <= 0) return null;
     try {
       const page = await consultasService.findAll({
         page: 1,
@@ -1174,50 +1175,6 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({
     setPreviewOpen(true);
   };
 
-  const guardarHistorialClinico = (payload: any, apiId: number | null) => {
-    const HISTORIAL_CLINICO_STORAGE_KEY = 'historial_clinico_pacientes';
-
-    try {
-      const data = localStorage.getItem(HISTORIAL_CLINICO_STORAGE_KEY);
-      const historiales = data ? JSON.parse(data) : [];
-
-      const nuevoHistorial = {
-        id: apiId
-          ? `consulta-api-${apiId}`
-          : `${paciente.id || paciente.numero_expediente || Date.now()}-${Date.now()}`,
-        consulta_api_id: apiId,
-        pacienteId: paciente.id,
-        paciente: {
-          id: paciente.id,
-          nombre: nombreCompleto,
-          numero_expediente: paciente.numero_expediente,
-          curp: paciente.curp,
-          sexo: paciente.sexo,
-          fecha_nacimiento: paciente.fecha_nacimiento,
-        },
-        consulta: payload,
-        diagnosticos,
-        fecha_consulta: payload.fecha_consulta,
-      };
-
-      const historialesActualizados = apiId
-        ? [
-            nuevoHistorial,
-            ...historiales.filter(
-              (item: any) => Number(item?.consulta_api_id) !== Number(apiId),
-            ),
-          ]
-        : [nuevoHistorial, ...historiales];
-
-      localStorage.setItem(
-        HISTORIAL_CLINICO_STORAGE_KEY,
-        JSON.stringify(historialesActualizados),
-      );
-    } catch {
-      // Evita romper la pantalla si localStorage falla.
-    }
-  };
-
   const handleGuardar = async () => {
     if (guardandoConsulta) return;
 
@@ -1296,9 +1253,6 @@ const ConsultaExterna: React.FC<ConsultaExternaProps> = ({
         apiPayload,
       };
 
-      // La API es la fuente principal. Este espejo local se conserva únicamente
-      // para no romper las pantallas de histórico que todavía leen localStorage.
-      guardarHistorialClinico(payloadLocal, idConsulta);
 
       setProgress((prev) => ({
         ...prev,

@@ -205,10 +205,6 @@ const grupoSanguineoOptions = [
   { value: 'Desconocido', label: 'Desconocido' },
 ];
 
-const siNoOptions = [
-  { value: 'SI', label: 'Sí' },
-  { value: 'NO', label: 'No' },
-];
 
 const habitosOptions = [
   { value: 'NUNCA', label: 'Nunca' },

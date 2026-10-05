@@ -245,7 +245,7 @@ const Citas: React.FC = () => {
       setSaving(true);
 
       if (!editing) {
-        citasService.createManual({
+        await citasService.createManual({
           pacienteId: values.pacienteId,
           fecha,
           hora,
@@ -256,7 +256,7 @@ const Citas: React.FC = () => {
           notas: values.notas,
         });
       } else if (editing.origen === 'MANUAL') {
-        citasService.updateManual(editing.id, {
+        await citasService.updateManual(editing.id, {
           pacienteId: values.pacienteId,
           fecha,
           hora,
@@ -267,7 +267,7 @@ const Citas: React.FC = () => {
           notas: values.notas,
         });
       } else if (editing.recetaId) {
-        citasService.updateSeguimiento(editing.recetaId, {
+        await citasService.updateSeguimiento(editing.recetaId, {
           hora,
           duracion,
           estado: values.estado,
@@ -307,8 +307,12 @@ const Citas: React.FC = () => {
       if (!result.isConfirmed) return;
     }
 
-    citasService.setStatus(cita, estado);
-    await loadAgenda(true);
+    try {
+      await citasService.setStatus(cita, estado);
+      await loadAgenda(true);
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'No se pudo actualizar la cita.');
+    }
   };
 
   const renderStatus = (estado: CitaEstado) => (

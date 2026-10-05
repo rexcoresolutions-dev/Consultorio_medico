@@ -5,7 +5,7 @@ import { detectGender } from '../../utils/genderDetector';
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  'https://api-medica.rexcoresolutions.com/api/v1';
+  (import.meta.env.DEV ? 'http://localhost:3000/api/v1' : 'https://api-medica.rexcoresolutions.com/api/v1');
 
 const decodeToken = (token: string): any => {
   try {
@@ -143,17 +143,43 @@ class AuthService {
         cleanUserData?.updated_at,
 
       genero: gender,
+      debe_cambiar_password: Boolean(cleanUserData?.debeCambiarPassword ?? tokenData?.debeCambiarPassword),
+      password_temporal_expira: cleanUserData?.passwordTemporalExpira ?? tokenData?.passwordTemporalExpira ?? null,
     };
+  }
+
+  async changeInitialPassword(newPassword: string): Promise<void> {
+    const response = await axiosInstance.post('/auth/cambiar-password-inicial', { newPassword });
+    const payload = response.data?.data ?? response.data;
+    const accessToken = payload?.accessToken ?? payload?.token;
+
+    if (!accessToken) {
+      throw new Error('La contraseña cambió, pero no fue posible renovar la sesión');
+    }
+
+    localStorage.setItem('access_token', accessToken);
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+
+    const currentUser = this.getUser();
+    if (currentUser) {
+      localStorage.setItem('user', JSON.stringify({
+        ...currentUser,
+        debe_cambiar_password: false,
+        password_temporal_expira: null,
+      }));
+    }
+
+    this.startRefreshTokenTimer();
   }
 
   private hasValidName(user: User | null): boolean {
     return !!user?.nombre && user.nombre.trim() !== '';
   }
 
-  async login(email: string, password: string): Promise<LoginResponse> {
+  async login(identificador: string, password: string): Promise<LoginResponse> {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
+        identificador,
         password,
       });
 
@@ -251,7 +277,7 @@ class AuthService {
             meUserNormalized?.email ||
             loginUserNormalized?.email ||
             decodedToken?.email ||
-            email,
+            identificador,
 
           rol_id: Number(
             usuarioById?.rol_id ||
@@ -263,7 +289,7 @@ class AuthService {
         };
       }
 
-      const allowedRoles = [1, 2, 3];
+      const allowedRoles = [1, 2, 3, 4];
 
       if (!allowedRoles.includes(Number(completeUser.rol_id))) {
         this.logout();
@@ -271,6 +297,11 @@ class AuthService {
       }
 
       localStorage.setItem('user', JSON.stringify(completeUser));
+
+      if (!completeUser.debe_cambiar_password && Number(completeUser.rol_id) !== 4) {
+        const { refreshOfflineAuthorization } = await import('../offline/offline-sync.service');
+        await refreshOfflineAuthorization().catch(() => undefined);
+      }
 
       this.startRefreshTokenTimer();
 
@@ -344,6 +375,8 @@ class AuthService {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('effective_permissions');
+    sessionStorage.removeItem('empresa_contexto_id');
 
     this.stopRefreshTokenTimer();
 

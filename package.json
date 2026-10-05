@@ -7,10 +7,19 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "pwa:build": "npm run build",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android",
+    "android:apk:debug": "npm run android:sync && cd android && gradlew.bat assembleDebug",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build"
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.3",
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/core": "^7.6.9",
+    "@tauri-apps/api": "^2.12.1",
     "antd": "^6.4.3",
     "axios": "^1.16.1",
     "axios-auth-refresh": "^5.0.2",
@@ -24,7 +33,9 @@
     "sweetalert2": "^11.26.25"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.9",
     "@eslint/js": "^10.0.1",
+    "@tauri-apps/cli": "^2.12.1",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

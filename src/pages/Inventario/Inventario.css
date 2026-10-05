@@ -1171,3 +1171,68 @@
   background: #e9fbf9;
   color: #087b74;
 }
+
+/* ==========================================================
+   TEMA GLOBAL DE EMPRESA
+========================================================== */
+.inventory-page {
+  background:
+    radial-gradient(circle at 8% 0%, var(--system-brand-color-soft, rgba(20,184,166,.12)), transparent 28%),
+    linear-gradient(180deg, var(--system-brand-page-bg, #f7fbfc) 0%, #f6f8fa 100%) !important;
+}
+
+.inv-hero {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255,255,255,.18), transparent 27%),
+    linear-gradient(
+      135deg,
+      var(--system-brand-darker, #075f58) 0%,
+      var(--system-brand-dark, #0f766e) 54%,
+      var(--system-brand-color, #14b8a6) 100%
+    ) !important;
+  box-shadow: 0 20px 42px var(--system-brand-color-shadow, rgba(15,118,110,.18)) !important;
+}
+
+.inv-hero-actions {
+  background: rgba(0,0,0,.14) !important;
+  border-color: rgba(255,255,255,.20) !important;
+}
+
+.inv-hero .inv-hero-btn--history,
+.inv-hero .inv-hero-btn--history:hover,
+.inv-hero .inv-hero-btn--history:focus {
+  background: rgba(255,255,255,.12) !important;
+  border-color: rgba(255,255,255,.20) !important;
+  color: #fff !important;
+}
+
+.inv-hero .inv-hero-btn--new,
+.inv-hero .inv-hero-btn--new:hover,
+.inv-hero .inv-hero-btn--new:focus {
+  background: #fff !important;
+  border-color: #fff !important;
+  color: var(--system-brand-dark, #075f58) !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.14) !important;
+}
+
+.inv-summary-card:hover,
+.inv-panel,
+.inv-toolbar-actions .ant-input-affix-wrapper:hover,
+.inv-toolbar-actions .ant-select-selector:hover {
+  border-color: var(--system-brand-border, #99d8d2) !important;
+}
+
+.inv-summary-card:not(.inv-summary-card--warning):not(.inv-summary-card--danger):not(.inv-summary-card--info) strong,
+.inv-med-icon,
+.inv-med-cell span {
+  color: var(--system-brand-dark, #0f766e) !important;
+}
+
+.inv-med-icon {
+  background: var(--system-brand-lighter, #e8fbf8) !important;
+}
+
+.inv-table .ant-table-thead > tr > th {
+  background: var(--system-brand-lighter, #f6fbfb) !important;
+  color: var(--system-brand-dark, #475569) !important;
+}

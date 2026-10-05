@@ -1,12 +1,11 @@
+import { documentosService } from '../../services/operacion/operacion.service';
 import React, { useMemo, useState } from 'react';
 import {
   Button,
   Card,
-  Col,
   Form,
   Input,
   Modal,
-  Row,
   Space,
   Typography,
   message,
@@ -30,7 +29,6 @@ const { TextArea } = Input;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
-const CERTIFICADOS_MEDICOS_STORAGE_KEY = 'certificados_medicos_pacientes';
 
 type PacienteData = {
   id?: number;
@@ -105,7 +103,7 @@ const CertificadoMedico: React.FC = () => {
     pacienteActivo?.numero_expediente || pacienteActivo?.expediente || '—';
 
   const initialValues: CertificadoMedicoForm = {
-    ciudad: 'TEPEXI DE RODRÍGUEZ, PUEBLA.',
+    ciudad: '',
   };
 
   const handleBack = () => {
@@ -158,7 +156,7 @@ const CertificadoMedico: React.FC = () => {
       await validateAll();
       setPreviewOpen(true);
     } catch {
-      message.warning('Completa los campos obligatorios.');
+      message.error('No se pudo completar la operación. Revisa los campos y la conexión con el servidor.');
     }
   };
 
@@ -191,14 +189,7 @@ const CertificadoMedico: React.FC = () => {
         ...values,
       };
 
-      const guardados = JSON.parse(
-        localStorage.getItem(CERTIFICADOS_MEDICOS_STORAGE_KEY) || '[]',
-      );
-
-      localStorage.setItem(
-        CERTIFICADOS_MEDICOS_STORAGE_KEY,
-        JSON.stringify([payload, ...guardados]),
-      );
+      await documentosService.create('CERTIFICADO_MEDICO', Number(pacienteActivo.id), payload);
 
       await Swal.fire({
         title: 'Certificado médico guardado',
@@ -210,7 +201,7 @@ const CertificadoMedico: React.FC = () => {
 
       setPreviewOpen(false);
     } catch {
-      message.warning('Completa los campos obligatorios.');
+      message.error('No se pudo completar la operación. Revisa los campos y la conexión con el servidor.');
     } finally {
       setSaving(false);
     }

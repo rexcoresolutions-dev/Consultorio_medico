@@ -17,7 +17,7 @@ interface UserDataLocal {
   telefono?: string;
   rol_id?: number;
   empresa_id?: number;
-  sucursal_id?: number;
+  sucursal_id?: number | null;
   activo?: boolean;
 }
 

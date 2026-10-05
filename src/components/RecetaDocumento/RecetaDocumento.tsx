@@ -218,13 +218,21 @@ const RecetaCopy: React.FC<{
 
       <header className="clinical-rx-header">
         <div className="clinical-rx-brand">
-          <span className="clinical-rx-logo">
+          <span className={`clinical-rx-logo ${systemConfig.logoDataUrl ? 'has-image' : ''}`}>
             {systemConfig.logoDataUrl ? (
-              <img
-                src={systemConfig.logoDataUrl}
-                alt={systemConfig.nombreCorto}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
+              <>
+                <MedicineBoxOutlined />
+                <img
+                  src={systemConfig.logoDataUrl}
+                  alt=""
+                  crossOrigin="anonymous"
+                  onError={(event) => {
+                    event.currentTarget.style.display = 'none';
+                    event.currentTarget.parentElement?.classList.remove('has-image');
+                  }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', inset: 0, background: 'inherit' }}
+                />
+              </>
             ) : (
               <MedicineBoxOutlined />
             )}

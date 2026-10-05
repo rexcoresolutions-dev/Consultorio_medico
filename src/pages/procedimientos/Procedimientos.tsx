@@ -118,9 +118,12 @@ const Procedimientos: React.FC = () => {
   const [historyType, setHistoryType] = useState<'todos' | 'registro' | 'correccion' | 'saldo_inicial'>('todos');
   const [historyRange, setHistoryRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
 
-  const reload = () => {
+  const reload = async () => {
+    try {
+    await procedimientosService.load();
     setProcedimientos(procedimientosService.getCatalogo());
     setMovimientos(procedimientosService.getMovimientos());
+    } catch { messageApi.error("No fue posible cargar los procedimientos del servidor."); }
   };
 
   useEffect(() => {
@@ -275,9 +278,9 @@ const Procedimientos: React.FC = () => {
     });
   }, [resumenesDiarios, historySearch, historyRange]);
 
-  const addProcedureRecord = (item: ProcedimientoCatalogo) => {
+  const addProcedureRecord = async (item: ProcedimientoCatalogo) => {
     try {
-      procedimientosService.registrarMovimiento({
+      await procedimientosService.registrarMovimiento({
         procedimientoId: item.id,
         cantidad: 1,
         tipo: 'registro',
@@ -300,7 +303,7 @@ const Procedimientos: React.FC = () => {
     if (!correctionProcedure) return;
     try {
       const values = await correctionForm.validateFields();
-      procedimientosService.registrarMovimiento({
+      await procedimientosService.registrarMovimiento({
         procedimientoId: correctionProcedure.id,
         cantidad: -1,
         tipo: 'correccion',
@@ -342,10 +345,10 @@ const Procedimientos: React.FC = () => {
       };
 
       if (editingProcedure) {
-        procedimientosService.updateProcedimiento(editingProcedure.id, payload);
+        await procedimientosService.updateProcedimiento(editingProcedure.id, payload);
         messageApi.success('Procedimiento actualizado.');
       } else {
-        procedimientosService.createProcedimiento(payload);
+        await procedimientosService.createProcedimiento(payload);
         messageApi.success('Procedimiento agregado al catálogo.');
       }
 

@@ -270,9 +270,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = (props) => {
           )}
         </div>
 
-        <button type="button" className="welcome-real-start" onClick={close}>
-          <HeartOutlined /> Comenzar a trabajar
-        </button>
+        <div className="welcome-real-actions">
+          <button type="button" className="welcome-real-start" onClick={close}>
+            <HeartOutlined />
+            <span>Comenzar a trabajar</span>
+          </button>
+        </div>
       </div>
     </Modal>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   SYSTEM_CONFIG_EVENT,
+  SYSTEM_CONFIG_CACHE_KEY,
   getSystemConfig,
   loadSystemConfig,
   type SystemConfig,
@@ -17,7 +18,13 @@ export const useSystemConfig = () => {
       if (active) setConfig(detail || getSystemConfig());
     };
 
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== SYSTEM_CONFIG_CACHE_KEY) return;
+      if (active) setConfig(getSystemConfig());
+    };
+
     window.addEventListener(SYSTEM_CONFIG_EVENT, onChanged);
+    window.addEventListener('storage', onStorage);
 
     loadSystemConfig()
       .then((next) => {
@@ -31,6 +38,7 @@ export const useSystemConfig = () => {
     return () => {
       active = false;
       window.removeEventListener(SYSTEM_CONFIG_EVENT, onChanged);
+      window.removeEventListener('storage', onStorage);
     };
   }, []);
 

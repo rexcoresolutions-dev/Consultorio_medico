@@ -1,14 +1,14 @@
+import dayjs from 'dayjs';
+import { notasService } from '../../services/notas-evolucion/notas-evolucion.service';
 import React, { useMemo, useState } from 'react';
 import {
   Avatar,
   Button,
   Card,
   Checkbox,
-  Col,
   DatePicker,
   Form,
   Input,
-  Row,
   Select,
   Table,
   Tag,
@@ -43,7 +43,6 @@ const { TextArea } = Input;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
-const NOTAS_EVOLUCION_STORAGE_KEY = 'notas_evolucion_pacientes';
 
 type DiagnosticoNota = {
   id: string;
@@ -82,28 +81,6 @@ type NotaEvolucionItem = {
   diagnosticos: DiagnosticoNota[];
 };
 
-const diagnosticosOptions = [
-  {
-    value: 'J00X|RINOFARINGITIS AGUDA [RESFRIADO COMUN]',
-    label: 'J00X - RINOFARINGITIS AGUDA [RESFRIADO COMUN]',
-  },
-  {
-    value: 'J029|FARINGITIS AGUDA, NO ESPECIFICADA',
-    label: 'J029 - FARINGITIS AGUDA, NO ESPECIFICADA',
-  },
-  {
-    value: 'A09X|DIARREA Y GASTROENTERITIS DE PRESUNTO ORIGEN INFECCIOSO',
-    label: 'A09X - DIARREA Y GASTROENTERITIS',
-  },
-  {
-    value: 'R51X|CEFALEA',
-    label: 'R51X - CEFALEA',
-  },
-  {
-    value: 'I10X|HIPERTENSION ESENCIAL',
-    label: 'I10X - HIPERTENSION ESENCIAL',
-  },
-];
 
 const cargarPacienteActivo = (): PacienteData | null => {
   try {
@@ -112,19 +89,6 @@ const cargarPacienteActivo = (): PacienteData | null => {
   } catch {
     return null;
   }
-};
-
-const cargarNotas = (): NotaEvolucionItem[] => {
-  try {
-    const data = localStorage.getItem(NOTAS_EVOLUCION_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
-
-const guardarNotas = (notas: NotaEvolucionItem[]) => {
-  localStorage.setItem(NOTAS_EVOLUCION_STORAGE_KEY, JSON.stringify(notas));
 };
 
 const getFullName = (paciente?: Partial<PacienteData> | null) =>
@@ -174,9 +138,20 @@ const NotaEvolucion: React.FC = () => {
   const [pacienteActivo, setPacienteActivo] = useState<PacienteData | null>(() =>
     cargarPacienteActivo(),
   );
-  const [notas, setNotas] = useState<NotaEvolucionItem[]>(() => cargarNotas());
+  const [notas, setNotas] = useState<NotaEvolucionItem[]>([]);
   const [diagnosticos, setDiagnosticos] = useState<DiagnosticoNota[]>([]);
 
+  const [saving, setSaving] = useState(false);
+  const [diagnosticosOptions, setDiagnosticosOptions] = useState<{ value: string; label: string }[]>([]);
+  const searchSequence = React.useRef(0);
+  const buscarDiagnosticos = async (term: string) => {
+    const sequence = ++searchSequence.current;
+    try {
+      const result = await notasService.search(term);
+      if (sequence === searchSequence.current) setDiagnosticosOptions(result.results.map(item => ({ value: item.id + '|' + item.catalogKey + '|' + item.nombre, label: item.text })));
+    } catch { message.error('No se pudo consultar CIE-10.'); }
+  };
+  React.useEffect(() => { void buscarDiagnosticos(''); }, []);
   const pacienteNombre = getFullName(pacienteActivo);
 
   const notaActual = useMemo(() => {
@@ -209,7 +184,7 @@ const NotaEvolucion: React.FC = () => {
       return;
     }
 
-    const [clave, diagnostico] = value.split('|');
+    const [cie10Id, clave, diagnostico] = value.split('|');
 
     const existe = diagnosticos.some((item) => item.clave === clave);
 
@@ -219,7 +194,7 @@ const NotaEvolucion: React.FC = () => {
     }
 
     const nuevoDiagnostico: DiagnosticoNota = {
-      id: `${clave}-${Date.now()}`,
+      id: cie10Id,
       no: diagnosticos.length + 1,
       clave,
       diagnostico,
@@ -250,7 +225,11 @@ const NotaEvolucion: React.FC = () => {
   };
 
   const guardarNota = async () => {
-    const values = await form.validateFields();
+    if (!pacienteActivo?.id || saving) return;
+    try {
+    await form.validateFields();
+    const values = form.getFieldsValue(true);
+    if (!values.motivoConsulta?.trim()) { message.warning("Captura el motivo de consulta."); return; }
 
     if (diagnosticos.length === 0) {
       message.warning('Agrega al menos un diagnóstico.');
@@ -276,14 +255,26 @@ const NotaEvolucion: React.FC = () => {
       diagnosticos,
     };
 
+    setSaving(true);
+    const payload = {
+      pacienteId: Number(pacienteActivo.id), motivoConsulta: values.motivoConsulta,
+      exploracionFisica: values.exploracionFisica, examenesParaclinicos: values.examenesParaclinicos,
+      tratamientoActual: values.tratamientoActual, pronostico: values.pronostico,
+      proximaCita: values.proximaCita && values.fechaProximaCita ? dayjs(values.fechaProximaCita).format('YYYY-MM-DD') : undefined,
+      diagnosticos: diagnosticos.map(d => ({ cie10Id: Number(d.id) })),
+      signosVitales: Object.fromEntries(['ta','fc','fr','temp','peso','talla','abdomen','spo2'].map(key => [key, values[key as keyof NotaEvolucionValues]]).filter(([,value]) => value !== undefined)),
+    };
+    const saved = notaActual ? await notasService.update(notaActual.id, payload) : await notasService.create(payload);
+    nuevaNota.id = String(saved.id);
     const notasActualizadas = notaActual
       ? notas.map((nota) => (nota.id === notaActual.id ? nuevaNota : nota))
       : [nuevaNota, ...notas];
 
     setNotas(notasActualizadas);
-    guardarNotas(notasActualizadas);
+
 
     message.success('Nota de evolución guardada correctamente.');
+    } catch (error: any) { message.error(error?.response?.data?.message || 'No se pudo guardar la nota. Revisa los campos y la conexión.'); } finally { setSaving(false); }
   };
 
   const finalizarAtencion = async () => {
@@ -571,6 +562,8 @@ const NotaEvolucion: React.FC = () => {
                       allowClear
                       placeholder="Seleccione..."
                       options={diagnosticosOptions}
+                      onSearch={buscarDiagnosticos}
+                      filterOption={false}
                       optionFilterProp="label"
                     />
                   </Form.Item>
@@ -635,12 +628,13 @@ const NotaEvolucion: React.FC = () => {
 
               {step === 1 && (
                 <>
-                  <Button icon={<EyeOutlined />}>Vista previa</Button>
+                  <Button icon={<EyeOutlined />} onClick={() => window.print()}>Vista previa</Button>
 
                   <Button
                     type="primary"
                     icon={<SaveOutlined />}
                     onClick={guardarNota}
+                    loading={saving}
                     className="nota-save-btn"
                   >
                     Guardar nota

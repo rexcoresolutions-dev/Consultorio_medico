@@ -59,6 +59,8 @@
 }
 
 .clinical-rx-logo {
+  position: relative;
+  overflow: hidden;
   display: grid;
   place-items: center;
   width: 34px;
@@ -68,6 +70,15 @@
   color: #fff;
   background: linear-gradient(145deg, #14a59c, #0d847d);
   font-size: 17px;
+}
+
+.clinical-rx-logo.has-image {
+  background: transparent;
+  border-radius: 0;
+}
+
+.clinical-rx-logo.has-image > .anticon {
+  display: none;
 }
 
 .clinical-rx-brand strong {

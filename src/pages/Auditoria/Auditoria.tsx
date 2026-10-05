@@ -12,7 +12,7 @@ import {
 import dayjs, { type Dayjs } from 'dayjs';
 
 import pacientesService from '../../services/pacientes/pacientes.service';
-import consultasService from '../../services/consultas/consultas.service';
+import { notasService } from '../../services/notas-evolucion/notas-evolucion.service';
 import recetasService from '../../services/recetas/recetas.service';
 import inventarioService from '../../services/inventario/inventario.service';
 import './Auditoria.css';
@@ -29,7 +29,7 @@ const normalize = (value: any) =>
 
 const entityDate = (item: any) =>
   String(
-    item?.fecha ??
+    item?.fechaElaboracion ?? item?.fechaHora ?? item?.fecha ??
       item?.fechaConsulta ??
       item?.fecha_consulta ??
       item?.createdAt ??
@@ -79,7 +79,7 @@ const Auditoria: React.FC = () => {
     setWarning(null);
     const results = await Promise.allSettled([
       pacientesService.getPacientes(),
-      loadAllPages((params) => consultasService.findAll(params)),
+      notasService.list(),
       loadAllPages((params) => recetasService.findAll(params)),
       inventarioService.getMovimientos(),
     ]);
@@ -111,7 +111,7 @@ const Auditoria: React.FC = () => {
   const consultasById = useMemo(() => {
     const map = new Map<number, any>();
     consultas.forEach((c) => {
-      const id = Number(c?.id ?? c?.consultaId ?? c?.consulta_id ?? 0);
+      const id = Number(c?.consultaId ?? c?.id ?? c?.consulta_id ?? 0);
       if (id > 0) map.set(id, c);
     });
     return map;
@@ -135,14 +135,14 @@ const Auditoria: React.FC = () => {
         const paciente = pacientesById.get(pacienteId) ?? consulta?.paciente;
         const diagnosticos = Array.isArray(consulta?.diagnosticos) ? consulta.diagnosticos : [];
         const diagnostico = diagnosticos
-          .map((d: any) => d?.diagnostico?.descripcion ?? d?.diagnostico?.nombre ?? d?.descripcion)
+          .map((d: any) => d?.nombre ?? d?.diagnostico?.descripcion ?? d?.diagnostico?.nombre ?? d?.descripcion)
           .filter(Boolean)
           .join(', ');
         return {
           key: String(consulta?.id ?? Math.random()),
           fecha: entityDate(consulta),
           paciente: fullName(paciente) || 'Paciente',
-          tipo: String(consulta?.tipoConsulta ?? consulta?.tipo_consulta ?? 'Consulta'),
+          tipo: String(consulta?.tipoConsulta ?? consulta?.tipo_consulta ?? 'Nota de evolución'),
           diagnostico: diagnostico || String(consulta?.motivoConsulta ?? '-'),
           estatus: String(consulta?.estatus ?? consulta?.estado ?? 'REGISTRADA'),
         };
@@ -156,7 +156,7 @@ const Auditoria: React.FC = () => {
     recetas
       .map((receta) => {
         const cId = Number(receta?.consultaId ?? receta?.consulta_id ?? receta?.consulta?.id ?? 0);
-        const consulta = consultasById.get(cId);
+        const consulta = receta.consulta ?? consultasById.get(cId);
         const pId = Number(consulta?.pacienteId ?? consulta?.paciente_id ?? consulta?.paciente?.id ?? 0);
         const paciente = pacientesById.get(pId) ?? consulta?.paciente;
         const meds = Array.isArray(receta?.medicamentos)
@@ -209,7 +209,7 @@ const Auditoria: React.FC = () => {
     { title: 'Receta', dataIndex: 'folio', width: 100, render: (v) => `#${v}` },
     { title: 'Paciente', dataIndex: 'paciente', width: 220 },
     { title: 'Medicamentos', dataIndex: 'medicamentos' },
-    { title: 'Consulta', dataIndex: 'consultaId', width: 110, render: (v) => `#${v}` },
+    { title: 'Nota de evolución', dataIndex: 'consultaId', width: 110, render: (v) => `#${v}` },
     { title: 'Seguimiento', dataIndex: 'seguimiento', width: 150 },
   ];
 
@@ -258,7 +258,7 @@ const Auditoria: React.FC = () => {
                 label: <span><SolutionOutlined /> Consultas ({clinicalRows.length})</span>,
                 children: clinicalRows.length ? (
                   <Table columns={clinicalColumns} dataSource={clinicalRows} pagination={{ pageSize: 8, showSizeChanger: false }} />
-                ) : <Empty description="Sin consultas para los filtros seleccionados" />,
+                ) : <Empty description="Sin notas para los filtros seleccionados" />,
               },
               {
                 key: 'recetas',

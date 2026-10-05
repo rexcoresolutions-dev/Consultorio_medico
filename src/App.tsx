@@ -1,4 +1,3 @@
-import React from 'react';
 import AppRouter from './router/AppRouter';
 import { ConfigProvider, App as AntdApp } from 'antd';
 import esES from 'antd/locale/es_ES';

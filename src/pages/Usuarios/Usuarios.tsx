@@ -7,7 +7,6 @@ import {
   Form,
   Input,
   Radio,
-  Typography,
   Card,
   Avatar,
   Tag,
@@ -15,6 +14,7 @@ import {
   Grid,
   Drawer,
   Select,
+  Typography,
 } from 'antd';
 import {
   PlusOutlined,
@@ -39,9 +39,9 @@ import axiosInstance from '../../api/axios.config';
 import { useAuth } from '../../hooks/useAuth';
 import { App } from 'antd';
 import './Usuarios.css';
+import { userStatusLabel } from '../../utils/user-contract.utils';
 
 const { useBreakpoint } = Grid;
-const { Text } = Typography;
 
 interface SucursalOption {
   id: number;
@@ -66,20 +66,31 @@ const Usuarios: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState('');
+  const [suggestedUsername, setSuggestedUsername] = useState('');
 
   const [form] = Form.useForm();
-  const [passwordForm] = Form.useForm();
 
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const rolSeleccionado = Form.useWatch('rol_id', form);
+
+  const proposeUsername = async () => {
+    const nombre = String(form.getFieldValue('nombre') || '').trim();
+    if (!nombre || editingUser) return;
+    try {
+      const response = await axiosInstance.get('/usuarios/proponer-username', { params: { nombre } });
+      const username = response.data?.data?.username ?? response.data?.username ?? '';
+      setSuggestedUsername(username);
+      form.setFieldValue('username_propuesto', username);
+    } catch { setSuggestedUsername(''); }
+  };
 
   const getRolName = (rolId?: number) => {
     switch (rolId) {
       case 1:
         return 'Administrador';
       case 2:
-        return 'Médico';
+        return 'Doctor';
       case 3:
         return 'Auditor';
       default:
@@ -212,6 +223,7 @@ const Usuarios: React.FC = () => {
 
     form.setFieldsValue({
       nombre: usuario.nombre,
+      username: usuario.username,
       primer_apellido: usuario.primer_apellido,
       segundo_apellido: usuario.segundo_apellido,
       correo: usuario.email,
@@ -241,51 +253,49 @@ const Usuarios: React.FC = () => {
         primer_apellido: values.primer_apellido,
         segundo_apellido: values.segundo_apellido || '',
         email: values.correo,
-        password: values.password,
+        username_propuesto: editingUser ? undefined : values.username_propuesto,
         telefono: values.telefono || '',
         rol_id: values.rol_id,
         sucursal_id: values.rol_id === 1 ? null : Number(values.sucursal_id),
         cedula_profesional: values.rol_id === 2 ? values.cedula_profesional || '' : '',
         especialidad: values.rol_id === 2 ? values.especialidad || '' : '',
-        activo: editingUser ? values.activo : true,
+        activo: editingUser && user?.rol_id === 1 && values.activo !== editingUser.activo ? values.activo : undefined,
       };
 
       if (editingUser) {
         await userService.updateUsuario(editingUser.id!, submitData);
         message.success('Usuario actualizado exitosamente');
       } else {
-        await userService.createUsuario(submitData as any);
-        message.success('Usuario creado exitosamente');
+        const created = await userService.createUsuario(submitData as any);
+        const emailCopy = created.correo_estado === 'ACEPTADO_SMTP'
+          ? 'Correo aceptado por SMTP.'
+          : created.correo_estado === 'PENDIENTE_CONFIGURACION'
+            ? 'El usuario fue creado; falta configurar SMTP.'
+            : 'El usuario fue creado; el correo quedó pendiente.';
+        message.success(`Usuario ${created.username || ''} creado. ${emailCopy}`.trim());
       }
 
       setModalVisible(false);
       form.resetFields();
       fetchUsers();
     } catch (error: any) {
+      if (error?.errorFields) return;
       message.error(error?.message || 'Error al guardar usuario');
     }
   };
 
   const handleOpenPasswordModal = (userId: number) => {
     setSelectedUserId(userId);
-    passwordForm.resetFields();
     setPasswordModalVisible(true);
   };
 
   const handleChangePassword = async () => {
     try {
-      const values = await passwordForm.validateFields();
-
-      if (values.newPassword !== values.confirmPassword) {
-        message.error('Las contraseñas no coinciden');
-        return;
-      }
-
       await userService.changePassword(selectedUserId!, {
-        newPassword: values.newPassword,
+        newPassword: '',
       });
 
-      message.success('Contraseña actualizada exitosamente');
+      message.success('Se emitió una nueva contraseña temporal y el correo quedó registrado.');
       setPasswordModalVisible(false);
     } catch (error) {
       message.error('Error al cambiar contraseña');
@@ -293,7 +303,7 @@ const Usuarios: React.FC = () => {
   };
 
   const filteredUsers = users.filter((usuario) => {
-    const fullText = `${usuario.nombre || ''} ${usuario.primer_apellido || ''} ${usuario.email || ''}`.toLowerCase();
+    const fullText = `${usuario.nombre || ''} ${usuario.primer_apellido || ''} ${usuario.username || ''} ${usuario.email || ''}`.toLowerCase();
     return fullText.includes(searchText.toLowerCase());
   });
 
@@ -305,13 +315,16 @@ const Usuarios: React.FC = () => {
       align: 'center',
     },
     {
-      title: 'Usuario',
+      title: 'Persona / usuario',
       key: 'nombre',
       render: (_, record) => (
         <Space>
           <Avatar icon={<UserOutlined />} className="user-avatar" />
-          <span>
-            {record.nombre} {record.primer_apellido}
+          <span style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>{record.nombre} {record.primer_apellido}</span>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              @{record.username || 'sin usuario'}
+            </Typography.Text>
           </span>
         </Space>
       ),
@@ -355,9 +368,23 @@ const Usuarios: React.FC = () => {
       width: 100,
       align: 'center',
       render: (activo) => (
-        <Tag color={activo ? 'green' : 'red'}>
-          {activo ? 'Activo' : 'Inactivo'}
+        <Tag color={activo === undefined ? 'default' : activo ? 'green' : 'red'}>
+          {userStatusLabel(activo)}
         </Tag>
+      ),
+    },
+    {
+      title: 'Contraseña',
+      dataIndex: 'debe_cambiar_password',
+      width: 145,
+      align: 'center',
+      responsive: ['lg'],
+      render: (pendiente?: boolean) => (
+        <Tooltip title={pendiente === undefined ? 'No fue posible consultar el estado de la contraseña' : pendiente ? 'El usuario todavía utiliza su contraseña temporal' : 'El usuario ya estableció su contraseña personal'}>
+          <Tag color={pendiente === undefined ? 'default' : pendiente ? 'orange' : 'green'}>
+            {pendiente === undefined ? 'Sin información' : pendiente ? 'Cambio pendiente' : 'Ya actualizada'}
+          </Tag>
+        </Tooltip>
       ),
     },
     {
@@ -379,7 +406,7 @@ const Usuarios: React.FC = () => {
             <Button type="link" icon={<LockOutlined />} onClick={() => handleOpenPasswordModal(record.id!)} />
           </Tooltip>
 
-          <Tooltip title={record.activo ? 'Desactivar' : 'Usuario inactivo'}>
+          <Tooltip title={record.activo ? 'Desactivar' : userStatusLabel(record.activo)}>
             <Button
               type="link"
               danger
@@ -411,6 +438,14 @@ const Usuarios: React.FC = () => {
         </div>
 
         <div className="user-detail-card">
+          <div className="user-detail-row">
+            <UserOutlined />
+            <div>
+              <div className="detail-label">Usuario de acceso</div>
+              <div className="detail-value">{selectedUser.username || 'No registrado'}</div>
+            </div>
+          </div>
+
           <div className="user-detail-row">
             <MailOutlined />
             <div>
@@ -465,8 +500,8 @@ const Usuarios: React.FC = () => {
             <CheckCircleOutlined />
             <div>
               <div className="detail-label">Estado</div>
-              <Tag color={selectedUser.activo ? 'success' : 'error'} style={{ margin: 0 }}>
-                {selectedUser.activo ? 'Activo' : 'Inactivo'}
+              <Tag color={selectedUser.activo === undefined ? 'default' : selectedUser.activo ? 'success' : 'error'} style={{ margin: 0 }}>
+                {userStatusLabel(selectedUser.activo)}
               </Tag>
             </div>
           </div>
@@ -600,8 +635,8 @@ const Usuarios: React.FC = () => {
                     </div>
                   </Space>
 
-                  <Tag color={usuario.activo ? 'green' : 'red'}>
-                    {usuario.activo ? 'Activo' : 'Inactivo'}
+                  <Tag color={usuario.activo === undefined ? 'default' : usuario.activo ? 'green' : 'red'}>
+                    {userStatusLabel(usuario.activo)}
                   </Tag>
                 </div>
 
@@ -641,8 +676,16 @@ const Usuarios: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="nombre" label="Nombre" rules={[{ required: true, message: 'Ingrese el nombre' }]}>
-            <Input placeholder="Ej: Juan" size="large" />
+            <Input placeholder="Ej: Juan" size="large" onBlur={() => void proposeUsername()} />
           </Form.Item>
+
+          {!editingUser && <Form.Item name="username_propuesto" label="Usuario propuesto" extra="Conserva siempre los dos dígitos aleatorios generados por el servidor."><Input value={suggestedUsername} onChange={(event) => setSuggestedUsername(event.target.value)} placeholder="Se genera al capturar el nombre" size="large" /></Form.Item>}
+
+          {editingUser && (
+            <Form.Item name="username" label="Usuario de acceso" extra="Este es el usuario que utiliza para iniciar sesión.">
+              <Input size="large" disabled />
+            </Form.Item>
+          )}
 
           <Form.Item
             name="primer_apellido"
@@ -664,18 +707,13 @@ const Usuarios: React.FC = () => {
             <Input placeholder="ejemplo@correo.com" size="large" />
           </Form.Item>
 
-          <Form.Item name="telefono" label="Teléfono">
+          <Form.Item name="telefono" label="Teléfono" rules={[{ required: true, whitespace: true, message: 'Ingrese el teléfono' }]}>
             <Input placeholder="Ej: 5551234567" size="large" />
           </Form.Item>
 
           <Form.Item name="rol_id" label="Rol" rules={[{ required: true, message: 'Seleccione un rol' }]}>
             <Radio.Group
               className="roles-radio-group"
-              options={[
-                { label: 'Administrador', value: 1 },
-                { label: 'Médico', value: 2 },
-                { label: 'Auditor', value: 3 },
-              ]}
               optionType="button"
               buttonStyle="solid"
               size="large"
@@ -695,7 +733,24 @@ const Usuarios: React.FC = () => {
                   });
                 }
               }}
-            />
+            >
+              {[
+                { label: 'Administrador', value: 1 },
+                { label: 'Doctor', value: 2 },
+                { label: 'Auditor', value: 3 },
+              ].map((role) => (
+                <Radio.Button
+                  key={role.value}
+                  value={role.value}
+                  className={rolSeleccionado === role.value ? 'role-option-selected' : 'role-option'}
+                >
+                  <span className="role-option-content">
+                    {rolSeleccionado === role.value && <CheckCircleOutlined />}
+                    <span>{role.label}</span>
+                  </span>
+                </Radio.Button>
+              ))}
+            </Radio.Group>
           </Form.Item>
 
           {rolSeleccionado !== 1 && (
@@ -736,8 +791,10 @@ const Usuarios: React.FC = () => {
           )}
 
           {editingUser && (
-            <Form.Item name="activo" label="Estado" rules={[{ required: true, message: 'Seleccione el estado' }]}>
+            <Form.Item name="activo" label="Estado" help={editingUser?.activo === undefined ? 'Estado no disponible. Puedes conservarlo sin cambios.' : undefined}>
               <Select
+                disabled={user?.rol_id !== 1}
+                placeholder="Sin información"
                 size="large"
                 options={[
                   { label: 'Activo', value: true },
@@ -747,20 +804,11 @@ const Usuarios: React.FC = () => {
             </Form.Item>
           )}
 
-          {!editingUser && (
-            <Form.Item
-              name="password"
-              label="Contraseña"
-              rules={[{ required: true, min: 6, message: 'Mínimo 6 caracteres' }]}
-            >
-              <Input.Password placeholder="••••••" size="large" />
-            </Form.Item>
-          )}
         </Form>
       </Modal>
 
       <Modal
-        title="Cambiar Contraseña"
+        title="Restablecer acceso"
         open={passwordModalVisible}
         onCancel={() => setPasswordModalVisible(false)}
         onOk={handleChangePassword}
@@ -769,23 +817,7 @@ const Usuarios: React.FC = () => {
         width={450}
         centered
       >
-        <Form form={passwordForm} layout="vertical">
-          <Form.Item
-            name="newPassword"
-            label="Nueva contraseña"
-            rules={[{ required: true, min: 6, message: 'Mínimo 6 caracteres' }]}
-          >
-            <Input.Password placeholder="••••••" size="large" />
-          </Form.Item>
-
-          <Form.Item
-            name="confirmPassword"
-            label="Confirmar nueva contraseña"
-            rules={[{ required: true, message: 'Confirme la nueva contraseña' }]}
-          >
-            <Input.Password placeholder="••••••" size="large" />
-          </Form.Item>
-        </Form>
+        <Typography.Paragraph>Se invalidará la contraseña actual, se generará una credencial temporal según la política de la empresa y el usuario deberá cambiarla al ingresar.</Typography.Paragraph>
       </Modal>
 
       {!isMobile && (

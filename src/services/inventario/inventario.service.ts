@@ -1,4 +1,5 @@
 import axiosInstance from '../../api/axios.config';
+import { queueOfflineRequest } from '../offline/offline-sync.service';
 
 export type EstadoMedicamento = 'activo' | 'inactivo';
 export type TipoMovimientoInventario = 'entrada' | 'salida' | 'ajuste';
@@ -367,9 +368,17 @@ class InventoryService {
       throw new Error('No se pudo identificar la sucursal activa del usuario. Selecciona una sucursal o vuelve a iniciar sesión.');
     }
 
-    const response = await axiosInstance.post(this.basePath, toCreatePayload(input, sucursalId));
-    notifyUpdated();
-    return normalizeMedicamento(unwrapEntity(response.data));
+    const payload = toCreatePayload(input, sucursalId);
+    try {
+      const response = await axiosInstance.post(this.basePath, payload);
+      notifyUpdated();
+      return normalizeMedicamento(unwrapEntity(response.data));
+    } catch (error: any) {
+      if (error?.response) throw error;
+      const queued = await queueOfflineRequest('INVENTARIO_CREAR', { method: 'POST', url: this.basePath, data: payload });
+      notifyUpdated();
+      return normalizeMedicamento({ ...payload, id: queued.localId, estado: 'activo', offlinePending: true });
+    }
   }
 
   async updateMedicamento(
@@ -460,14 +469,22 @@ class InventoryService {
       throw new Error('La cantidad debe ser mayor a cero.');
     }
 
-    const response = await axiosInstance.post(
-      `${this.basePath}/${params.medicamentoId}/movimientos`,
-      {
+    const movementPayload = {
         tipo: params.tipo.toUpperCase(),
         cantidad,
         motivo: params.motivo.trim() || 'Movimiento sin observaciones',
-      },
-    );
+      };
+    let response;
+    try {
+      response = await axiosInstance.post(`${this.basePath}/${params.medicamentoId}/movimientos`, movementPayload);
+    } catch (error: any) {
+      if (error?.response) throw error;
+      const localMedication = String(params.medicamentoId);
+      const dependencies = localMedication.startsWith('local:') ? [localMedication] : [];
+      const queued = await queueOfflineRequest('INVENTARIO_MOVIMIENTO', { method: 'POST', url: `${this.basePath}/${localMedication}/movimientos`, data: movementPayload }, dependencies);
+      notifyUpdated();
+      return normalizeMovimiento({ ...movementPayload, id: queued.localId, medicamentoId: params.medicamentoId, fecha: new Date().toISOString(), offlinePending: true });
+    }
 
     notifyUpdated();
     return normalizeMovimiento(unwrapEntity(response.data));

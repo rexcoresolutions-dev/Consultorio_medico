@@ -1,4 +1,5 @@
 import axiosInstance from '../../api/axios.config';
+import { normalizeUserActive, userApiError } from '../../utils/user-contract.utils';
 
 export interface UserData {
   id?: number;
@@ -16,6 +17,11 @@ export interface UserData {
   password?: string;
   cedula_profesional?: string;
   especialidad?: string;
+  username?: string;
+  correo_estado?: string;
+  username_propuesto?: string;
+  debe_cambiar_password?: boolean;
+  password_temporal_expira?: string | null;
 }
 
 
@@ -44,6 +50,7 @@ class UserService {
   }
 
   private normalizeUser(user: any): UserData {
+    const pendingPasswordChange = user?.debeCambiarPassword ?? user?.debe_cambiar_password;
     return {
       id: user?.id,
       nombre: user?.nombre || '',
@@ -85,9 +92,13 @@ class UserService {
         user?.sucursal?.nombre_sucursal ||
         '',
 
-      activo: user?.activo === true || user?.activo === 1,
+      activo: normalizeUserActive(user?.activo),
       cedula_profesional: user?.cedulaProfesional || user?.cedula_profesional || '',
       especialidad: user?.especialidad || '',
+      username: user?.username || '',
+      correo_estado: user?.correoEstado || user?.correo_estado || '',
+      debe_cambiar_password: pendingPasswordChange === undefined ? undefined : Boolean(pendingPasswordChange),
+      password_temporal_expira: user?.passwordTemporalExpira ?? user?.password_temporal_expira ?? null,
     };
   }
 
@@ -116,10 +127,6 @@ class UserService {
 
     if (userData.rol_id !== undefined) {
       payload.rolId = userData.rol_id;
-    }
-
-    if (userData.empresa_id !== undefined) {
-      payload.empresaId = userData.empresa_id;
     }
 
     if (userData.sucursal_id !== undefined) {
@@ -180,7 +187,7 @@ class UserService {
       console.error('Error updating current user:', error);
 
       if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+        throw new Error(userApiError(error.response.data, 'No se pudo actualizar el usuario'));
       }
 
       throw error;
@@ -235,17 +242,14 @@ class UserService {
         throw new Error('El correo es obligatorio');
       }
 
-      if (!userData.password?.trim()) {
-        throw new Error('La contraseña es obligatoria');
-      }
-
       const payload: any = {
         nombre: userData.nombre.trim(),
         primerApellido: userData.primer_apellido.trim(),
         correo: userData.email.trim(),
-        password: userData.password,
         rolId: userData.rol_id || 2,
       };
+      if (userData.password?.trim()) payload.password = userData.password;
+      if (userData.username_propuesto?.trim()) payload.usernamePropuesto = userData.username_propuesto.trim();
 
       if (userData.segundo_apellido?.trim()) {
         payload.segundoApellido = userData.segundo_apellido.trim();
@@ -280,7 +284,7 @@ class UserService {
 
       if (error.response?.data) {
         console.error('Error response:', JSON.stringify(error.response.data, null, 2));
-        throw new Error(error.response.data.message || 'Error al crear usuario');
+        throw new Error(userApiError(error.response.data, 'Error al crear usuario'));
       }
 
       throw error;
@@ -303,7 +307,7 @@ class UserService {
       console.error(`Error updating user ${id}:`, error);
 
       if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+        throw new Error(userApiError(error.response.data, 'No se pudo actualizar el usuario'));
       }
 
       throw error;
@@ -312,9 +316,8 @@ class UserService {
 
   async changePassword(id: number, passwords: ChangePasswordData): Promise<void> {
     try {
-      await axiosInstance.patch(`/usuarios/${id}`, {
-        password: passwords.newPassword,
-      });
+      void passwords;
+      await axiosInstance.post(`/usuarios/${id}/restablecer-acceso`);
     } catch (error) {
       console.error(`Error changing password for user ${id}:`, error);
       throw error;

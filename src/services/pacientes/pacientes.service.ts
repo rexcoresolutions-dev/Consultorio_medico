@@ -1,4 +1,5 @@
 import axiosInstance from '../../api/axios.config';
+import { queueOfflineRequest } from '../offline/offline-sync.service';
 
 export interface PacienteData {
   id?: number;
@@ -311,7 +312,11 @@ class PacientesService {
     });
 
     const pacientes = this.normalizeArray(response.data);
-
+    const pages = Number(response.data?.data?.meta?.totalPages ?? response.data?.meta?.totalPages ?? 1);
+    for (let page = 2; page <= pages; page++) {
+      const next = await axiosInstance.get(this.basePath, { params: { page, limit: 100 } });
+      pacientes.push(...this.normalizeArray(next.data));
+    }
     return pacientes.map((paciente) => this.normalizePaciente(paciente));
   }
 
@@ -340,11 +345,14 @@ class PacientesService {
 
     console.log('BODY REAL ENVIADO A /pacientes:', payload);
 
-    const response = await axiosInstance.post(this.basePath, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    let response;
+    try {
+      response = await axiosInstance.post(this.basePath, payload, { headers: { 'Content-Type': 'application/json' } });
+    } catch (error: any) {
+      if (error?.response) throw error;
+      const queued = await queueOfflineRequest('PACIENTE_CREAR', { method: 'POST', url: this.basePath, data: payload, headers: { 'Content-Type': 'application/json' } });
+      return this.normalizePaciente({ ...payload, id: queued.localId, activo: true, offlinePending: true });
+    }
 
     const paciente = this.getResponseData(response.data);
 

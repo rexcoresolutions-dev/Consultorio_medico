@@ -1,4 +1,5 @@
 import axiosInstance from '../../api/axios.config';
+import { queueOfflineRequest } from '../offline/offline-sync.service';
 import type { PacienteData } from '../pacientes/pacientes.service';
 
 export type HistoriaClinicaQuery = {
@@ -308,7 +309,7 @@ const buildHeredofamiliares = (values: Record<string, any>) => {
  * 400 cuando recibe propiedades fuera de estos objetos.
  */
 export const buildHistoriaClinicaPayload = (
-  pacienteId: number,
+  pacienteId: number | string,
   values: Record<string, any>,
   explicitSucursalId?: number,
 ) => {
@@ -825,13 +826,20 @@ class HistoriaClinicaService {
   private readonly basePath = '/historia-clinica';
 
   async create(
-    pacienteId: number,
+    pacienteId: number | string,
     values: Record<string, any>,
     pacienteFallback?: Partial<PacienteData> | null,
   ): Promise<HistoriaClinicaItem> {
     const payload = buildHistoriaClinicaPayload(pacienteId, values);
-    const response = await axiosInstance.post(this.basePath, payload);
-    return normalizeHistoriaClinica(unwrapEntity(response.data), pacienteFallback);
+    try {
+      const response = await axiosInstance.post(this.basePath, payload);
+      return normalizeHistoriaClinica(unwrapEntity(response.data), pacienteFallback);
+    } catch (error: any) {
+      if (error?.response) throw error;
+      const dependencies = typeof pacienteId === 'string' && pacienteId.startsWith('local:') ? [pacienteId] : [];
+      const queued = await queueOfflineRequest('HISTORIA_CLINICA_CREAR', { method: 'POST', url: this.basePath, data: payload }, dependencies);
+      return normalizeHistoriaClinica({ ...payload, id: queued.localId, offlinePending: true }, pacienteFallback);
+    }
   }
 
   async findAll(

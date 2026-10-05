@@ -1,3 +1,4 @@
+import { allPages, apiData } from '../../services/operacion/operacion.service';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -9,7 +10,6 @@ import {
   Button,
   Table,
   Tag,
-  Progress,
   Grid,
   Select,
   Spin,
@@ -42,6 +42,8 @@ import { useNavigate } from 'react-router-dom';
 import WelcomeModal from '../../components/Auth/WelcomeModal';
 import axiosInstance from '../../api/axios.config';
 import './Dashboard.css';
+
+let dashboardRequestVersion = 0;
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -133,27 +135,30 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   const fetchDashboard = async () => {
+    const requestVersion = ++dashboardRequestVersion;
     setLoading(true);
 
     try {
-      const [usuariosRes, sucursalesRes, meRes] = await Promise.all([
-        axiosInstance.get('/usuarios', {
-          params: {
-            page: 1,
-            limit: 100,
-          },
-        }),
-        axiosInstance.get('/sucursales', {
-          params: {
-            page: 1,
-            limit: 100,
-          },
-        }),
-        axiosInstance.get('/auth/me'),
+      const response = await axiosInstance.get('/dashboard-resumen', { params: sucursalId ? { sucursalId } : {} });
+      if (requestVersion !== dashboardRequestVersion) return;
+      const summary = response.data?.data ?? response.data;
+      setStats(summary.stats);
+      setMetricas(summary.metricas);
+      setSucursales(summary.sucursales ?? []);
+      setSucursalesOptions(summary.sucursalesOptions ?? []);
+      setUsuariosPorSucursal(summary.usuariosPorSucursal ?? []);
+      setUsuariosPorRol(summary.usuariosPorRol ?? []);
+      setActividad([
+        { id: 1, action: summary.alcance === 'SUCURSAL' ? 'Datos de la sucursal seleccionada' : 'Datos consolidados', user: 'Sistema', time: `${summary.stats?.consultas ?? 0} consultas este mes` },
+        { id: 2, action: 'Usuarios activos', user: 'Sistema', time: `${summary.stats?.usuarios ?? 0} usuarios únicos` },
+      ]);
+      return;
+      const list = (path: string) => allPages<any>(page => apiData(axiosInstance.get(path, { params: { page, limit: 100 } })));
+      const [usuariosData, sucursalesData, meRes, pacientesData, consultasData, recetasData, citasData] = await Promise.all([
+        list('/usuarios'), list('/sucursales'), axiosInstance.get('/auth/me'),
+        list('/pacientes'), list('/consultas'), list('/recetas'), apiData<any[]>(axiosInstance.get('/citas')),
       ]);
 
-      const usuariosData = usuariosRes.data?.data?.data || [];
-      const sucursalesData = sucursalesRes.data?.data?.data || [];
       const currentUser = meRes.data?.data;
 
       const empresaId = currentUser?.empresaId || user?.empresa_id;
@@ -170,8 +175,8 @@ const Dashboard: React.FC = () => {
         id: item.id,
         nombre: item.nombre,
         ubicacion: `${item.municipio || ''}, ${item.entidad || ''}`,
-        pacientes: 0,
-        consultas: 0,
+        pacientes: pacientesData.filter((p: any) => (p.sucursalAltaId ?? p.sucursalId) === item.id).length,
+        consultas: consultasData.filter((c: any) => c.sucursalId === item.id).length,
         medicos: usuariosData.filter(
           (u: any) => u.empresaId === empresaId && u.sucursalId === item.id && u.rolId === 2
         ).length,
@@ -197,8 +202,8 @@ const Dashboard: React.FC = () => {
         id: item.id,
         nombre: item.nombre,
         ubicacion: `${item.municipio || ''}, ${item.entidad || ''}`,
-        pacientes: 0,
-        consultas: 0,
+        pacientes: pacientesData.filter((p: any) => (p.sucursalAltaId ?? p.sucursalId) === item.id).length,
+        consultas: consultasData.filter((c: any) => c.sucursalId === item.id).length,
         medicos: usuariosFiltrados.filter(
           (u: any) => u.sucursalId === item.id && u.rolId === 2
         ).length,
@@ -213,8 +218,8 @@ const Dashboard: React.FC = () => {
       const totalSucursales = sucursalesFiltradas.length;
 
       setStats({
-        pacientes: 0,
-        consultas: 0,
+        pacientes: pacientesData.filter((p: any) => !sucursalId || (p.sucursalAltaId ?? p.sucursalId) === sucursalId).length,
+        consultas: consultasData.filter((c: any) => !sucursalId || c.sucursalId === sucursalId).length,
         medicos: totalMedicos,
         sucursales: totalSucursales,
         usuarios: totalUsuarios,
@@ -266,10 +271,10 @@ const Dashboard: React.FC = () => {
       ]);
 
       setMetricas({
-        ocupacion: totalSucursales > 0 ? Math.min(Math.round((totalUsuarios / totalSucursales) * 10), 100) : 0,
+        ocupacion: 0,
         satisfaccion: 0,
-        citas: 0,
-        recetas: 0,
+        citas: citasData.filter((c: any) => !sucursalId || c.sucursalId === sucursalId).length,
+        recetas: recetasData.filter((r: any) => !sucursalId || r.sucursalId === sucursalId).length,
       });
     } catch (error: any) {
       console.error('ERROR DASHBOARD:', error?.response?.data || error);
@@ -602,7 +607,7 @@ const Dashboard: React.FC = () => {
                       <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>
                         Ocupación
                       </Text>
-                      <Progress percent={metricas.ocupacion} strokeColor="#50EBEC" size="small" />
+                      <Text>Sin datos de capacidad</Text>
                     </div>
                   </Col>
 
@@ -611,7 +616,7 @@ const Dashboard: React.FC = () => {
                       <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>
                         Satisfacción
                       </Text>
-                      <Progress percent={metricas.satisfaccion} strokeColor="#36C6C7" size="small" />
+                      <Text>Sin encuestas registradas</Text>
                     </div>
                   </Col>
 
@@ -620,7 +625,7 @@ const Dashboard: React.FC = () => {
                       <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>
                         Citas
                       </Text>
-                      <Progress percent={metricas.citas} strokeColor="#2BA1A2" size="small" />
+                      <Title level={3}>{metricas.citas}</Title>
                     </div>
                   </Col>
 
@@ -629,7 +634,7 @@ const Dashboard: React.FC = () => {
                       <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>
                         Recetas
                       </Text>
-                      <Progress percent={metricas.recetas} strokeColor="#50EBEC" size="small" />
+                      <Title level={3}>{metricas.recetas}</Title>
                     </div>
                   </Col>
                 </Row>

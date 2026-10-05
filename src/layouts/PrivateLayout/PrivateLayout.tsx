@@ -9,6 +9,8 @@ import {
   Tooltip,
   App,
   Dropdown,
+  Modal,
+  Select,
 } from 'antd';
 import {
   DashboardOutlined,
@@ -40,15 +42,29 @@ import {
   FileProtectOutlined,
   AuditOutlined,
   FileSearchOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import MobileMenu from '../../components/MobileMenu/MobileMenu';
 import WelcomeModal from '../../components/Auth/WelcomeModal';
+import CambiarPasswordInicial from '../../pages/Auth/CambiarPasswordInicial';
+import OfflineStatus from '../../components/OfflineStatus/OfflineStatus';
 import UserService from '../../services/user/user.service';
 import { ROUTES } from '../../router/routes';
 import useSystemConfig from '../../hooks/useSystemConfig';
+import { persistSystemConfigSnapshot } from '../../services/system-config/system-config.service';
 import { getRoleLabel, getUserRoleId } from '../../utils/role.utils';
+import axiosInstance from '../../api/axios.config';
+import {
+  clearWorkSucursal,
+  getWorkSucursal,
+  setWorkSucursal,
+  setAllBranchesContext,
+  isAllBranchesContext,
+  WORK_CONTEXT_CHANGED,
+  type WorkSucursal,
+} from '../../services/work-context/work-context.service';
 import './PrivateLayout.css';
 
 const { Header, Sider, Content } = Layout;
@@ -160,12 +176,29 @@ const PrivateLayout: React.FC = () => {
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
+  const [sucursales, setSucursales] = useState<WorkSucursal[]>([]);
+  const [workSucursal, setWorkSucursalState] = useState<WorkSucursal | null>(() => getWorkSucursal());
+  const [workSucursalId, setWorkSucursalId] = useState<number | 'all'>();
+  const [allBranches, setAllBranches] = useState(() => isAllBranchesContext());
+  const [contextOpen, setContextOpen] = useState(false);
+  const [contextLoading, setContextLoading] = useState(false);
+  const [effectivePermissions, setEffectivePermissions] = useState<Set<string> | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { message, modal } = App.useApp();
   const systemConfig = useSystemConfig();
+
+  useEffect(() => {
+    const refresh = () => {
+      setWorkSucursalState(getWorkSucursal());
+      setAllBranches(isAllBranchesContext());
+    };
+    window.addEventListener(WORK_CONTEXT_CHANGED, refresh);
+    return () => window.removeEventListener(WORK_CONTEXT_CHANGED, refresh);
+  }, []);
 
   useEffect(() => {
     const loadUserFromApi = async () => {
@@ -202,7 +235,113 @@ const PrivateLayout: React.FC = () => {
   const activeUser = currentUser || user;
   const rolId = getUserRoleId(activeUser);
 
+  useEffect(() => {
+    if (!activeUser?.id || activeUser?.debe_cambiar_password) return;
+    axiosInstance.get('/notificaciones/mias', { params: { page: 1, limit: 1 } })
+      .then((response) => setUnreadNotifications(Number((response.data?.data ?? response.data)?.meta?.noLeidas ?? 0)))
+      .catch(() => setUnreadNotifications(0));
+  }, [activeUser?.id, activeUser?.debe_cambiar_password]);
+
+  useEffect(() => {
+    if (!activeUser?.id || activeUser?.debe_cambiar_password || rolId === 4) return;
+    axiosInstance.get('/permisos/me')
+      .then((response) => {
+        const payload = response.data?.data ?? response.data;
+        const rows = payload?.permisos ?? [];
+        setEffectivePermissions(new Set(
+          rows
+            .filter((item: any) => item.efectivo)
+            .map((item: any) => String(item.clave)),
+        ));
+        localStorage.setItem('effective_permissions', JSON.stringify({
+          userId: Number(activeUser.id),
+          values: Object.fromEntries(rows.map((item: any) => [String(item.clave), Boolean(item.efectivo)])),
+        }));
+      })
+      .catch(() => setEffectivePermissions(null));
+  }, [activeUser?.id, rolId]);
+
+  useEffect(() => {
+    if (!activeUser || !rolId) return;
+    if (rolId !== 1) {
+      const id = Number(activeUser?.sucursal_id ?? activeUser?.sucursalId);
+      if (id > 0) {
+        const fixed = { id, nombre: activeUser?.sucursal_nombre ?? activeUser?.sucursalNombre ?? 'Sucursal asignada' };
+        setWorkSucursal(fixed);
+        setWorkSucursalState(fixed);
+      }
+      return;
+    }
+    let active = true;
+    setContextLoading(true);
+    axiosInstance.get('/sucursales', { params: { page: 1, limit: 100 }, skipWorkContext: true } as any).then(response => {
+      if (!active) return;
+      const rows = response.data?.data?.data ?? response.data?.data ?? [];
+      const options = rows.map((item: any) => ({ id: Number(item.id), nombre: item.nombre, empresaId: Number(item.empresaId) }));
+      setSucursales(options);
+      const stored = getWorkSucursal();
+      const valid = options.find((item: WorkSucursal) => item.id === stored?.id);
+      const consolidated = options.length > 1 && isAllBranchesContext();
+      if (options.length === 1) {
+        const onlyBranch = options[0];
+        setWorkSucursal(onlyBranch);
+        setWorkSucursalState(onlyBranch);
+        setWorkSucursalId(onlyBranch.id);
+        setAllBranches(false);
+        sessionStorage.setItem('work-context-confirmed', '1');
+        setContextOpen(false);
+      } else if (valid) {
+        setWorkSucursalId(valid.id);
+        setWorkSucursalState(valid);
+        setAllBranches(false);
+        setContextOpen(false);
+      } else if (consolidated) {
+        setWorkSucursalId('all');
+        setWorkSucursalState(null);
+        setAllBranches(true);
+        setContextOpen(false);
+      } else {
+        clearWorkSucursal();
+        setWorkSucursalState(null);
+        setAllBranches(false);
+        setContextOpen(options.length > 1);
+      }
+    }).catch(() => message.error('No fue posible cargar las sucursales autorizadas.'))
+      .finally(() => { if (active) setContextLoading(false); });
+    return () => { active = false; };
+  }, [activeUser?.id, rolId]);
+
+  const confirmWorkContext = () => {
+    if (workSucursalId === 'all') {
+      setAllBranchesContext();
+      setWorkSucursalState(null);
+      setAllBranches(true);
+      sessionStorage.setItem('work-context-confirmed', '1');
+      setContextOpen(false);
+      message.success('Contexto activo: Todas las sucursales');
+      navigate(ROUTES.DASHBOARD_ADMIN);
+      return;
+    }
+    const selected = sucursales.find(item => item.id === workSucursalId);
+    if (!selected) { message.warning('Selecciona la sucursal donde vas a trabajar.'); return; }
+    const changed = Boolean(workSucursal && workSucursal.id !== selected.id);
+    if (changed) {
+      localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
+      localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
+    }
+    setWorkSucursal(selected);
+    setWorkSucursalState(selected);
+    setAllBranches(false);
+    sessionStorage.setItem('work-context-confirmed', '1');
+    setContextOpen(false);
+    message.success(`Sucursal activa: ${selected.nombre}`);
+    if (changed) navigate(ROUTES.DASHBOARD_ADMIN);
+  };
+
   const menuItems = useMemo(() => {
+    const canModule = (name: string) =>
+      rolId === 1 || rolId === 4 || effectivePermissions === null ||
+      effectivePermissions.has(`modulo.${name}.acceder`);
     const leaf = (key: string, icon: React.ReactNode, label: string) => ({
       key,
       icon,
@@ -302,7 +441,7 @@ const PrivateLayout: React.FC = () => {
       'Consulta',
       'Referencias, estudios y control',
       [
-        leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos'),
+        ...(canModule('procedimientos') ? [leaf(ROUTES.PROCEDIMIENTOS, <MedicineBoxOutlined />, 'Procedimientos')] : []),
         leaf(
           ROUTES.HOJA_REFERENCIA,
           <MedicineBoxOutlined />,
@@ -372,6 +511,7 @@ const PrivateLayout: React.FC = () => {
       [
         leaf(ROUTES.CLINICS, <ShopOutlined />, 'Consultorios'),
         leaf(ROUTES.USERS, <TeamOutlined />, 'Usuarios'),
+        leaf(ROUTES.PERMISSIONS, <SafetyCertificateOutlined />, 'Permisos'),
         leaf(ROUTES.REPORTS, <BarChartOutlined />, 'Reportes'),
         leaf(ROUTES.SETTINGS, <SettingOutlined />, 'Configuración'),
       ]
@@ -403,6 +543,18 @@ const PrivateLayout: React.FC = () => {
     );
 
     switch (rolId) {
+      case 4:
+        return [
+          leaf(ROUTES.PLATFORM, <ShopOutlined />, 'Plataforma'),
+          dashboardAdmin,
+          pacienteAdmin,
+          expediente,
+          consulta,
+          inventario,
+          formatos,
+          administracionAdmin,
+        ];
+
       case 1:
         return [
           dashboardAdmin,
@@ -416,21 +568,26 @@ const PrivateLayout: React.FC = () => {
 
       case 2:
         return [
-          dashboardMedico,
-          pacienteMedico,
-          expediente,
-          consulta,
-          formatos,
-          administracionMedico,
-        ];
+          canModule('inicio') ? dashboardMedico : null,
+          canModule('pacientes') ? pacienteMedico : null,
+          canModule('expediente') ? expediente : null,
+          canModule('consulta') ? consulta : null,
+          canModule('inventario') ? inventario : null,
+          canModule('formatos') ? formatos : null,
+          canModule('reportes') ? administracionMedico : null,
+        ].filter(Boolean) as any[];
 
       case 3:
-        return [dashboardAuditor, auditoria, documentacionAuditor];
+        return [
+          canModule('inicio') ? dashboardAuditor : null,
+          canModule('auditoria') ? auditoria : null,
+          canModule('control_diario') ? documentacionAuditor : null,
+        ].filter(Boolean) as any[];
 
       default:
         return [];
     }
-  }, [rolId, collapsed]);
+  }, [rolId, collapsed, effectivePermissions]);
 
   const activeMenuItem = useMemo(() => {
     return getActiveMenuItem(menuItems, location.pathname);
@@ -453,16 +610,27 @@ const PrivateLayout: React.FC = () => {
     try {
       localStorage.removeItem(PACIENTE_ATENCION_STORAGE_KEY);
       localStorage.removeItem(CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY);
+      clearWorkSucursal();
+      sessionStorage.removeItem('empresa_contexto_id');
+      localStorage.removeItem('effective_permissions');
       sessionStorage.removeItem('hasSeenWelcome');
     } catch {
       // Evita romper la app si el navegador bloquea storage.
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
+      // Guardamos una copia de la identidad antes y después del logout. Algunos
+      // providers de autenticación limpian localStorage completo al cerrar sesión;
+      // así el Login conserva logo, nombre y tema de la última empresa utilizada.
+      const previousUser = activeUser;
+      const identitySnapshot = systemConfig;
+
+      persistSystemConfigSnapshot(identitySnapshot, previousUser);
       limpiarEstadoClinicoTemporal();
-      logout();
+      await Promise.resolve(logout());
+      persistSystemConfigSnapshot(identitySnapshot, previousUser);
 
       message.success('Sesión cerrada correctamente');
       navigate('/login', { replace: true });
@@ -505,7 +673,8 @@ const PrivateLayout: React.FC = () => {
 
   const userMenuItems = [
     { key: 'profile', icon: <ProfileOutlined />, label: 'Mi perfil' },
-    ...(rolId === 1
+    { key: 'sync', icon: <SyncOutlined />, label: 'Sincronización offline' },
+    ...([1, 4].includes(rolId)
       ? [{ key: 'settings', icon: <SettingOutlined />, label: 'Configuración del sistema' }]
       : []),
     { type: 'divider' as const },
@@ -528,6 +697,11 @@ const PrivateLayout: React.FC = () => {
       return;
     }
 
+    if (key === 'sync') {
+      navigate(ROUTES.SYNC);
+      return;
+    }
+
     if (key === 'logout') {
       showLogoutConfirm();
     }
@@ -546,11 +720,13 @@ const PrivateLayout: React.FC = () => {
         <div className="logo-container">
           <div className={`logo ${collapsed ? 'collapsed' : ''}`}>
             {systemConfig.logoDataUrl ? (
-              <img
-                src={systemConfig.logoDataUrl}
-                alt={systemConfig.nombreCorto}
-                className="system-sidebar-logo-image"
-              />
+              <span className="system-sidebar-logo-frame">
+                <img
+                  src={systemConfig.logoDataUrl}
+                  alt={systemConfig.nombreCorto}
+                  className="system-sidebar-logo-image"
+                />
+              </span>
             ) : (
               <HeartOutlined className="logo-icon" />
             )}
@@ -561,13 +737,20 @@ const PrivateLayout: React.FC = () => {
         </div>
 
         <Menu
+          key={location.pathname}
           theme="dark"
           mode="inline"
           selectedKeys={[String(selectedKey)]}
           openKeys={collapsed ? [] : openKeys}
           items={menuItems}
           className="custom-menu custom-menu-sectioned"
-          onClick={({ key }) => handleMenuClick(String(key))}
+          onClick={({ key, domEvent }) => {
+            const clickedElement = domEvent.currentTarget as HTMLElement | null;
+            handleMenuClick(String(key));
+            if ('detail' in domEvent && domEvent.detail > 0) {
+              requestAnimationFrame(() => clickedElement?.blur());
+            }
+          }}
           onOpenChange={handleMenuOpenChange}
         />
       </Sider>
@@ -595,12 +778,19 @@ const PrivateLayout: React.FC = () => {
           </div>
 
           <div className="header-right">
+            <OfflineStatus />
+            {rolId === 1 && (
+              <Button icon={<ShopOutlined />} onClick={() => setContextOpen(true)}>
+                {allBranches ? 'Todas las sucursales' : workSucursal?.nombre || 'Seleccionar sucursal'}
+              </Button>
+            )}
             <Tooltip title="Notificaciones">
-              <Badge count={3} size="small">
+              <Badge count={unreadNotifications} size="small" showZero={false}>
                 <Button
                   type="text"
                   icon={<BellOutlined />}
                   className="notification-btn"
+                  onClick={() => navigate(ROUTES.NOTIFICATIONS)}
                 />
               </Badge>
             </Tooltip>
@@ -649,10 +839,37 @@ const PrivateLayout: React.FC = () => {
       />
 
       <WelcomeModal
-        visible={welcomeOpen}
+        visible={welcomeOpen && !activeUser?.debe_cambiar_password}
         user={activeUser}
         onClose={() => setWelcomeOpen(false)}
       />
+      {activeUser?.debe_cambiar_password && <CambiarPasswordInicial />}
+      <Modal
+        title="Selecciona tu sucursal de trabajo"
+        open={contextOpen}
+        closable={Boolean(workSucursal || allBranches)}
+        maskClosable={false}
+        keyboard={false}
+        cancelButtonProps={{ style: { display: workSucursal || allBranches ? undefined : 'none' } }}
+        okText="Trabajar en esta sucursal"
+        onOk={confirmWorkContext}
+        onCancel={() => (workSucursal || allBranches) && setContextOpen(false)}
+        confirmLoading={contextLoading}
+      >
+        <p>La consulta, receta, inventario y demás registros se asociarán a esta sucursal.</p>
+        <Select
+          style={{ width: '100%' }}
+          size="large"
+          value={workSucursalId}
+          onChange={setWorkSucursalId}
+          placeholder="Selecciona una sucursal"
+          loading={contextLoading}
+          options={[
+            ...(sucursales.length > 1 ? [{ value: 'all' as const, label: 'Ver todas las sucursales' }] : []),
+            ...sucursales.map(item => ({ value: item.id, label: item.nombre })),
+          ]}
+        />
+      </Modal>
     </Layout>
   );
 };

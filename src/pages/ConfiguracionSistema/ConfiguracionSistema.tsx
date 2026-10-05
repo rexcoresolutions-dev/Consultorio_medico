@@ -5,8 +5,12 @@ import {
   ColorPicker,
   Form,
   Input,
+  InputNumber,
+  Modal,
+  Select,
   Spin,
   Switch,
+  Tabs,
   Upload,
 } from 'antd';
 import {
@@ -18,16 +22,22 @@ import {
   SettingOutlined,
   UndoOutlined,
   UploadOutlined,
+  MailOutlined,
+  KeyOutlined,
+  BellOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 
 import useSystemConfig from '../../hooks/useSystemConfig';
 import systemConfigService, {
   type SystemConfig,
 } from '../../services/system-config/system-config.service';
+import { removeConnectedLightBackground } from '../../utils/logoBackgroundRemoval';
+import { loadEmpresaConfig, revealEmpresaTemporaryPassword, saveEmpresaConfig, testEmpresaSmtp, type EmpresaConfig } from '../../services/system-config/empresa-config.service';
 import './ConfiguracionSistema.css';
 
 const MAX_IMAGE_SIZE = 1.5 * 1024 * 1024;
-const ALLOWED_IMAGES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
+const ALLOWED_IMAGES = ['image/png', 'image/jpeg', 'image/webp'];
 
 const DEFAULT_THEME_COLOR = '#36C6C7';
 
@@ -68,6 +78,7 @@ const getApiError = (error: any) => {
 const ConfiguracionSistema: React.FC = () => {
   const current = useSystemConfig();
   const [form] = Form.useForm<IdentityFormValues>();
+  const [companyForm] = Form.useForm();
   const { message, modal } = App.useApp();
 
   const [draft, setDraft] = useState<SystemConfig>(current);
@@ -75,6 +86,17 @@ const ConfiguracionSistema: React.FC = () => {
   const [logoPreview, setLogoPreview] = useState(current.logoDataUrl);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [removeLogoBackground, setRemoveLogoBackground] = useState(true);
+  const [processingLogo, setProcessingLogo] = useState(false);
+  const [companyLoading, setCompanyLoading] = useState(true);
+  const [companySaving, setCompanySaving] = useState(false);
+  const [smtpTesting, setSmtpTesting] = useState(false);
+  const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
+  const [temporaryPasswordConfigured, setTemporaryPasswordConfigured] = useState(false);
+  const [revealedTemporaryPassword, setRevealedTemporaryPassword] = useState<string | null>(null);
+  const [revealedPasswordInUse, setRevealedPasswordInUse] = useState(false);
+  const [revealingPassword, setRevealingPassword] = useState(false);
+  const [settingsArea, setSettingsArea] = useState<'identity' | 'smtp' | 'access' | 'notifications'>('identity');
 
   const initialValues = useMemo<IdentityFormValues>(
     () => ({
@@ -94,22 +116,94 @@ const ConfiguracionSistema: React.FC = () => {
     setLogoPreview(current.logoDataUrl);
   }, [current, form, initialValues]);
 
-  const readLogo = (file: File) => {
+  useEffect(() => {
+    let active = true;
+    setCompanyLoading(true);
+    loadEmpresaConfig().then((config: EmpresaConfig) => {
+      if (!active) return;
+      companyForm.setFieldsValue(config);
+      setSmtpPasswordConfigured(config.smtpPasswordConfigurado);
+      setTemporaryPasswordConfigured(config.passwordTemporalConfigurada);
+    }).catch((error) => message.error(getApiError(error)))
+      .finally(() => active && setCompanyLoading(false));
+    return () => { active = false; };
+  }, [companyForm, message]);
+
+  const handleCompanySave = async () => {
+    try {
+      const values = await companyForm.validateFields();
+      setCompanySaving(true);
+      const { destinatarioPrueba: _destinatarioPrueba, ...configurationValues } = values;
+      const normalizedSecurity = Number(configurationValues.smtpPuerto) === 465
+        ? 'TLS'
+        : Number(configurationValues.smtpPuerto) === 587
+          ? 'STARTTLS'
+          : configurationValues.smtpSeguridad;
+      const saved = await saveEmpresaConfig({
+        ...configurationValues,
+        smtpSeguridad: normalizedSecurity,
+        smtpResponderA: configurationValues.smtpResponderA?.trim() || null,
+      });
+      setSmtpPasswordConfigured(saved.smtpPasswordConfigurado);
+      setTemporaryPasswordConfigured(saved.passwordTemporalConfigurada);
+      companyForm.setFieldsValue({ ...saved, smtpPassword: undefined, passwordTemporal: undefined });
+      message.success('Configuración de la empresa actualizada.');
+    } catch (error: any) {
+      if (!error?.errorFields) message.error(getApiError(error));
+    } finally { setCompanySaving(false); }
+  };
+
+  const handleSmtpTest = async () => {
+    try {
+      const destinatario = companyForm.getFieldValue('destinatarioPrueba');
+      if (!destinatario) return message.warning('Ingresa el destinatario de prueba.');
+      setSmtpTesting(true);
+      await testEmpresaSmtp(destinatario);
+      message.success('Correo aceptado por el servidor SMTP.');
+    } catch (error) { message.error(getApiError(error)); }
+    finally { setSmtpTesting(false); }
+  };
+
+  const handleRevealTemporaryPassword = async () => {
+    try {
+      setRevealingPassword(true);
+      const result = await revealEmpresaTemporaryPassword();
+      setRevealedTemporaryPassword(result.passwordTemporal);
+      setRevealedPasswordInUse(result.utilizadaEnNuevasCuentas);
+    } catch (error) { message.error(getApiError(error)); }
+    finally { setRevealingPassword(false); }
+  };
+
+  const readLogo = async (file: File) => {
     if (file.size > MAX_IMAGE_SIZE) {
       message.error('El logo debe pesar máximo 1.5 MB.');
       return Upload.LIST_IGNORE;
     }
 
     if (!ALLOWED_IMAGES.includes(file.type)) {
-      message.error('Usa un archivo PNG, JPG, WEBP o SVG.');
+      message.error('Usa un archivo PNG, JPG o WEBP.');
       return Upload.LIST_IGNORE;
     }
 
-    setLogoFile(file);
+    setProcessingLogo(true);
+    let preparedFile = file;
+    try {
+      if (removeLogoBackground) {
+        preparedFile = await removeConnectedLightBackground(file);
+        message.success('Fondo claro removido. Revisa la vista previa antes de guardar.');
+      }
+    } catch (error) {
+      console.warn('No fue posible quitar el fondo del logo:', error);
+      message.warning('Se conservará el logo original porque no fue posible quitar el fondo.');
+    } finally {
+      setProcessingLogo(false);
+    }
+
+    setLogoFile(preparedFile);
 
     const reader = new FileReader();
     reader.onload = () => setLogoPreview(String(reader.result || ''));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(preparedFile);
 
     return false;
   };
@@ -240,6 +334,9 @@ const ConfiguracionSistema: React.FC = () => {
         </div>
 
         <div className="system-settings-hero-actions">
+          <span className="system-settings-mode">
+            <CheckCircleOutlined /> Conectado
+          </span>
           <Button
             icon={<ReloadOutlined />}
             loading={refreshing}
@@ -250,7 +347,22 @@ const ConfiguracionSistema: React.FC = () => {
         </div>
       </section>
 
-      <div className="system-settings-grid">
+      <nav className="system-settings-area-nav" aria-label="Secciones de configuración">
+        <button type="button" className={settingsArea === 'identity' ? 'active' : ''} onClick={() => setSettingsArea('identity')}>
+          <PictureOutlined /><span><strong>Identidad visual</strong></span>
+        </button>
+        <button type="button" className={settingsArea === 'smtp' ? 'active' : ''} onClick={() => setSettingsArea('smtp')}>
+          <MailOutlined /><span><strong>Correo SMTP</strong></span>
+        </button>
+        <button type="button" className={settingsArea === 'access' ? 'active' : ''} onClick={() => setSettingsArea('access')}>
+          <KeyOutlined /><span><strong>Primer ingreso</strong></span>
+        </button>
+        <button type="button" className={settingsArea === 'notifications' ? 'active' : ''} onClick={() => setSettingsArea('notifications')}>
+          <BellOutlined /><span><strong>Notificaciones</strong></span>
+        </button>
+      </nav>
+
+      {settingsArea === 'identity' && <div className="system-settings-grid">
         <aside className="system-settings-preview-card">
           <div className="system-settings-preview-title">
             <span>Vista previa</span>
@@ -357,15 +469,19 @@ const ConfiguracionSistema: React.FC = () => {
 
                 <div className="system-settings-logo-actions">
                   <strong>Logo principal</strong>
-                  <span>PNG, JPG, WEBP o SVG. Máximo 1.5 MB.</span>
+                  <span>PNG, JPG o WEBP. Máximo 1.5 MB.</span>
+                  <label className="system-settings-remove-background">
+                    <Switch checked={removeLogoBackground} onChange={setRemoveLogoBackground} size="small" />
+                    <span>Quitar automáticamente el fondo claro al subir</span>
+                  </label>
                   <div>
                     <Upload
-                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      accept="image/png,image/jpeg,image/webp"
                       showUploadList={false}
                       beforeUpload={readLogo}
                     >
-                      <Button icon={<UploadOutlined />}>
-                        {displayedLogo ? 'Cambiar logo' : 'Subir logo'}
+                      <Button icon={<UploadOutlined />} loading={processingLogo}>
+                        {processingLogo ? 'Procesando logo' : displayedLogo ? 'Cambiar logo' : 'Subir logo'}
                       </Button>
                     </Upload>
 
@@ -486,7 +602,80 @@ const ConfiguracionSistema: React.FC = () => {
             </Form>
           </Spin>
         </section>
-      </div>
+      </div>}
+
+      {settingsArea !== 'identity' && <section className="system-settings-form-card system-settings-company-card">
+        <Spin spinning={companyLoading}>
+          <Form form={companyForm} layout="vertical" initialValues={{ smtpPuerto: 587, smtpSeguridad: 'STARTTLS', generarPasswordTemporal: true, passwordTemporalDias: 60, cambioPasswordObligatorio: true }}>
+            <div className="system-settings-section-heading">
+              <span className="system-settings-section-icon"><SettingOutlined /></span>
+              <div><h2>Configuración de la empresa</h2><p>Correo, acceso y avisos compartidos entre todas sus sucursales.</p></div>
+            </div>
+            <Tabs
+              className="system-settings-company-tabs"
+              activeKey={settingsArea}
+              items={[
+                {
+                  key: 'smtp',
+                  label: <span><MailOutlined /> Correo SMTP</span>,
+                  children: <div className="system-settings-tab-panel">
+                    <div className="system-settings-tab-intro"><div><h3>Servidor de correo</h3><p>Configura la cuenta que enviará accesos y notificaciones.</p></div><Form.Item name="smtpHabilitado" valuePropName="checked" noStyle><Switch checkedChildren="Activo" unCheckedChildren="Inactivo" /></Form.Item></div>
+                    <div className="system-settings-fields-grid">
+                      <Form.Item name="smtpHost" label="Servidor SMTP"><Input placeholder="smtp.proveedor.com" /></Form.Item>
+                      <Form.Item name="smtpPuerto" label="Puerto" extra="587 usa STARTTLS; 465 usa TLS implícito."><InputNumber min={1} max={65535} style={{ width: '100%' }} onChange={(port) => { const numericPort = Number(port); if (numericPort === 465) companyForm.setFieldValue('smtpSeguridad', 'TLS'); if (numericPort === 587) companyForm.setFieldValue('smtpSeguridad', 'STARTTLS'); }} /></Form.Item>
+                      <Form.Item name="smtpSeguridad" label="Seguridad"><Select options={[{ value: 'STARTTLS', label: 'STARTTLS' }, { value: 'TLS', label: 'TLS implícito' }, { value: 'NINGUNA', label: 'Sin cifrado' }]} /></Form.Item>
+                      <Form.Item name="smtpUsuario" label="Usuario SMTP"><Input autoComplete="off" /></Form.Item>
+                      <Form.Item name="smtpPassword" label={`Contraseña SMTP${smtpPasswordConfigured ? ' (configurada)' : ''}`}><Input.Password placeholder={smtpPasswordConfigured ? 'Déjala vacía para conservarla' : 'Contraseña SMTP'} autoComplete="new-password" /></Form.Item>
+                      <Form.Item name="smtpRemitenteNombre" label="Nombre del remitente"><Input /></Form.Item>
+                      <Form.Item name="smtpRemitenteCorreo" label="Correo del remitente" rules={[{ type: 'email' }]}><Input /></Form.Item>
+                      <Form.Item name="smtpResponderA" label="Responder a" rules={[{ type: 'email' }]}><Input /></Form.Item>
+                    </div>
+                    <div className="system-settings-test-row"><Form.Item name="destinatarioPrueba" label="Destinatario de prueba" rules={[{ type: 'email' }]}><Input placeholder="correo@ejemplo.com" /></Form.Item><Button onClick={handleSmtpTest} loading={smtpTesting} icon={<MailOutlined />}>Enviar prueba</Button></div>
+                  </div>,
+                },
+                {
+                  key: 'access',
+                  label: <span><KeyOutlined /> Primer ingreso</span>,
+                  children: <div className="system-settings-tab-panel">
+                    <div className="system-settings-tab-intro"><div><h3>Credenciales temporales</h3><p>Define cómo ingresan las cuentas nuevas y cuánto dura su acceso inicial.</p></div></div>
+                    <div className="system-settings-option-card"><div><strong>Generar una contraseña individual segura</strong><span>El sistema crea una clave diferente para cada usuario nuevo.</span></div><Form.Item name="generarPasswordTemporal" valuePropName="checked" noStyle><Switch /></Form.Item></div>
+                    <div className="system-settings-access-grid">
+                      <div className="system-settings-credential-card">
+                        <div><strong>Contraseña temporal predeterminada</strong><span>{temporaryPasswordConfigured ? 'Guardada de forma cifrada.' : 'Todavía no está configurada.'}</span></div>
+                        <Form.Item name="passwordTemporal" noStyle><Input.Password placeholder={temporaryPasswordConfigured ? 'Déjala vacía para conservarla' : 'Nueva contraseña, mínimo 8 caracteres'} autoComplete="new-password" /></Form.Item>
+                        <Button icon={<EyeOutlined />} loading={revealingPassword} disabled={!temporaryPasswordConfigured} onClick={() => void handleRevealTemporaryPassword()}>Ver contraseña configurada</Button>
+                      </div>
+                      <div className="system-settings-duration-card">
+                        <div><strong>Vigencia del acceso inicial</strong><span>Al vencer debe emitirse una nueva contraseña temporal.</span></div>
+                        <Form.Item name="passwordTemporalDias" noStyle><Select options={[{ value: 60, label: '60 días' }, { value: 90, label: '90 días' }]} /></Form.Item>
+                      </div>
+                    </div>
+                    <div className="system-settings-option-card"><div><strong>Exigir cambio en el primer ingreso</strong><span>Bloquea los módulos hasta que el usuario elija una contraseña nueva.</span></div><Form.Item name="cambioPasswordObligatorio" valuePropName="checked" noStyle><Switch /></Form.Item></div>
+                  </div>,
+                },
+                {
+                  key: 'notifications',
+                  label: <span><BellOutlined /> Notificaciones</span>,
+                  children: <div className="system-settings-tab-panel">
+                    <div className="system-settings-tab-intro"><div><h3>Eventos habilitados</h3><p>Selecciona los eventos que pueden generar avisos para esta empresa.</p></div></div>
+                    <div className="system-settings-options-list">
+                      <div className="system-settings-option-card"><div><strong>Alta y acceso inicial de usuarios</strong><span>Envía credenciales temporales después de crear una cuenta.</span></div><Form.Item name="notificarAltaUsuario" valuePropName="checked" noStyle><Switch /></Form.Item></div>
+                      <div className="system-settings-option-card"><div><strong>Cambios de acceso</strong><span>Avisa modificaciones de rol, permisos o sucursales.</span></div><Form.Item name="notificarCambiosAcceso" valuePropName="checked" noStyle><Switch /></Form.Item></div>
+                      <div className="system-settings-option-card"><div><strong>Citas</strong><span>Avisa creaciones, cambios, cancelaciones y recordatorios.</span></div><Form.Item name="notificarCitas" valuePropName="checked" noStyle><Switch /></Form.Item></div>
+                    </div>
+                  </div>,
+                },
+              ]}
+            />
+            <div className="system-settings-company-footer"><span>Los cambios se aplican a toda la empresa.</span><Button type="primary" icon={<SaveOutlined />} loading={companySaving} onClick={handleCompanySave}>Guardar configuración</Button></div>
+          </Form>
+        </Spin>
+      </section>}
+      <Modal title="Contraseña temporal configurada" open={revealedTemporaryPassword !== null} footer={null} onCancel={() => setRevealedTemporaryPassword(null)} destroyOnHidden>
+        <p>{revealedPasswordInUse ? 'Esta contraseña se utiliza actualmente para las cuentas nuevas.' : 'Está guardada, pero las cuentas nuevas reciben una contraseña individual generada automáticamente.'}</p>
+        <Input.Password value={revealedTemporaryPassword ?? ''} readOnly visibilityToggle />
+        <Button style={{ marginTop: 16 }} onClick={() => setRevealedTemporaryPassword(null)}>Cerrar y ocultar</Button>
+      </Modal>
     </main>
   );
 };

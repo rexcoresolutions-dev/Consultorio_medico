@@ -57,7 +57,7 @@ interface SemanaItem {
 const extractFecha = (item: any): string =>
   String(
     item?.fecha ??
-      item?.fechaConsulta ??
+      item?.fechaHora ?? item?.fechaConsulta ??
       item?.fecha_consulta ??
       item?.createdAt ??
       item?.created_at ??

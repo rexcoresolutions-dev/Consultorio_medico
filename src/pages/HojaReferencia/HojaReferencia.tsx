@@ -1,3 +1,7 @@
+import api from '../../api/axios.config';
+import { apiData } from '../../services/operacion/operacion.service';
+import { useCie10Catalog } from '../../hooks/useCie10Catalog';
+import { documentosService } from '../../services/operacion/operacion.service';
 import React, { useMemo, useState } from 'react';
 import {
   Button,
@@ -125,21 +129,7 @@ const motivoReferenciaOptions = [
   'SEGUIMIENTO',
 ];
 
-const diagnosticosCatalogo = [
-  { clave: 'J00X', diagnostico: 'RINOFARINGITIS AGUDA [RESFRIADO COMÚN]' },
-  { clave: 'I10X', diagnostico: 'HIPERTENSIÓN ESENCIAL' },
-  { clave: 'E119', diagnostico: 'DIABETES MELLITUS TIPO 2 SIN COMPLICACIONES' },
-  { clave: 'A09X', diagnostico: 'DIARREA Y GASTROENTERITIS DE PRESUNTO ORIGEN INFECCIOSO' },
-];
 
-const medicoDefault = {
-  medico_nombre: 'JANETH GOMEZ RIOS',
-  medico_cedula: '14987288',
-  medico_universidad: 'BENEMÉRITA UNIVERSIDAD AUTÓNOMA DE PUEBLA',
-  medico_unidad: 'TEPEXI DE RODRÍGUEZ 1 PUE. CONSULTORIO A',
-  medico_direccion:
-    '16 DE SEPTIEMBRE, A, 30, TEPEXI DE RODRÍGUEZ, 74690, TEPEXI DE RODRÍGUEZ, PUEBLA.',
-};
 
 const cargarPacienteActivo = (): PacienteData | null => {
   try {
@@ -165,9 +155,27 @@ const calcularEdad = (paciente?: PacienteData | null) => {
 };
 
 const HojaReferencia: React.FC = () => {
+  const { catalogo: diagnosticosCatalogo, buscar: buscarDiagnosticos } = useCie10Catalog();
   const navigate = useNavigate();
   const [form] = Form.useForm<HojaReferenciaForm>();
 
+  const [medicoDefault, setMedicoDefault] = useState({ medico_nombre: '', medico_cedula: '', medico_universidad: '', medico_unidad: '', medico_direccion: '' });
+  React.useEffect(() => {
+    let active = true;
+    apiData<any>(api.get('/auth/me')).then(async user => {
+      const sucursal = user.sucursalId ? await apiData<any>(api.get('/sucursales/' + user.sucursalId)) : user.sucursal;
+      if (!active) return;
+      const values = {
+        medico_nombre: [user.nombre, user.primerApellido, user.segundoApellido].filter(Boolean).join(' '),
+        medico_cedula: user.cedulaProfesional || '',
+        medico_universidad: user.universidad || user.universidadEgreso || '',
+        medico_unidad: sucursal?.nombre || user.sucursalNombre || '',
+        medico_direccion: [sucursal?.calle, sucursal?.numeroExterior, sucursal?.colonia, sucursal?.municipio, sucursal?.entidad].filter(Boolean).join(', '),
+      };
+      setMedicoDefault(values); form.setFieldsValue(values);
+    }).catch(() => { if (active) message.error('No se pudieron cargar los datos del médico.'); });
+    return () => { active = false; };
+  }, [form]);
   const [currentStep, setCurrentStep] = useState(0);
   const [pacienteActivo, setPacienteActivo] = useState<PacienteData | null>(() =>
     cargarPacienteActivo(),
@@ -185,7 +193,7 @@ const HojaReferencia: React.FC = () => {
     escolaridad: pacienteActivo?.escolaridad || undefined,
     estado_civil: pacienteActivo?.estado_civil || undefined,
     ocupacion: pacienteActivo?.ocupacion || '',
-    entidad: 'PUEBLA',
+    entidad: undefined,
     urgencia: 'NO',
     motivo_referencia: 'NO APLICA',
     contrarreferencia: false,
@@ -238,7 +246,7 @@ const HojaReferencia: React.FC = () => {
       await form.validateFields(stepOneFields);
       setCurrentStep(1);
     } catch {
-      message.warning('Completa los campos obligatorios.');
+      message.error('No se pudo completar la operación. Revisa los campos y la conexión con el servidor.');
     }
   };
 
@@ -296,7 +304,7 @@ const HojaReferencia: React.FC = () => {
       await validateAll();
       setPreviewOpen(true);
     } catch {
-      message.warning('Completa los campos obligatorios.');
+      message.error('No se pudo completar la operación. Revisa los campos y la conexión con el servidor.');
     }
   };
 
@@ -352,14 +360,7 @@ const HojaReferencia: React.FC = () => {
         ...values,
       };
 
-      const hojasGuardadas = JSON.parse(
-        localStorage.getItem('hojas_referencia_pacientes') || '[]',
-      );
-
-      localStorage.setItem(
-        'hojas_referencia_pacientes',
-        JSON.stringify([payload, ...hojasGuardadas]),
-      );
+      await documentosService.create('HOJA_REFERENCIA', Number(pacienteActivo.id), payload);
 
       await Swal.fire({
         title: 'Hoja de referencia guardada',
@@ -371,7 +372,7 @@ const HojaReferencia: React.FC = () => {
 
       setPreviewOpen(false);
     } catch {
-      message.warning('Completa los campos obligatorios.');
+      message.error('No se pudo completar la operación. Revisa los campos y la conexión con el servidor.');
     } finally {
       setSaving(false);
     }
@@ -750,6 +751,8 @@ const HojaReferencia: React.FC = () => {
                           showSearch
                           placeholder="Seleccione..."
                           optionFilterProp="label"
+                          onSearch={buscarDiagnosticos}
+                          filterOption={false}
                           options={diagnosticosCatalogo.map((item) => ({
                             label: `${item.clave} - ${item.diagnostico}`,
                             value: item.clave,

@@ -1,5 +1,11 @@
+import { documentosService, allPages, apiData } from '../../services/operacion/operacion.service';
+import DocumentoDetalle from '../../components/DocumentoDetalle/DocumentoDetalle';
+import api from '../../api/axios.config';
+import authService from '../../services/auth/auth.service';
+import { getUserRoleId } from '../../utils/role.utils';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -32,9 +38,11 @@ type TipoDocumento =
   | 'CONSULTA EXTERNA'
   | 'HOJA DE REFERENCIA'
   | 'RECETA'
-  | 'ESTUDIOS CLÍNICOS';
+  | 'ESTUDIOS CLÍNICOS'
+  | 'CERTIFICADO MÉDICO';
 
 type DocumentoRow = {
+  contenido?: unknown;
   id: string;
   documento: Exclude<TipoDocumento, 'TODOS'>;
   nombre_paciente: string;
@@ -47,134 +55,13 @@ type DocumentoRow = {
 
 const tiposDocumento: { label: string; value: TipoDocumento }[] = [
   { label: 'Todos', value: 'TODOS' },
+  { label: 'Certificado médico', value: 'CERTIFICADO MÉDICO' },
   { label: 'Consulta externa', value: 'CONSULTA EXTERNA' },
   { label: 'Hoja de referencia', value: 'HOJA DE REFERENCIA' },
   { label: 'Receta', value: 'RECETA' },
   { label: 'Estudios clínicos', value: 'ESTUDIOS CLÍNICOS' },
 ];
 
-const documentosDemo: DocumentoRow[] = [
-  {
-    id: '1',
-    documento: 'CONSULTA EXTERNA',
-    nombre_paciente: 'JANETH GOMEZ RIOS',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 12:13',
-    fecha_iso: '2026-05-17T12:13:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Consulta externa generada al finalizar atención médica.',
-  },
-  {
-    id: '2',
-    documento: 'HOJA DE REFERENCIA',
-    nombre_paciente: 'MIGUEL VILLERALDO MEDEL',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 12:08',
-    fecha_iso: '2026-05-17T12:08:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Hoja de referencia generada para seguimiento del paciente.',
-  },
-  {
-    id: '3',
-    documento: 'CONSULTA EXTERNA',
-    nombre_paciente: 'MIGUEL VILLERALDO MEDEL',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 12:05',
-    fecha_iso: '2026-05-17T12:05:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Resumen de consulta externa del paciente.',
-  },
-  {
-    id: '4',
-    documento: 'RECETA',
-    nombre_paciente: 'ALEJANDRA AVECES HUERTA',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 11:51',
-    fecha_iso: '2026-05-17T11:51:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Receta médica generada durante la atención.',
-  },
-  {
-    id: '5',
-    documento: 'CONSULTA EXTERNA',
-    nombre_paciente: 'ALEJANDRA AVECES HUERTA',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 11:49',
-    fecha_iso: '2026-05-17T11:49:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Consulta externa con diagnóstico y tratamiento.',
-  },
-  {
-    id: '6',
-    documento: 'ESTUDIOS CLÍNICOS',
-    nombre_paciente: 'ALEJANDRA AVECES HUERTA',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 11:49',
-    fecha_iso: '2026-05-17T11:49:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Solicitud o registro de estudios clínicos.',
-  },
-  {
-    id: '7',
-    documento: 'RECETA',
-    nombre_paciente: 'JOEL ROMERO HOYOS',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 11:40',
-    fecha_iso: '2026-05-17T11:40:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Receta médica emitida para el paciente.',
-  },
-  {
-    id: '8',
-    documento: 'CONSULTA EXTERNA',
-    nombre_paciente: 'JOEL ROMERO HOYOS',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 11:39',
-    fecha_iso: '2026-05-17T11:39:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Consulta externa registrada en el expediente.',
-  },
-  {
-    id: '9',
-    documento: 'RECETA',
-    nombre_paciente: 'HANNA AILIN TOVAR LUNA',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 11:10',
-    fecha_iso: '2026-05-17T11:10:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Receta médica para tratamiento indicado.',
-  },
-  {
-    id: '10',
-    documento: 'CONSULTA EXTERNA',
-    nombre_paciente: 'HANNA AILIN TOVAR LUNA',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 10:56',
-    fecha_iso: '2026-05-17T10:56:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Consulta externa generada para el paciente.',
-  },
-  {
-    id: '11',
-    documento: 'RECETA',
-    nombre_paciente: 'LORENA VERA FLORES',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 10:44',
-    fecha_iso: '2026-05-17T10:44:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Receta médica emitida al paciente.',
-  },
-  {
-    id: '12',
-    documento: 'CONSULTA EXTERNA',
-    nombre_paciente: 'LORENA VERA FLORES',
-    curp: 'XXXX999999XXXXXX99',
-    fecha_hora: '17/05/2026 10:42',
-    fecha_iso: '2026-05-17T10:42:00',
-    nombre_medico: 'JANETH GOMEZ RIOS',
-    descripcion: 'Documento de consulta externa.',
-  },
-];
 
 const normalizeText = (value: string) =>
   value
@@ -206,8 +93,30 @@ const getOrderedDateRange = (start: Dayjs, end: Dayjs) => {
 };
 
 const Documentos: React.FC = () => {
-  const [fechaInicial, setFechaInicial] = useState<Dayjs>(dayjs('2026-05-17'));
-  const [fechaFinal, setFechaFinal] = useState<Dayjs>(dayjs('2026-05-17'));
+  const [documentos, setDocumentos] = useState<DocumentoRow[]>([]);
+  const [loadError, setLoadError] = useState('');
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    const name = (p: any) => p?.nombre_completo || [p?.nombre, p?.primerApellido ?? p?.primer_apellido, p?.segundoApellido ?? p?.segundo_apellido].filter(Boolean).join(' ') || 'No disponible';
+    const row = (id: string, documento: DocumentoRow['documento'], fecha: string, paciente: any, medico: any, descripcion: string): DocumentoRow => ({ id, documento, fecha_iso: fecha, fecha_hora: dayjs(fecha).format('DD/MM/YYYY HH:mm'), nombre_paciente: name(paciente), curp: paciente?.curp ?? '', nombre_medico: name(medico), descripcion });
+    const list = (path: string) => allPages<any>(page => apiData(api.get(path, { params: { page, limit: 100 } })));
+    Promise.allSettled([documentosService.list(), getUserRoleId(authService.getUser()) === 3 ? Promise.resolve([]) : list('/consultas'), list('/recetas')]).then(results => {
+      if (!active) return;
+      const [docs, consultas, recetas] = results.map(r => r.status === 'fulfilled' ? r.value : []);
+      const labels: Record<string, DocumentoRow['documento']> = { CERTIFICADO_MEDICO: 'CERTIFICADO MÉDICO', ESTUDIOS_CLINICOS: 'ESTUDIOS CLÍNICOS', HOJA_REFERENCIA: 'HOJA DE REFERENCIA' };
+      setDocumentos([
+        ...docs.map((d: any) => ({ ...row('doc-' + d.id, labels[d.tipo], d.createdAt, d.datos?.paciente, d.usuario, d.datos?.detalle || d.datos?.motivo || labels[d.tipo]), contenido: d.datos })),
+        ...consultas.map((d: any) => ({ ...row('consulta-' + d.id, 'CONSULTA EXTERNA', d.fechaHora || d.createdAt, d.paciente, d.medico, d.motivoConsulta || 'Consulta externa'), contenido: d })),
+        ...recetas.map((d: any) => ({ ...row('receta-' + d.id, 'RECETA', d.fecha || d.createdAt, d.consulta?.paciente, d.consulta?.medico, d.observaciones || 'Receta médica'), contenido: { medicamentos: d.medicamentos, observaciones: d.observaciones, fechaSeguimiento: d.fechaSeguimiento } })),
+      ]);
+      if (results.some(r => r.status === 'rejected')) setLoadError('No se pudieron cargar todos los documentos del servidor.');
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+  const [fechaInicial, setFechaInicial] = useState<Dayjs>(dayjs());
+  const [fechaFinal, setFechaFinal] = useState<Dayjs>(dayjs());
   const [tipoDocumento, setTipoDocumento] = useState<TipoDocumento>('TODOS');
   const [searchText, setSearchText] = useState('');
   const [debouncedSearchText, setDebouncedSearchText] = useState('');
@@ -228,7 +137,7 @@ const Documentos: React.FC = () => {
     const { inicio, fin } = getOrderedDateRange(fechaInicial, fechaFinal);
     const query = normalizeText(debouncedSearchText);
 
-    return documentosDemo.filter((item) => {
+    return documentos.filter((item) => {
       const fecha = dayjs(item.fecha_iso);
 
       const matchDate =
@@ -247,7 +156,7 @@ const Documentos: React.FC = () => {
 
       return matchDate && matchTipo && matchSearch;
     });
-  }, [fechaInicial, fechaFinal, tipoDocumento, debouncedSearchText]);
+  }, [documentos, fechaInicial, fechaFinal, tipoDocumento, debouncedSearchText]);
 
   useEffect(() => {
     if (!selectedDocumento) return;
@@ -283,7 +192,7 @@ const Documentos: React.FC = () => {
   }, [documentosFiltrados]);
 
   const handleLimpiar = () => {
-    const defaultDate = dayjs('2026-05-17');
+    const defaultDate = dayjs();
 
     setFechaInicial(defaultDate);
     setFechaFinal(defaultDate);
@@ -371,6 +280,7 @@ const Documentos: React.FC = () => {
 
   return (
     <section className="documentos-page">
+      {loadError && <Alert type="error" title={loadError} showIcon />}
       <div className="documentos-shell">
         <div className="documentos-header">
           <div className="documentos-header-accent" />
@@ -504,7 +414,7 @@ const Documentos: React.FC = () => {
             </div>
 
             <div className="documentos-table-desktop">
-              <Table
+              <Table loading={loading}
                 rowKey="id"
                 columns={columns}
                 dataSource={documentosFiltrados}
@@ -638,6 +548,7 @@ const Documentos: React.FC = () => {
 
             <div className="documentos-preview-paper">
               <h3>{selectedDocumento.documento}</h3>
+              <DocumentoDetalle datos={selectedDocumento.contenido} />
 
               <p>
                 Documento generado dentro del expediente clínico del paciente{' '}

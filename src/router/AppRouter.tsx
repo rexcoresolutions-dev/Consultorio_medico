@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -15,39 +15,38 @@ import PublicLayout from '../layouts/PublicLayout/PublicLayout';
 import PrivateLayout from '../layouts/PrivateLayout/PrivateLayout';
 
 import Login from '../pages/Auth/Login';
-import Perfil from '../pages/Perfil/Perfil';
-
-import Dashboard from '../pages/Dashboard/Dashboard';
-import DashboardMedico from '../pages/DashboardMedico/DashboardMedico';
-import DashboardAuditor from '../pages/DashboardAuditor/DashboardAuditor';
-import Auditoria from '../pages/Auditoria/Auditoria';
-
-import Clinicas from '../pages/clinicas/Clinicas';
-import Usuarios from '../pages/Usuarios/Usuarios';
-import Pacientes from '../pages/Pacientes/Pacientes';
-
-import ConfirmarAtencion from '../pages/ConfirmarAtencion/ConfirmarAtencion';
-import Procedimientos from '../pages/procedimientos/Procedimientos';
-import HistorialClinico from '../pages/HistorialClinico/HistorialClinico';
-import HistorialesDisponibles from '../pages/HistorialClinico/HistorialesDisponibles';
-import NotaEvolucion from '../pages/NotaEvolucion/NotaEvolucion';
-import HistoricoPaciente from '../pages/HistoricoPaciente/HistoricoPaciente';
-
-import OpcionesHojaReferencia from '../pages/HojaReferencia/OpcionesHojaReferencia';
-import HojaReferencia from '../pages/HojaReferencia/HojaReferencia';
-
-import EstudiosClinicos from '../pages/EstudiosClinicos/EstudiosClinicos';
-import CertificadoMedico from '../pages/CertificadoMedico/CertificadoMedico';
-import ControlDiarioPacientes from '../pages/ControlDiarioPacientes/ControlDiarioPacientes';
-import Citas from '../pages/Citas/Citas';
-import Recetas from '../pages/Recetas/Recetas';
-import Inventario from '../pages/Inventario/Inventario';
-import ConfiguracionSistema from '../pages/ConfiguracionSistema/ConfiguracionSistema';
-import Documentos from '../pages/Documentos/Documentos';
-import ConsentimientoInformado from '../pages/ConsentimientoInformado/ConsentimientoInformado';
-import FarmacoVigilancia from '../pages/FarmacoVigilancia/FarmacoVigilancia';
-import AvisoPrivacidad from '../pages/AvisoPrivacidad/AvisoPrivacidad';
-import AvisoMedicoComodatario from '../pages/AvisoMedicoComodatario/AvisoMedicoComodatario';
+const Perfil = lazy(() => import('../pages/Perfil/Perfil'));
+const Dashboard = lazy(() => import('../pages/Dashboard/Dashboard'));
+const DashboardMedico = lazy(() => import('../pages/DashboardMedico/DashboardMedico'));
+const DashboardAuditor = lazy(() => import('../pages/DashboardAuditor/DashboardAuditor'));
+const Auditoria = lazy(() => import('../pages/Auditoria/Auditoria'));
+const Clinicas = lazy(() => import('../pages/clinicas/Clinicas'));
+const Usuarios = lazy(() => import('../pages/Usuarios/Usuarios'));
+const Pacientes = lazy(() => import('../pages/Pacientes/Pacientes'));
+const ConfirmarAtencion = lazy(() => import('../pages/ConfirmarAtencion/ConfirmarAtencion'));
+const Procedimientos = lazy(() => import('../pages/procedimientos/Procedimientos'));
+const HistorialClinico = lazy(() => import('../pages/HistorialClinico/HistorialClinico'));
+const HistorialesDisponibles = lazy(() => import('../pages/HistorialClinico/HistorialesDisponibles'));
+const NotaEvolucion = lazy(() => import('../pages/NotaEvolucion/NotaEvolucion'));
+const HistoricoPaciente = lazy(() => import('../pages/HistoricoPaciente/HistoricoPaciente'));
+const OpcionesHojaReferencia = lazy(() => import('../pages/HojaReferencia/OpcionesHojaReferencia'));
+const HojaReferencia = lazy(() => import('../pages/HojaReferencia/HojaReferencia'));
+const EstudiosClinicos = lazy(() => import('../pages/EstudiosClinicos/EstudiosClinicos'));
+const CertificadoMedico = lazy(() => import('../pages/CertificadoMedico/CertificadoMedico'));
+const ControlDiarioPacientes = lazy(() => import('../pages/ControlDiarioPacientes/ControlDiarioPacientes'));
+const Citas = lazy(() => import('../pages/Citas/Citas'));
+const Recetas = lazy(() => import('../pages/Recetas/Recetas'));
+const Inventario = lazy(() => import('../pages/Inventario/Inventario'));
+const ConfiguracionSistema = lazy(() => import('../pages/ConfiguracionSistema/ConfiguracionSistema'));
+const Plataforma = lazy(() => import('../pages/Plataforma/Plataforma'));
+const Permisos = lazy(() => import('../pages/Permisos/Permisos'));
+const Documentos = lazy(() => import('../pages/Documentos/Documentos'));
+const ConsentimientoInformado = lazy(() => import('../pages/ConsentimientoInformado/ConsentimientoInformado'));
+const FarmacoVigilancia = lazy(() => import('../pages/FarmacoVigilancia/FarmacoVigilancia'));
+const AvisoPrivacidad = lazy(() => import('../pages/AvisoPrivacidad/AvisoPrivacidad'));
+const AvisoMedicoComodatario = lazy(() => import('../pages/AvisoMedicoComodatario/AvisoMedicoComodatario'));
+const Notificaciones = lazy(() => import('../pages/Notificaciones/Notificaciones'));
+const Sincronizacion = lazy(() => import('../pages/Sincronizacion/Sincronizacion'));
 
 import {
   ROUTES,
@@ -55,6 +54,7 @@ import {
   canAccessRoute,
 } from '../router/routes';
 import { getUserRoleId } from '../utils/role.utils';
+import { getWorkSucursal } from '../services/work-context/work-context.service';
 
 const LoadingScreen: React.FC = () => (
   <div
@@ -98,13 +98,33 @@ const RoleRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (isLoading) return <LoadingScreen />;
 
   const roleId = getUserRoleId(user);
+  const isSuperAdmin = roleId === 4;
+  const hasCompanyContext = Number(sessionStorage.getItem('empresa_contexto_id')) > 0;
+  const hasBranchContext = Boolean(getWorkSucursal()?.id);
+  const companyOnlyRoute = [
+    ROUTES.SETTINGS,
+    ROUTES.NOTIFICATIONS,
+    ROUTES.USERS,
+    ROUTES.PERMISSIONS,
+    ROUTES.CLINICS,
+    ROUTES.CLINIC_NEW,
+  ].includes(location.pathname as any) || location.pathname.startsWith('/clinicas/');
+
+  if (
+    isSuperAdmin &&
+    location.pathname !== ROUTES.PLATFORM &&
+    location.pathname !== ROUTES.PROFILE &&
+    (!hasCompanyContext || (!companyOnlyRoute && !hasBranchContext))
+  ) {
+    return <Navigate to={ROUTES.PLATFORM} replace />;
+  }
   const allowed = canAccessRoute(roleId, location.pathname);
 
   if (!allowed) {
     return <Navigate to={getDashboardByRole(getUserRoleId(user))} replace />;
   }
 
-  return <>{children}</>;
+  return <Suspense fallback={<LoadingScreen />}>{children}</Suspense>;
 };
 
 const AppRouter: React.FC = () => {
@@ -381,6 +401,16 @@ const AppRouter: React.FC = () => {
 
 
               <Route
+                path={ROUTES.PERMISSIONS}
+                element={<RoleRoute><Permisos /></RoleRoute>}
+              />
+
+              <Route
+                path={ROUTES.PLATFORM}
+                element={<RoleRoute><Plataforma /></RoleRoute>}
+              />
+
+              <Route
                 path={ROUTES.SETTINGS}
                 element={
                   <RoleRoute>
@@ -397,6 +427,9 @@ const AppRouter: React.FC = () => {
                   </RoleRoute>
                 }
               />
+              <Route path={ROUTES.NOTIFICATIONS} element={<RoleRoute><Notificaciones /></RoleRoute>} />
+              <Route path={ROUTES.INITIAL_PASSWORD} element={<RoleRedirect />} />
+              <Route path={ROUTES.SYNC} element={<RoleRoute><Sincronizacion /></RoleRoute>} />
 
               <Route path="*" element={<RoleRedirect />} />
             </Route>

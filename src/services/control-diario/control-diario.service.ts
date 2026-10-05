@@ -68,7 +68,7 @@ const toNumber = (value: unknown): number | undefined => {
 const getEntityDate = (entity: any): string =>
   firstText(
     entity?.fecha,
-    entity?.fechaConsulta,
+    entity?.fechaHora ?? entity?.fechaConsulta,
     entity?.fecha_consulta,
     entity?.fechaElaboracion,
     entity?.fecha_elaboracion,

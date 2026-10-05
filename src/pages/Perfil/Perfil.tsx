@@ -28,6 +28,7 @@ import {
 } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import UserService, { type UserData } from '../../services/user/user.service';
+import { getWorkSucursal } from '../../services/work-context/work-context.service';
 import './Perfil.css';
 
 const { Title, Text } = Typography;
@@ -61,6 +62,13 @@ const Perfil: React.FC = () => {
 
   const roleInfo = useMemo(() => {
     switch (rolId) {
+      case 4:
+        return {
+          name: 'Superadministrador',
+          description: 'Acceso global a empresas, sucursales y configuración de la plataforma.',
+          icon: <SafetyCertificateOutlined />,
+          className: 'role-admin',
+        };
       case 1:
         return {
           name: 'Administrador',
@@ -70,14 +78,14 @@ const Perfil: React.FC = () => {
         };
       case 2:
         return {
-          name: 'Médico',
+          name: 'Doctor',
           description: 'Gestión clínica, pacientes, consultas y recetas.',
           icon: <MedicineBoxOutlined />,
           className: 'role-medico',
         };
       case 3:
         return {
-          name: 'Consultor',
+          name: 'Auditor',
           description: 'Acceso de consulta a información y reportes.',
           icon: <EyeOutlined />,
           className: 'role-consultor',
@@ -121,7 +129,9 @@ const Perfil: React.FC = () => {
   }, [userData]);
 
   const sucursalNombre = useMemo(() => {
+    const activeSucursal = getWorkSucursal();
     return (
+      activeSucursal?.nombre ||
       userData?.sucursal_nombre ||
       userData?.nombre_sucursal ||
       userData?.sucursal?.nombre ||

@@ -1,4 +1,5 @@
 import axiosInstance from '../../api/axios.config';
+import { queueOfflineRequest } from '../offline/offline-sync.service';
 
 export interface RecetaMedicamentoPayload {
   inventarioId?: number;
@@ -20,7 +21,7 @@ export interface RecetaMedicamentoPayload {
 
 export interface RecetaPayload {
   sucursalId: number;
-  consultaId: number;
+  consultaId: number | string;
   fecha: string;
   observaciones?: string;
   programarSeguimiento: boolean;
@@ -95,8 +96,15 @@ class RecetasService {
   private readonly basePath = '/recetas';
 
   async create(payload: RecetaPayload): Promise<any> {
-    const response = await axiosInstance.post(this.basePath, payload);
-    return unwrapEntity(response.data);
+    try {
+      const response = await axiosInstance.post(this.basePath, payload);
+      return unwrapEntity(response.data);
+    } catch (error: any) {
+      if (error?.response) throw error;
+      const dependencies = typeof payload.consultaId === 'string' && payload.consultaId.startsWith('local:') ? [payload.consultaId] : [];
+      const queued = await queueOfflineRequest('RECETA_CREAR', { method: 'POST', url: this.basePath, data: payload }, dependencies);
+      return { ...payload, id: queued.localId, offlinePending: true };
+    }
   }
 
   async findAll(params: RecetasQueryParams = {}): Promise<RecetasPage> {

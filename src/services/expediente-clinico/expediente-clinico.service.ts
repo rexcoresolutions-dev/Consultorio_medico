@@ -77,6 +77,7 @@ const siNo = (value: any): string | undefined => {
 };
 
 const getPatientName = (raw: any, fallback?: Partial<PacienteData> | null) => {
+  const consultaNested = raw?.consulta;
   const paciente = raw?.paciente ?? raw?.patient ?? consultaNested?.paciente ?? consultaNested?.patient ?? {};
   const direct = firstDefined(paciente?.nombreCompleto, paciente?.nombre_completo);
   if (direct) return String(direct);
@@ -140,7 +141,7 @@ const normalizeConsultaDiagnosticos = (raw: any): DiagnosticoHistoriaClinica[] =
 const getConsultaDate = (raw: any) =>
   String(
     firstDefined(
-      raw?.fechaConsulta,
+      raw?.fechaHora ?? raw?.fechaConsulta,
       raw?.fecha_consulta,
       raw?.fecha,
       raw?.createdAt,

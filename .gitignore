@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Native build outputs and machine-local Android settings
+src-tauri/target/
+android/.gradle/
+android/local.properties
+android/**/build/

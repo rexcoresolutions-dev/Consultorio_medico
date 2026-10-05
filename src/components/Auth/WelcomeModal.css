@@ -205,26 +205,63 @@
   font-size: 10px;
 }
 
-.welcome-real-start {
+.welcome-real-actions {
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
-  min-height: 49px;
   margin-top: 20px;
-  border: 0;
-  border-radius: 14px;
-  background: linear-gradient(90deg, var(--system-brand-light, #45dce0), var(--system-brand-color, #36c5c8));
-  box-shadow: 0 12px 24px var(--system-brand-color-shadow, rgba(54, 197, 200, 0.2));
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 850;
 }
 
-.welcome-real-start:hover { filter: brightness(.985); }
+.welcome-real-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 300px;
+  max-width: 100%;
+  height: 46px;
+  margin: 0;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--system-brand-color, #36c5c8);
+  box-shadow: 0 8px 20px var(--system-brand-color-shadow, rgba(54, 197, 200, 0.18));
+  color: var(--system-brand-contrast, #fff);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .1px;
+  text-align: center;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.welcome-real-start > span {
+  display: inline-block;
+  line-height: 1;
+}
+
+.welcome-real-start svg {
+  font-size: 15px;
+}
+
+.welcome-real-start:hover {
+  transform: translateY(-1px);
+  filter: brightness(.96);
+  box-shadow: 0 10px 22px var(--system-brand-color-shadow, rgba(54, 197, 200, 0.22));
+}
+
+.welcome-real-start:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 12px var(--system-brand-color-shadow, rgba(54, 197, 200, 0.16));
+}
 
 @media (max-width: 680px) {
   .welcome-real-card { padding: 28px 22px 24px; }
+  .welcome-real-actions { margin-top: 16px; }
+  .welcome-real-start { width: min(100%, 280px); }
   .welcome-real-heading { grid-template-columns: 82px minmax(0, 1fr); gap: 14px; }
   .welcome-real-main-icon { width: 66px; height: 66px; font-size: 29px; }
   .welcome-real-greeting h1 { font-size: 23px; }

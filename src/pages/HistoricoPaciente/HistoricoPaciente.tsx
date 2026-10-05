@@ -1,3 +1,6 @@
+import { notasService } from '../../services/notas-evolucion/notas-evolucion.service';
+import authService from '../../services/auth/auth.service';
+import { getUserRoleId } from '../../utils/role.utils';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -13,7 +16,6 @@ import {
   Select,
   Table,
   Tag,
-  Tooltip,
   Typography,
 } from 'antd';
 import {
@@ -24,7 +26,6 @@ import {
   FolderOpenOutlined,
   PrinterOutlined,
   HistoryOutlined,
-  MedicineBoxOutlined,
   IdcardOutlined,
   LogoutOutlined,
   SearchOutlined,
@@ -47,7 +48,6 @@ const { Title, Text } = Typography;
 
 const PACIENTE_ATENCION_STORAGE_KEY = 'paciente_atencion_actual';
 const CONSULTA_EXTERNA_ABIERTA_STORAGE_KEY = 'consulta_externa_abierta';
-const NOTAS_EVOLUCION_STORAGE_KEY = 'notas_evolucion_pacientes';
 
 type DocumentoHistorico = {
   id: string;
@@ -64,15 +64,6 @@ const cargarPacienteActivo = (): PacienteData | null => {
     return data ? JSON.parse(data) : null;
   } catch {
     return null;
-  }
-};
-
-const cargarStorageArray = <T,>(key: string): T[] => {
-  try {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
   }
 };
 
@@ -102,7 +93,7 @@ const calcularEdad = (fechaNacimiento?: string) => {
 const extractFecha = (item: any): string =>
   String(
     item?.fecha ??
-      item?.fechaConsulta ??
+      item?.fechaHora ?? item?.fechaConsulta ??
       item?.fecha_consulta ??
       item?.createdAt ??
       item?.created_at ??
@@ -270,7 +261,16 @@ const HistoricoPaciente: React.FC = () => {
   const [consultaRecetaDetalle, setConsultaRecetaDetalle] = useState<any | null>(null);
 
   const pacienteNombre = getFullName(pacienteActivo);
-  const notas = cargarStorageArray<any>(NOTAS_EVOLUCION_STORAGE_KEY);
+  const [notas, setNotas] = useState<any[]>([]);
+  useEffect(() => {
+    setNotas([]);
+    if (getUserRoleId(authService.getUser()) !== 3 || !pacienteActivo?.id) return;
+    let active = true;
+    notasService.list(Number(pacienteActivo.id)).then(rows => {
+      if (active) setNotas(rows.map(row => ({ ...row, fecha_elaboracion: row.fechaElaboracion, datos: row, diagnosticos: row.diagnosticos?.map((d: any) => ({ diagnostico: d.nombre ?? d.cie10?.nombre })) })));
+    }).catch(() => { if (active) setApiError('No se pudieron cargar las notas de evolución.'); });
+    return () => { active = false; };
+  }, [pacienteActivo?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -326,6 +326,7 @@ const HistoricoPaciente: React.FC = () => {
         const primeraPaginaRecetas = await recetasService.findAll({
           page: 1,
           limit: 100,
+          pacienteId,
         });
 
         recetas = [...primeraPaginaRecetas.data];
@@ -341,6 +342,7 @@ const HistoricoPaciente: React.FC = () => {
               recetasService.findAll({
                 page: index + 2,
                 limit: 100,
+                pacienteId,
               }),
             ),
           );

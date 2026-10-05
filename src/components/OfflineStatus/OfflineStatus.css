@@ -1,0 +1,4 @@
+.offline-status { border-radius: 12px; font-weight: 600; }
+.offline-status.online { border-color: #a7ebcf; background: #effcf7; color: #087a52; }
+.offline-status.offline { border-color: #ffd7a1; background: #fff7eb; color: #a85d00; }
+@media (max-width: 760px) { .offline-status span:not(.anticon) { display: none; } }

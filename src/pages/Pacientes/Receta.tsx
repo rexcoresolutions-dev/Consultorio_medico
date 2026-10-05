@@ -1101,13 +1101,11 @@ const Receta: React.FC<RecetaProps> = ({
     if (idFinal) {
       setRecetaApiId(idFinal);
 
-      // La API de recetas actualmente conserva la fecha de seguimiento, pero no
-      // un campo de hora. El módulo de Citas usa este override temporal para que
-      // la cita aparezca desde ahora con fecha + hora completas.
+      // Persiste el horario del seguimiento en la agenda del servidor.
       if (values.requiere_proxima_cita && values.fecha_proxima_cita) {
         const seguimiento = dayjs(values.fecha_proxima_cita);
         if (seguimiento.isValid()) {
-          citasService.updateSeguimiento(idFinal, {
+          await citasService.updateSeguimiento(idFinal, {
             hora: seguimiento.format('HH:mm'),
             duracion: 30,
             estado: 'PROGRAMADA',
@@ -1115,7 +1113,7 @@ const Receta: React.FC<RecetaProps> = ({
           });
         }
       } else {
-        citasService.clearSeguimiento(idFinal);
+        await citasService.clearSeguimiento(idFinal);
       }
     }
 
@@ -1353,13 +1351,21 @@ const Receta: React.FC<RecetaProps> = ({
 
       <header className="rx-template-header">
         <div className="rx-template-brand">
-          <div className="rx-template-logo">
+          <div className={`rx-template-logo ${systemConfig.logoDataUrl ? 'has-image' : ''}`}>
             {systemConfig.logoDataUrl ? (
-              <img
-                src={systemConfig.logoDataUrl}
-                alt={systemConfig.nombreCorto}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
+              <>
+                <MedicineBoxOutlined />
+                <img
+                  src={systemConfig.logoDataUrl}
+                  alt=""
+                  crossOrigin="anonymous"
+                  onError={(event) => {
+                    event.currentTarget.style.display = 'none';
+                    event.currentTarget.parentElement?.classList.remove('has-image');
+                  }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', inset: 0, background: 'inherit' }}
+                />
+              </>
             ) : (
               <MedicineBoxOutlined />
             )}

@@ -109,6 +109,52 @@
   flex: 1;
   text-align: center;
   border-radius: 10px !important;
+  border: 1px solid #d9d9d9 !important;
+  background: #ffffff !important;
+  color: #241532 !important;
+  box-shadow: none !important;
+  font-weight: 600;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.roles-radio-group .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked),
+.roles-radio-group .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked) > span,
+.roles-radio-group .role-option,
+.roles-radio-group .role-option > span {
+  color: #241532 !important;
+}
+
+.roles-radio-group .role-option-content {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: inherit !important;
+}
+
+.roles-radio-group .ant-radio-button-wrapper::before {
+  display: none !important;
+}
+
+.roles-radio-group .ant-radio-button-wrapper:hover {
+  border-color: var(--system-brand-color, #8b3df0) !important;
+  background: var(--system-brand-color-soft, #f7f2ff) !important;
+  color: var(--system-brand-dark, #5b21b6) !important;
+}
+
+.roles-radio-group .ant-radio-button-wrapper-checked,
+.roles-radio-group .ant-radio-button-wrapper-checked:hover {
+  border-color: var(--system-brand-color, #8b3df0) !important;
+  background: var(--system-brand-color, #8b3df0) !important;
+  color: var(--system-brand-contrast, #ffffff) !important;
+  box-shadow: 0 5px 14px var(--system-brand-color-shadow, rgba(139, 61, 240, .22)) !important;
+}
+
+.roles-radio-group .ant-radio-button-wrapper-checked > span,
+.roles-radio-group .role-option-selected,
+.roles-radio-group .role-option-selected > span {
+  color: var(--system-brand-contrast, #ffffff) !important;
 }
 
 /* Modal elegante para PC */
